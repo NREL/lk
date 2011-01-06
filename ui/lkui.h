@@ -48,7 +48,8 @@ class LKFrame : public wxFrame
 {
 public:
 	LKFrame();
-
+	void SaveCode();
+	void LoadCode();
 	void Post(const wxString &text) { m_txtOutput->AppendText(text); }
 private:	
 

@@ -7,6 +7,7 @@
 #include <wx/config.h>
 #include <wx/scrolbar.h>
 #include <wx/print.h>
+#include <wx/textfile.h>
 #include <wx/printdlg.h>
 #include <wx/accel.h>
 #include <wx/image.h>
@@ -249,7 +250,7 @@ BEGIN_EVENT_TABLE(LKFrame, wxFrame)
 END_EVENT_TABLE()
 
 LKFrame::LKFrame()
- : wxFrame(NULL, wxID_ANY, "lkui-editor", wxDefaultPosition, wxSize(800,600))
+ : wxFrame(NULL, wxID_ANY, "lk editor (F1 to save)", wxDefaultPosition, wxSize(800,600))
 {
 	SetIcon( wxIcon("appicon") );
 
@@ -284,9 +285,7 @@ LKFrame::LKFrame()
 	app_config->Read("FrameHeight", &f_height, -1);
 	app_config->Read("FrameMaximized", &b_maximize, false);
 
-	wxString code;
-	app_config->Read("lkCode", &code, wxEmptyString );
-	m_codeEdit->SetText( code );
+	LoadCode();
 
 	if (b_maximize)
 	{
@@ -328,9 +327,6 @@ void LKFrame::OnCloseFrame( wxCloseEvent &evt )
 	app_config->Write("FrameHeight", f_height);
 	app_config->Write("FrameMaximized", b_maximize);
 
-	
-	app_config->Write("lkCode", m_codeEdit->GetText());
-		
 	Destroy();
 }
 
@@ -338,12 +334,32 @@ void LKFrame::OnCharHook( wxKeyEvent &evt )
 {
 	if (evt.GetKeyCode() == WXK_ESCAPE)
 		Close();
+	else if (evt.GetKeyCode() == WXK_F1)
+		SaveCode();
 	else
 		evt.Skip();
 }
 
 
-class m_wxio : public lk::io_basic
+void LKFrame::LoadCode()
+{
+	m_codeEdit->SetText( ReadTextFile(wxPathOnly(app_args[0]) + "/lkCode.txt") );
+}
+
+void LKFrame::SaveCode()
+{
+	wxString tf( wxPathOnly(app_args[0]) + "/lkCode.txt" );
+	FILE *fp = fopen((const char*)tf.c_str(), "w");
+	if (fp)
+	{
+		fputs( (const char*)m_codeEdit->GetText().c_str(), fp );
+		fclose(fp);
+		m_txtOutput->AppendText("Wrote: " + tf + "\n");
+	}
+	else wxMessageBox("Could not write: " + tf);
+}
+
+class m_wxio : public lk::std_io
 {
 private:
 	LKFrame *frm;
@@ -368,11 +384,10 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 	{
 	case ID_EXECUTE:
 		{
-			
-			app_config->Write("lkCode", m_codeEdit->GetText());
-			app_config->Flush();
-	
 			m_txtOutput->Clear();
+			
+			SaveCode();
+	
 			m_txtOutput->AppendText( "Start: " + wxNow() + "\n" );
 
 			lk::input_string p( (const char*) m_codeEdit->GetText().c_str() );
@@ -397,8 +412,12 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 				lk::env_t env;
 				lk::vardata_t result;
 				int ctl_id = lk::CTL_NONE;
+				wxStopWatch sw;
 				if (lk::eval( tree, &env, &io, result, false, ctl_id ))
 				{
+					long time = sw.Time();
+					applog("elapsed time: %ld msec\n", time);
+
 					const char *key = env.first();
 					while( key )
 					{
@@ -406,6 +425,7 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 						applog("env{%s}=%s\n", key, v->as_string().c_str());
 						key = env.next();
 					}
+
 				}
 				else
 					Post("eval fail\n");

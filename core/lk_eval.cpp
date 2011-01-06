@@ -3,7 +3,7 @@
 
 bool lk::eval( node_t *root, 
 		env_t *env, 
-		io_basic *io, 
+		std_io *io, 
 		vardata_t &result,
 		bool env_mutable,
 		int &ctl_id)
@@ -162,7 +162,7 @@ bool lk::eval( node_t *root,
 			case expr_t::GT:
 				ok = ok && eval(n->left, env, io, l, false, ctl_id);
 				ok = ok && eval(n->right, env, io, r, false, ctl_id);
-				result.assign( !l.deref().lessthan(r.deref())||!l.deref().equals(r.deref()) ? 1 : 0);
+				result.assign( !l.deref().lessthan(r.deref())&&!l.deref().equals(r.deref()) ? 1 : 0);
 				return ok;
 			case expr_t::GE:
 				ok = ok && eval(n->left, env, io, l, false, ctl_id);

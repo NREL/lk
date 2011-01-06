@@ -8,7 +8,7 @@
 
 namespace lk {
 
-	class io_basic
+	class std_io
 	{
 	public:
 		virtual std::string input() = 0;
@@ -19,7 +19,7 @@ namespace lk {
 
 	bool eval( node_t *root, 
 		env_t *env, 
-		io_basic *io, 
+		std_io *io, 
 		vardata_t &result,
 		bool env_mutable,
 		int &ctl_id);
