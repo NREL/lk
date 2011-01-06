@@ -1,0 +1,743 @@
+#include <cstdarg>
+#include <cstdlib>
+
+#include "lk_parse.h"
+
+lk::parser::parser( input_base &input )
+	: lex( input )
+{
+	m_haltFlag = false;
+	m_tokType = lex.next();
+}
+
+int lk::parser::token()
+{
+	return m_tokType;
+}
+
+bool lk::parser::token(int t)
+{
+	return (m_tokType==t);
+}
+
+const char *lk::parser::error(int idx)
+{
+	if (idx >= 0 && idx < (int)m_errorList.size())
+		return m_errorList[idx].c_str();
+	return NULL;
+}
+
+
+bool lk::parser::match( const char *s )
+{
+	if ( m_tokType == lk::lexer::END )
+	{
+		error("reached end of input, but expected '%s'", s);
+		return false;
+	}
+	
+	if ( lex.text() != s )
+	{
+		error("expected '%s' but found '%s'", s, lex.text().c_str());
+		return false;
+	}
+	
+	skip();
+	return true;
+}
+
+bool lk::parser::match(int t)
+{
+	if (m_tokType == lk::lexer::END )
+	{
+		error("reached end of input, but expected token '%s'", 
+			lk::lexer::tokstr(t));
+		return false;
+	}
+	
+	if ( m_tokType != t)
+	{
+		error("expected '%s' but found '%s' %s", 
+			lk::lexer::tokstr(t), 
+			lk::lexer::tokstr(m_tokType),
+			lex.text().c_str());
+		return false;
+	}
+	
+	skip();
+	return true;
+}
+
+void lk::parser::skip()
+{	
+	m_tokType = lex.next();
+	
+	if (m_tokType == lk::lexer::INVALID)
+		error("invalid sequence in input: %s", lex.error().c_str());
+}
+
+void lk::parser::error( const char *fmt, ... )
+{
+	char buf[512];
+
+	sprintf(buf, "[%d]: ", lex.line() );
+
+	char *p = buf + strlen(buf);
+
+	va_list list;
+	va_start( list, fmt );	
+	
+	#if defined(_WIN32)&&defined(_MSC_VER)
+		_vsnprintf( p, 480, fmt, list );
+	#else
+		vsnprintf( p, 480, fmt, list );
+	#endif
+	
+	m_errorList.push_back(std::string(buf));
+	va_end( list );
+}
+
+lk::node_t *lk::parser::script()
+{
+	list_t *head = 0, *tail = 0;
+	node_t *stmt = 0;
+
+	while ( !token(lk::lexer::END)
+	   && !token(lk::lexer::INVALID)
+		&& (stmt = statement()) )
+	{
+		list_t *link = new list_t( line(), stmt, 0 );
+
+		if (!head) head = link;
+		if (tail) tail->next = link;
+		tail = link;
+	}
+
+	return head;
+}
+
+
+lk::node_t *lk::parser::block()
+{
+	if ( token( lk::lexer::SEP_LCURLY ) )
+	{
+		match(lk::lexer::SEP_LCURLY);
+		
+		node_t *n = statement();
+		
+		if (!token( lk::lexer::SEP_RCURLY ))
+		{
+			list_t *head = new list_t( line(), n, 0 );
+			list_t *tail = head;
+						
+			while ( token() != lk::lexer::END
+				&& token() != lk::lexer::INVALID
+				&& token() != lk::lexer::SEP_RCURLY
+				&& !m_haltFlag )
+			{
+				list_t *link = new list_t( line(), statement(), 0 );
+				
+				tail->next = link;				
+				tail = link;
+			}
+			
+			n = head;
+			
+		}
+		
+		if (!match( lk::lexer::SEP_RCURLY ))
+			m_haltFlag = true;
+			
+		return n;
+	}
+	else
+		return statement();		
+}
+
+
+lk::node_t *lk::parser::statement()
+{
+	node_t *stmt = 0;
+	
+	if (lex.text() == "if")
+	{
+		return test();
+	}
+	else if (lex.text() == "while" || lex.text() == "for")
+	{
+		return loop();
+	}
+	else if (token(lk::lexer::SEP_LCURLY))
+	{
+		return block();
+	}
+	else if (lex.text() == "return")
+	{
+		skip();
+		stmt = new expr_t( line(), expr_t::RETURN, ternary(), 0 );
+	}
+	else if (lex.text() == "exit")
+	{
+		stmt = new expr_t( line(), expr_t::EXIT, 0, 0 );
+		skip();
+	}
+	else if (lex.text() == "break")
+	{
+		stmt = new expr_t( line(), expr_t::BREAK, 0, 0 );
+		skip();
+	}
+	else if (lex.text() == "continue")
+	{
+		stmt = new expr_t( line(), expr_t::CONTINUE, 0, 0 );
+		skip();
+	}
+	else	
+		stmt = assignment();
+	
+	// require semicolon at end of a statement
+	if (!match(lk::lexer::SEP_SEMI))
+	{
+		while (token() != lk::lexer::END
+			&& token() != lk::lexer::INVALID
+			&& token() != lk::lexer::SEP_SEMI)
+			skip();
+		
+		if (!match(lk::lexer::SEP_SEMI))
+			m_haltFlag = true;
+	}
+	return stmt;
+}
+
+lk::node_t *lk::parser::test()
+{
+	match("if");
+	match( lk::lexer::SEP_LPAREN );
+	node_t *test = logicalor();
+	match( lk::lexer::SEP_RPAREN );
+	node_t *on_true = block();
+
+	cond_t *c_top = new cond_t( line(), test, on_true, 0 );
+
+	if ( lex.text() == "else" )
+	{
+		skip();
+		c_top->on_false = block();
+	}
+	else if ( lex.text() == "elseif" )
+	{
+		cond_t *tail = c_top;
+
+		while( lex.text() == "elseif" )
+		{
+			skip();
+			match( lk::lexer::SEP_LPAREN );
+			test = logicalor();
+			match( lk::lexer::SEP_RPAREN );
+			on_true = block();
+
+			cond_t *link = new cond_t( line(), test, on_true, 0 );
+			tail->on_false = link;
+			tail = link;
+		}
+
+		if ( lex.text() == "else" )
+		{
+			skip();
+			tail->on_false = block();
+		}
+	}
+
+	return c_top;
+}
+
+lk::node_t *lk::parser::loop()
+{
+	iter_t *it = 0;
+
+	if ( lex.text() == "while" )
+	{
+		it = new iter_t( line(), 0, 0, 0, 0 );
+		skip();
+		match( lk::lexer::SEP_LPAREN );
+		it->test = logicalor();
+		match( lk::lexer::SEP_RPAREN );
+		it->block = block();
+	}
+	else if ( lex.text() == "for" )
+	{
+		it = new iter_t( line(), 0, 0, 0, 0 );
+		skip();
+
+		match( lk::lexer::SEP_LPAREN );
+		
+		if ( !token( lk::lexer::SEP_SEMI ) )
+			it->init = assignment();
+		
+		match( lk::lexer::SEP_SEMI );
+
+		if ( !token( lk::lexer::SEP_SEMI ) )
+			it->test = logicalor();
+
+		match( lk::lexer::SEP_SEMI );
+
+		if ( !token( lk::lexer::SEP_RPAREN ) )
+			it->adv = assignment();
+
+		match( lk::lexer::SEP_RPAREN );
+
+		it->block = block();
+	}
+	else
+	{
+		error("invalid looping construct");
+	}
+
+	return it;
+}
+
+lk::node_t *lk::parser::define()
+{
+	if (m_haltFlag) return 0;
+	
+	match("define");
+	match( lk::lexer::SEP_LPAREN );
+	node_t *a = identifierlist( lk::lexer::SEP_COMMA, lk::lexer::SEP_RPAREN );
+	match( lk::lexer::SEP_RPAREN );
+	node_t *b = block();
+	
+	return new expr_t( line(), expr_t::DEFINE, a, b );
+}
+
+lk::node_t *lk::parser::assignment()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *n = ternary();
+	
+	if ( token(lk::lexer::OP_ASSIGN) )
+	{
+		skip();		
+		n = new expr_t(line(), expr_t::ASSIGN, n, assignment() );
+	}
+	
+	return n;
+}
+
+lk::node_t *lk::parser::ternary()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *test = logicalor();
+	if ( token(lk::lexer::OP_QMARK) )
+	{
+		skip();
+		node_t *rtrue = ternary();
+		match( lk::lexer::SEP_COLON );
+		node_t *rfalse = ternary();
+		
+		return new lk::cond_t(line(), test, rtrue, rfalse);
+	}
+	else
+		return test;
+}
+
+lk::node_t *lk::parser::logicalor()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *n = logicaland();
+	while ( token(lk::lexer::OP_LOGIOR) )
+	{
+		skip();		
+		node_t *left = n;
+		node_t *right = logicaland();
+		n = new lk::expr_t( line(), expr_t::LOGIOR, left, right );
+	}
+	
+	return n;
+}
+
+lk::node_t *lk::parser::logicaland()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *n = equality();
+	while ( token(lk::lexer::OP_LOGIAND) )
+	{
+		skip();		
+		node_t *left = n;
+		node_t *right = equality();
+		n = new lk::expr_t( line(), expr_t::LOGIAND, left, right );
+	}
+	
+	return n;
+}
+
+lk::node_t *lk::parser::equality()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *n = relational();
+	
+	while ( token( lk::lexer::OP_EQ )
+		|| token( lk::lexer::OP_NE ) )
+	{
+		int oper = token(lk::lexer::OP_EQ) ? expr_t::EQ : expr_t::NE;
+		skip();
+		
+		node_t *left = n;
+		node_t *right = relational();
+		
+		n = new lk::expr_t( line(), oper, left, right );		
+	}
+	
+	return n;
+}
+
+lk::node_t *lk::parser::relational()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *n = additive();
+	
+	while ( token( lk::lexer::OP_LT )
+	  || token( lk::lexer::OP_LE )
+	  || token( lk::lexer::OP_GT )
+	  || token( lk::lexer::OP_GE ) )
+	{
+		int oper = expr_t::INVALID;
+		
+		switch( token() )
+		{
+		case lk::lexer::OP_LT: oper = expr_t::LT; break;
+		case lk::lexer::OP_LE: oper = expr_t::LE; break;
+		case lk::lexer::OP_GT: oper = expr_t::GT; break;
+		case lk::lexer::OP_GE: oper = expr_t::GE; break;
+		default:
+			error("invalid relational operator: %s", lk::lexer::tokstr( token() ) );
+		}
+		
+		skip();
+		
+		node_t *left = n;
+		node_t *right = additive();
+		
+		n = new lk::expr_t( line(), oper, left, right );		
+	}
+	
+	return n;	
+}
+
+
+
+lk::node_t *lk::parser::additive()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *n = multiplicative();
+	
+	while ( token( lk::lexer::OP_PLUS )
+		|| token( lk::lexer::OP_MINUS ) )
+	{
+		int oper = token(lk::lexer::OP_PLUS) ? expr_t::PLUS : expr_t::MINUS;
+		skip();
+		
+		node_t *left = n;
+		node_t *right = multiplicative();
+		
+		n = new lk::expr_t( line(), oper, left, right );		
+	}
+	
+	return n;
+	
+}
+
+lk::node_t *lk::parser::multiplicative()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *n = exponential();
+	
+	while ( token( lk::lexer::OP_MULT )
+		|| token( lk::lexer::OP_DIV ) )
+	{
+		int oper = token(lk::lexer::OP_MULT) ? expr_t::MULT : expr_t::DIV ;
+		skip();
+		
+		node_t *left = n;
+		node_t *right = exponential();
+		
+		n = new lk::expr_t( line(), oper, left, right );		
+	}
+	
+	return n;
+}
+
+lk::node_t *lk::parser::exponential()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *n = unary();
+	
+	if ( token(lk::lexer::OP_EXP) )
+	{
+		skip();
+		n = new expr_t( line(), expr_t::EXP, n, exponential() );
+	}
+	
+	return n;
+}
+
+lk::node_t *lk::parser::unary()
+{
+	if (m_haltFlag) return 0;
+
+	switch( token() )
+	{
+	case lk::lexer::OP_BANG:
+		skip();
+		return new lk::expr_t( line(), expr_t::NOT, unary(), 0 );
+	case lk::lexer::OP_MINUS:
+		skip();
+		return new lk::expr_t( line(), expr_t::NEG, unary(), 0 );
+	case lk::lexer::OP_POUND:
+		skip();
+		return new lk::expr_t( line(), expr_t::SIZEOF, unary(), 0 );
+	/*
+	case lk::lexer::OP_BITAND:
+		skip();
+		return new lk::expr_t( line(), expr_t::ADDROF, unary(), 0 );
+	case lk::lexer::OP_MULT:
+		skip();
+		return new lk::expr_t( line(), expr_t::DEREF, unary(), 0 );
+	*/
+	case lk::lexer::IDENTIFIER:
+		if (lex.text() == "typeof")
+		{
+			skip();
+			match( lk::lexer::SEP_LPAREN );
+			node_t *expr = ternary();
+			match( lk::lexer::SEP_RPAREN );
+			return new lk::expr_t( line(), expr_t::TYPEOF, expr, 0 );
+		}
+	default:
+		return postfix();
+	}		
+}
+
+lk::node_t *lk::parser::postfix()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *left = primary();
+	
+	while ( 1 )
+	{
+		if ( token( lk::lexer::SEP_LBRACK ) )
+		{
+			skip();			
+			node_t *right = ternary();
+			match( lk::lexer::SEP_RBRACK );
+			left = new expr_t( line(), expr_t::INDEX, left, right );
+		}
+		else if ( token( lk::lexer::SEP_LPAREN ) )
+		{
+			skip();
+			node_t *right = ternarylist(lk::lexer::SEP_COMMA, lk::lexer::SEP_RPAREN);
+			match( lk::lexer::SEP_RPAREN );
+			left = new expr_t( line(), expr_t::CALL, left, right );
+		}
+		else if ( token( lk::lexer::SEP_LCURLY ) )
+		{
+			skip();
+			node_t *right = ternary();
+			match( lk::lexer::SEP_RCURLY );
+			left = new expr_t( line(), expr_t::HASH, left, right );
+		}
+		else if ( token( lk::lexer::OP_DOT ) )
+		{
+			// x.value is syntactic sugar for x{"value"}
+			skip();			
+			left = new expr_t( line(), expr_t::HASH, left, new literal_t( line(), lex.text() ) );
+			skip();
+		}
+		else if ( token (lk::lexer::OP_REF ) )
+		{
+/*
+			pure syntactic translation for:
+
+			obj->append(x) is syntactic sugar for 
+					obj.append(obj, x)
+			and     obj{"append"}( obj{"append"}, x )
+		
+			syntactic translation copies the syntax tree for obj{"append"}
+			which if evaluated directly will slow down an unintelligent interpreter
+		
+			perhaps better to simply note the dereference operator and perform
+			the transformation at run-time (not what is done here, right now)
+
+			basic class definition of a pair with a method:
+		
+			pair = define(f,s) {
+			  obj.first = f;
+			  obj.second = s;
+			  obj.sum = define(this, balance) {
+				 return this.first + this.second + balance;
+			  };
+			  return obj;
+			};
+		
+			usage:
+	
+			arr[0] = pair(1,2);
+			arr[1] = pair(3,4);
+
+			echo( arr[0]->sum(3) );
+			echo( arr[1]->sum(5) );
+*/
+	
+			skip();
+			
+			if ( !token( lk::lexer::IDENTIFIER ) )
+			{
+				error("expected method-function name after dereference operator ->");
+				skip();
+			}			
+
+			std::string method_iden = lex.text();			
+			skip();
+
+			match( lk::lexer::SEP_LPAREN );
+			list_t *arg_list = ternarylist( lk::lexer::SEP_COMMA, lk::lexer::SEP_RPAREN );
+			match( lk::lexer::SEP_RPAREN );
+
+			// augment argument list with copy of left hand primary expression first item
+			arg_list = new list_t( line(), 
+								left->make_copy(),
+								arg_list );
+			
+			left = new expr_t( line(), expr_t::CALL,
+						new expr_t( line(), expr_t::HASH, 
+							left,  // primary expression on left of ->  (i.e. 'obj')
+							new literal_t( line(), method_iden )),
+						arg_list );
+
+		}
+		else if ( token( lk::lexer::OP_PP ) )
+		{
+			left = new expr_t( line(), expr_t::INCR, left, 0 );
+			skip();
+		}
+		else if ( token( lk::lexer::OP_MM ) )
+		{
+			left = new expr_t( line(), expr_t::DECR, left, 0 );
+			skip();
+		}
+		else
+			break;
+	}
+	
+	return left;
+}
+
+lk::node_t *lk::parser::primary()
+{
+	if (m_haltFlag) return 0;
+	
+	node_t *n = 0;
+	switch( token() )
+	{
+	case lk::lexer::SEP_LPAREN:
+		skip();
+		n = ternary();
+		match(lk::lexer::SEP_RPAREN);
+		return n;
+	case lk::lexer::NUMBER:
+		n = new lk::constant_t( line(), lex.value() );
+		skip();
+		return n;
+	case lk::lexer::LITERAL:
+		n = new lk::literal_t( line(), lex.text() );
+		skip();
+		return n; 
+	case lk::lexer::IDENTIFIER:
+		if (lex.text() == "define")
+		{
+			n = define();
+		}
+		else if (lex.text() == "true")
+		{
+			n = new lk::constant_t( line(), 1.0 );
+			skip();
+		}
+		else if (lex.text() == "false")
+		{
+			n = new lk::constant_t( line(), 0.0 );
+			skip();
+		}
+		else if (lex.text() == "null")
+		{
+			n = new lk::null_t( line() );
+			skip();
+		}
+		else
+		{
+			n = new lk::iden_t( line(), lex.text() );
+			skip();
+		}
+		return n;
+	default:
+		error("invalid expression beginning with '%s'", lk::lexer::tokstr(token()));
+		m_haltFlag = true;
+		return 0;
+	}
+}
+
+lk::list_t *lk::parser::ternarylist( int septok, int endtok)
+{
+	list_t *head=0, *tail=0;
+		
+	while ( token() != lk::lexer::INVALID
+		&& token() != lk::lexer::END
+		&& token() != endtok 
+		&& !m_haltFlag )
+	{
+		list_t *link = new list_t( line(), ternary(), 0 );
+		
+		if ( !head ) head = link;
+		
+		if (tail) tail->next = link;
+	
+		tail = link;
+
+		if ( token() != endtok )
+			if (!match( septok ))
+				m_haltFlag = true;
+	}
+	
+	return head;
+}
+
+lk::list_t *lk::parser::identifierlist( int septok, int endtok)
+{
+	list_t *head=0, *tail=0;
+		
+	while ( !m_haltFlag && token(lk::lexer::IDENTIFIER) )
+	{
+		list_t *link = new list_t( line(), new iden_t( line(), lex.text() ), 0 );
+		
+		if ( !head ) head = link;
+		
+		if (tail) tail->next = link;
+		
+		tail = link;
+		
+		skip();
+								
+		if ( token() != endtok )
+			if (!match( septok ))
+				m_haltFlag = true;
+	}
+	
+	return head;
+}
