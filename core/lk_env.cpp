@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "lk_env.h"
 
 #ifdef _MSC_VER
@@ -451,15 +453,24 @@ lk::vardata_t *lk::vardata_t::lookup( const std::string &key ) throw(error_t)
 }
 
 
-lk::env_t::env_t() : m_parent(0), m_iter(m_hash.begin()) {  }
-lk::env_t::env_t(env_t *p) : m_parent(p), m_iter(m_hash.begin()) {  }
-lk::env_t::~env_t() { clear(); }
+lk::env_t::env_t() : m_parent(0), m_varIter(m_varHash.begin()) {  }
+lk::env_t::env_t(env_t *p) : m_parent(p), m_varIter(m_varHash.begin()) {  }
+
+lk::env_t::~env_t()
+{
+	clear();
+
+	// delete the referenced objects
+	for ( size_t i=0;i<m_objTable.size();i++ )
+		if ( m_objTable[i] )
+			delete m_objTable[i];
+}
 
 void lk::env_t::clear()
 {
-	for ( varhash_t::iterator it = m_hash.begin(); it !=m_hash.end(); ++it )
+	for ( varhash_t::iterator it = m_varHash.begin(); it !=m_varHash.end(); ++it )
 		delete it->second; // delete the var_data object
-	m_hash.clear();
+	m_varHash.clear();
 }
 
 void lk::env_t::assign( const std::string &name, vardata_t *value )
@@ -469,23 +480,23 @@ void lk::env_t::assign( const std::string &name, vardata_t *value )
 	if (x && x!=value)
 		delete x;
 
-	m_hash[name] = value;
+	m_varHash[name] = value;
 }
 
 void lk::env_t::unassign( const std::string &name )
 {
-	varhash_t::iterator it = m_hash.find( name );
-	if (it != m_hash.end())
+	varhash_t::iterator it = m_varHash.find( name );
+	if (it != m_varHash.end())
 	{
 		delete (*it).second; // delete the associated data
-		m_hash.erase( it );
+		m_varHash.erase( it );
 	}
 }
 
 lk::vardata_t *lk::env_t::lookup( const std::string &name, bool search_hierarchy )
 {
-	varhash_t::iterator it = m_hash.find( name );
-	if ( it != m_hash.end() )
+	varhash_t::iterator it = m_varHash.find( name );
+	if ( it != m_varHash.end() )
 		return (*it).second;
 	else if (search_hierarchy && m_parent)
 		return m_parent->lookup( name, true );
@@ -495,20 +506,20 @@ lk::vardata_t *lk::env_t::lookup( const std::string &name, bool search_hierarchy
 		
 const char *lk::env_t::first()
 {
-	m_iter = m_hash.begin();
-	if (m_iter != m_hash.end())
-		return m_iter->first.c_str();
+	m_varIter = m_varHash.begin();
+	if (m_varIter != m_varHash.end())
+		return m_varIter->first.c_str();
 	else
 		return 0;
 }
 
 const char *lk::env_t::next()
 {
-	if (m_iter == m_hash.end()) return NULL;
+	if (m_varIter == m_varHash.end()) return NULL;
 
-	++m_iter;
+	++m_varIter;
 
-	if (m_iter != m_hash.end())	return m_iter->first.c_str();
+	if (m_varIter != m_varHash.end())	return m_varIter->first.c_str();
 
 	return 0;
 }
@@ -518,4 +529,73 @@ lk::env_t *lk::env_t::parent()
 	return m_parent;
 }
 
-unsigned int lk::env_t::size() { return m_hash.size(); }
+unsigned int lk::env_t::size()
+{
+	return m_varHash.size();
+}
+
+
+void lk::env_t::register_func( const std::string &name, fcall_t f )
+{
+	m_funcHash[name] = f;
+}
+
+lk::fcall_t lk::env_t::lookup_func( const std::string &name )
+{
+	funchash_t::iterator it = m_funcHash.find( name );
+	if ( it != m_funcHash.end() )
+		return (*it).second;
+	else if ( m_parent )
+		return m_parent->lookup_func( name );
+	else
+		return 0;
+}
+
+size_t lk::env_t::insert_object( objref_t *o )
+{
+	std::vector< objref_t* >::iterator pos = std::find(m_objTable.begin(), m_objTable.end(), o);
+	if ( pos != m_objTable.end())
+	{
+		return (pos-m_objTable.begin()) + 1;
+	}
+	else
+	{
+		m_objTable.push_back( o );
+		return m_objTable.size();
+	}
+}
+
+bool lk::env_t::destroy_object( objref_t *o )
+{
+	std::vector< objref_t* >::iterator pos = std::find(m_objTable.begin(), m_objTable.end(), o);
+	if (pos != m_objTable.end())
+	{
+		if (*pos != 0)
+			delete (*pos);
+
+		m_objTable.erase( pos );
+		return true;
+	}
+	else
+		return false;
+}
+
+lk::objref_t *lk::env_t::query_object( size_t ref )
+{
+	ref--;
+	if (ref >= 0 && ref < m_objTable.size())
+		return m_objTable[ref];
+	else
+		return 0;
+}
+
+/*bool lk::invoke_t::call( const std::string &name, std::vector< vardata_t > &args, vardata_t &result )
+{
+	vardata_t *f = m_env->lookup(name, true);
+	if (!f) return false;
+
+	if ( expr_t *define =
+
+
+	
+}*/

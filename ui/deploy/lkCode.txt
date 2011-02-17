@@ -1,3 +1,21 @@
+//c = in();
+
+my_callback = define(evt) {
+	out("my_callback was called with " + #__args + " arguments\n");
+};
+
+a=b=c=d="asdfasdf";//1.40;
+//info(a,b);
+
+text = func_name(my_callback);
+
+my_callback("asdf", "asdf", "asdf");
+
+for (i=0;i<10;i++) out("Hello" + i + "\n");
+
+
+exit;
+
 /* ' SamUL version: 4.3 sec
 
 x[476000] = 0
@@ -21,14 +39,17 @@ exit;
 */
 
 
+
 t = true; 
 f = false;
+//size = #t;
 
 //declare a[4857];
 
 pair = define(f,s) {
 	obj.first = f;
 	obj.second = s;
+	
 	obj.sum = define(this, balance) {
 		return this.first + this.second + balance;
 	};

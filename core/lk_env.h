@@ -23,6 +23,24 @@ namespace lk {
 	class vardata_t;
 	typedef unordered_map< std::string, vardata_t* > varhash_t;
 		
+	
+	class error_t : public std::exception
+	{
+	public:
+		error_t() : text("general data exception") {  }
+		error_t(const char *fmt, ...) {
+			char buf[512];
+			va_list args;
+			va_start( args, fmt );
+			vsprintf( buf, fmt, args );
+			va_end( args );
+			text = buf;
+		}
+		error_t(const std::string &t) : text(t) {  }
+		std::string text;
+		virtual const char *what() const { return text.c_str(); }
+	};
+
 	class vardata_t
 	{
 	private:
@@ -33,22 +51,6 @@ namespace lk {
 		} m_u;
 
 	public:
-
-		class error_t : public std::exception
-		{
-		public:
-			error_t() : text("general data exception") {  }
-			error_t(const char *fmt, ...) {
-				char buf[512];
-				va_list args;
-				va_start( args, fmt );
-				vsprintf( buf, fmt, args );
-				va_end( args );
-				text = buf;
-			}
-			error_t(const std::string &t) : text(t) {  }
-			std::string text;
-		};
 
 		enum {
 			NULLVAL,
@@ -113,13 +115,61 @@ namespace lk {
 		std::vector<vardata_t> *vec() throw(error_t);
 		varhash_t *hash() throw(error_t);
 	};
+	
+	class objref_t
+	{
+	public:
+		virtual ~objref_t() {  }
+		virtual std::string type_name() = 0;
+	};
+	
+	class env_t;
 
+	class invoke_t
+	{
+	private:
+		std::string m_funcName;
+		env_t *m_env;
+		vardata_t &m_resultVal;
+		std::vector< vardata_t > m_argList;
+
+		std::string m_error;
+		bool m_hasError;
+		
+	public:
+		invoke_t( const std::string &n, env_t *e, vardata_t &result) 
+			: m_funcName(n), m_env(e), m_hasError(false), m_resultVal(result) { }
+		env_t *env() { return m_env; }
+		std::string name() { return m_funcName; }
+		vardata_t &result() { return m_resultVal; }
+
+		std::vector< vardata_t > &arg_list() { return m_argList; }
+		size_t arg_count() { return m_argList.size(); }
+		vardata_t &arg(size_t idx) throw( error_t ) {
+			if (idx < m_argList.size())	return m_argList[idx].deref();
+			else throw error_t( "invalid access to function argument");
+		}
+
+		//bool call( const std::string &name, std::vector< vardata_t > &args, vardata_t &result );
+
+		void error( const std::string &text ) { m_error = text; m_hasError = true; }
+		std::string error() { return m_error; }
+		bool has_error() { return m_hasError; }
+	};
+
+	typedef void (*fcall_t)( lk::invoke_t& );
+	typedef unordered_map< std::string, fcall_t > funchash_t;
+	
 	class env_t
 	{
 	private:
-		varhash_t m_hash;
-		varhash_t::iterator m_iter;
-		env_t *m_parent;
+		varhash_t m_varHash;
+		varhash_t::iterator m_varIter;
+
+		funchash_t m_funcHash;
+		std::vector< objref_t* > m_objTable;
+	
+		env_t *m_parent;		
 	public:
 		env_t();
 		env_t(env_t *p);
@@ -133,6 +183,14 @@ namespace lk {
 		const char *next();
 		unsigned int size();
 		env_t *parent();
+		
+		void register_func( const std::string &name, fcall_t f );
+		fcall_t lookup_func( const std::string &name );
+
+		size_t insert_object( objref_t *o );
+		bool destroy_object( objref_t *o );
+		objref_t *query_object( size_t ref );
+		
 	};
 
 }; // namespace lk

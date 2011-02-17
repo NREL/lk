@@ -359,24 +359,29 @@ void LKFrame::SaveCode()
 	else wxMessageBox("Could not write: " + tf);
 }
 
-class m_wxio : public lk::std_io
+void fcall_info( lk::invoke_t &cxt )
 {
-private:
-	LKFrame *frm;
-public:
-	m_wxio(LKFrame *f) : frm(f) {  }
-	
-	virtual std::string input()
-	{
-		wxString text = wxGetTextFromUser("Enter input:");
-		return std::string( (const char*) text.c_str() );
-	}
+	cxt.arg(0).assign("no_1");
+	cxt.arg(1).assign("no_2");
+	cxt.arg(2).assign("no_3");
+}
 
-	virtual void output(const std::string &text)
-	{
-		if (frm) frm->Post( text.c_str() );
-	}
-};
+void fcall_output( lk::invoke_t &cxt )
+{
+	for (size_t i=0;i<cxt.arg_count();i++)
+		app_frame->Post( (const char*)cxt.arg(i).as_string().c_str());
+}
+
+void fcall_input(  lk::invoke_t &cxt )
+{
+	cxt.result().assign( std::string((const char*)wxGetTextFromUser("Standard Input:").c_str()) );
+}
+
+/*void fcall_call_internal( lk::invoke_t &cxt )
+{
+	cxt.call( cxt.arg(0).as_string(), cxt.arg_list(), cxt.result() );
+}*/
+
 
 void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 {
@@ -398,8 +403,11 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 			applog("parsed: %d nodes allocated, next: %s\n", lk::_node_alloc, lk::lexer::tokstr(parse.token()) );
 		
 		
-			if (parse.token() != lk::lexer::END)
+			if ( parse.error_count() != 0 
+				|| parse.token() != lk::lexer::END)
+			{
 				applog("!\tparsing did not reach end of input\n");
+			}
 			else
 			{			
 				std::string str;
@@ -407,13 +415,17 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 				Post(str.c_str());
 				Post("\n\n");
 				
-				m_wxio io(this);
 
 				lk::env_t env;
+				env.register_func( "in", fcall_input );
+				env.register_func( "out", fcall_output );
+				env.register_func( "info", fcall_info );
+
 				lk::vardata_t result;
 				int ctl_id = lk::CTL_NONE;
 				wxStopWatch sw;
-				if (lk::eval( tree, &env, &io, result, false, ctl_id ))
+				std::vector<std::string> errors;
+				if ( lk::eval( tree, &env, errors, result, false, ctl_id ) )
 				{
 					long time = sw.Time();
 					applog("elapsed time: %ld msec\n", time);
@@ -428,7 +440,11 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 
 				}
 				else
+				{
 					Post("eval fail\n");
+					for (size_t i=0;i<errors.size();i++)
+						Post( errors[i].c_str() );
+				}
 			}
 			
 			int i=0;
