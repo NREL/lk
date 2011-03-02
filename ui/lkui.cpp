@@ -374,7 +374,7 @@ void fcall_output( lk::invoke_t &cxt )
 
 void fcall_input(  lk::invoke_t &cxt )
 {
-	cxt.result().assign( std::string((const char*)wxGetTextFromUser("Standard Input:").c_str()) );
+	cxt.result().assign( std::string((const char*)wxGetTextFromUser("Standard Input:").c_str()) );	
 }
 
 /*void fcall_call_internal( lk::invoke_t &cxt )

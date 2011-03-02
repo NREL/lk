@@ -128,6 +128,7 @@ namespace lk {
 	class invoke_t
 	{
 	private:
+		int m_mode;
 		std::string m_funcName;
 		env_t *m_env;
 		vardata_t &m_resultVal;
@@ -137,8 +138,11 @@ namespace lk {
 		bool m_hasError;
 		
 	public:
-		invoke_t( const std::string &n, env_t *e, vardata_t &result) 
-			: m_funcName(n), m_env(e), m_hasError(false), m_resultVal(result) { }
+		enum { CALL, INFO };
+
+		invoke_t( int mode, const std::string &n, env_t *e, vardata_t &result) 
+			: m_mode(mode), m_funcName(n), m_env(e), m_hasError(false), m_resultVal(result) { }
+
 		env_t *env() { return m_env; }
 		std::string name() { return m_funcName; }
 		vardata_t &result() { return m_resultVal; }
@@ -147,7 +151,7 @@ namespace lk {
 		size_t arg_count() { return m_argList.size(); }
 		vardata_t &arg(size_t idx) throw( error_t ) {
 			if (idx < m_argList.size())	return m_argList[idx].deref();
-			else throw error_t( "invalid access to function argument");
+			else throw error_t( "invalid access to function argument %d, only %d given", idx, m_argList.size());
 		}
 
 		//bool call( const std::string &name, std::vector< vardata_t > &args, vardata_t &result );
