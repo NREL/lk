@@ -30,12 +30,12 @@
 
 #include "lkui.h"
 
-#include "../core/lk_absyn.h"
-#include "../core/lk_lex.h"
-#include "../core/lk_parse.h"
-#include "../core/lk_pretty.h"
-#include "../core/lk_env.h"
-#include "../core/lk_eval.h"
+#include "../lk_absyn.h"
+#include "../lk_env.h"
+#include "../lk_eval.h"
+#include "../lk_parse.h"
+#include "../lk_lex.h"
+#include "../lk_stdlib.h"
 
 /* exported application global variables */
 
@@ -359,29 +359,18 @@ void LKFrame::SaveCode()
 	else wxMessageBox("Could not write: " + tf);
 }
 
-void fcall_info( lk::invoke_t &cxt )
-{
-	cxt.arg(0).assign("no_1");
-	cxt.arg(1).assign("no_2");
-	cxt.arg(2).assign("no_3");
-}
-
 void fcall_output( lk::invoke_t &cxt )
 {
+	LK_DOC("out", "Output data to the console.", "(...):none");
 	for (size_t i=0;i<cxt.arg_count();i++)
 		app_frame->Post( (const char*)cxt.arg(i).as_string().c_str());
 }
 
 void fcall_input(  lk::invoke_t &cxt )
 {
+	LK_DOC("in", "Input text from the user.", "(none):string");
 	cxt.result().assign( std::string((const char*)wxGetTextFromUser("Standard Input:").c_str()) );	
 }
-
-/*void fcall_call_internal( lk::invoke_t &cxt )
-{
-	cxt.call( cxt.arg(0).as_string(), cxt.arg_list(), cxt.result() );
-}*/
-
 
 void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 {
@@ -417,15 +406,19 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 				
 
 				lk::env_t env;
-				env.register_func( "in", fcall_input );
-				env.register_func( "out", fcall_output );
-				env.register_func( "info", fcall_info );
+				env.register_func( fcall_input );
+				env.register_func( fcall_output );
+
+				env.register_funcs( lk::stdlib_basic() );
+				env.register_funcs( lk::stdlib_string() );
+				env.register_funcs( lk::stdlib_math() );
+
 
 				lk::vardata_t result;
-				int ctl_id = lk::CTL_NONE;
+				unsigned int ctl_id = lk::CTL_NONE;
 				wxStopWatch sw;
 				std::vector<std::string> errors;
-				if ( lk::eval( tree, &env, errors, result, false, ctl_id ) )
+				if ( lk::eval( tree, &env, errors, result, 0, ctl_id, 0, 0 ) )
 				{
 					long time = sw.Time();
 					applog("elapsed time: %ld msec\n", time);

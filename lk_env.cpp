@@ -1,10 +1,14 @@
 #include <algorithm>
+#include <cstring>
+#include <cstdlib>
 
 #include "lk_env.h"
+#include "lk_eval.h"
 
-#ifdef _MSC_VER
-#define strcasecmp _stricmp
+#if defined(_MSC_VER)||defined(WIN32)
+#define strcasecmp stricmp
 #endif
+
 
 static const unsigned long _nan[2]={0xffffffff, 0x7fffffff};
 const double lk::vardata_t::nanval = *( double* )_nan;
@@ -12,6 +16,12 @@ const double lk::vardata_t::nanval = *( double* )_nan;
 lk::vardata_t::vardata_t()
 {
 	m_type = NULLVAL;
+}
+
+lk::vardata_t::vardata_t(const vardata_t &cp)
+{
+	m_type = NULLVAL;
+	copy( const_cast<vardata_t&>(cp) );
 }
 
 lk::vardata_t::~vardata_t()
@@ -35,13 +45,22 @@ bool lk::vardata_t::as_boolean()
 	return true;
 }
 
+unsigned int lk::vardata_t::as_unsigned()
+{
+	return (unsigned int)as_number();
+}
+
+int lk::vardata_t::as_integer()
+{
+	return (int)as_number();
+}
+
 std::string lk::vardata_t::as_string()
 {
 	switch (m_type)
 	{
 	case NULLVAL: return "<null>";
 	case REFERENCE: return ref()->as_string();
-	/*case POINTER: return "<pointer>";*/
 	case NUMBER:
 		{
 			char buf[1024];
@@ -211,10 +230,9 @@ std::string lk::vardata_t::typestr()
 	case REFERENCE: return "reference";
 	case NUMBER: return "number";
 	case STRING: return "string";
-	case VECTOR: return "vector";
-	case HASH: return "hash";
+	case VECTOR: return "array";
+	case HASH: return "table";
 	case FUNCTION: return "function";
-	/*case POINTER: return "pointer";*/
 	default: return "invalid?";
 	}
 }
@@ -344,7 +362,7 @@ void lk::vardata_t::unassign( const std::string &key )
 	}
 }
 
-void lk::vardata_t::assign( node_t *func )
+void lk::vardata_t::assign( expr_t *func )
 {
 	nullify();
 	m_type = FUNCTION;
@@ -371,11 +389,6 @@ void lk::vardata_t::resize( size_t n )
 	reinterpret_cast<std::vector<vardata_t>*>(m_u.p)->resize( n );
 }
 
-/*lk::vardata_t *lk::vardata_t::pointer() throw(error_t)
-{
-	if (m_type != POINTER) throw error_t("access violation to non-pointer data");
-	return reinterpret_cast<vardata_t*>(m_u.p);
-}*/
 
 double &lk::vardata_t::num() throw(error_t)
 {
@@ -409,6 +422,20 @@ std::vector<lk::vardata_t> *lk::vardata_t::vec() throw(error_t)
 	return reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
 }
 
+void lk::vardata_t::vec_append( double d ) throw(error_t)
+{
+	vardata_t v;
+	v.assign(d);
+	vec()->push_back( v );
+}
+
+void lk::vardata_t::vec_append( const std::string &s ) throw(error_t)
+{
+	vardata_t v;
+	v.assign(s);
+	vec()->push_back( v );
+}
+
 size_t lk::vardata_t::length()
 {
 	switch(m_type)
@@ -420,10 +447,10 @@ size_t lk::vardata_t::length()
 	}
 }
 
-lk::node_t *lk::vardata_t::func() throw(error_t)
+lk::expr_t *lk::vardata_t::func() throw(error_t)
 {
 	if (m_type != FUNCTION) throw error_t("access violation to non-function data");
-	return reinterpret_cast< node_t* >(m_u.p);
+	return reinterpret_cast< expr_t* >(m_u.p);
 }
 
 lk::varhash_t *lk::vardata_t::hash() throw(error_t)
@@ -432,11 +459,53 @@ lk::varhash_t *lk::vardata_t::hash() throw(error_t)
 	return reinterpret_cast< varhash_t* > (m_u.p);
 }
 
+void lk::vardata_t::hash_item( const std::string &key, double d ) throw(error_t)
+{
+	varhash_t *h = hash();
+	varhash_t::iterator it = h->find(key);
+	if (it != h->end())
+		(*it).second->assign(d);
+	else
+	{
+		vardata_t *t = new vardata_t;
+		t->assign(d);
+		(*h)[key] = t;
+	}
+}
+
+void lk::vardata_t::hash_item( const std::string &key, const std::string &s ) throw(error_t)
+{
+	varhash_t *h = hash();
+	varhash_t::iterator it = h->find(key);
+	if (it != h->end())
+		(*it).second->assign(s);
+	else
+	{
+		vardata_t *t = new vardata_t;
+		t->assign(s);
+		(*h)[key] = t;
+	}
+}
+
+void lk::vardata_t::hash_item( const std::string &key, const vardata_t &v ) throw(error_t)
+{
+	varhash_t *h = hash();
+	varhash_t::iterator it = h->find(key);
+	if (it != h->end())
+		(*it).second->copy( const_cast<vardata_t&>(v) );
+	else
+	{
+		vardata_t *t = new vardata_t;
+		t->copy( const_cast<vardata_t&>(v) );
+		(*h)[key] = t;
+	}
+}
+
 lk::vardata_t *lk::vardata_t::index(size_t idx) throw(error_t)
 {
 	if (m_type != VECTOR) throw error_t("access violation to non-array data");
 	register std::vector<vardata_t> &m = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
-	if (idx < 0 || idx >= m.size()) throw error_t("array index out of bounds: %d (len: %d)", (int)idx, (int)m.size());
+	if (idx >= m.size()) throw error_t("array index out of bounds: %d (len: %d)", (int)idx, (int)m.size());
 
 	return &m[idx];
 }
@@ -458,15 +527,22 @@ lk::env_t::env_t(env_t *p) : m_parent(p), m_varIter(m_varHash.begin()) {  }
 
 lk::env_t::~env_t()
 {
-	clear();
+	clear_objs();
+	clear_vars();
+}
+
+void lk::env_t::clear_objs()
+{
 
 	// delete the referenced objects
 	for ( size_t i=0;i<m_objTable.size();i++ )
 		if ( m_objTable[i] )
 			delete m_objTable[i];
+
+	m_objTable.clear();
 }
 
-void lk::env_t::clear()
+void lk::env_t::clear_vars()
 {
 	for ( varhash_t::iterator it = m_varHash.begin(); it !=m_varHash.end(); ++it )
 		delete it->second; // delete the var_data object
@@ -529,26 +605,73 @@ lk::env_t *lk::env_t::parent()
 	return m_parent;
 }
 
+lk::env_t *lk::env_t::global()
+{
+	env_t *p = this;
+
+	while (p->parent())
+		p = p->parent();
+
+	return p;
+}
+
 unsigned int lk::env_t::size()
 {
 	return m_varHash.size();
 }
 
 
-void lk::env_t::register_func( const std::string &name, fcall_t f )
+bool lk::env_t::register_func( fcall_t f, void *user_data )
 {
-	m_funcHash[name] = f;
+	lk::doc_t d;
+	if ( lk::doc_t::info(f, d) && !d.func_name.empty())
+	{
+		fcallinfo_t x;
+		x.f = f;
+		x.user_data = user_data;
+		m_funcHash[d.func_name] = x;
+		return true;
+	}
+
+	return false;
 }
 
-lk::fcall_t lk::env_t::lookup_func( const std::string &name )
+bool lk::env_t::register_funcs( std::vector<fcall_t> l )
+{
+	bool ok = true;
+	for (size_t i=0;i<l.size();i++)
+		ok = ok && register_func( l[i] );
+	return ok;
+}
+
+lk::fcall_t lk::env_t::lookup_func( const std::string &name, void **user_data )
 {
 	funchash_t::iterator it = m_funcHash.find( name );
 	if ( it != m_funcHash.end() )
-		return (*it).second;
+	{
+		if (user_data) *user_data = (*it).second.user_data;
+		return (*it).second.f;
+	}
 	else if ( m_parent )
-		return m_parent->lookup_func( name );
+	{
+		return m_parent->lookup_func( name, user_data );
+	}
 	else
+	{
+		if (user_data) *user_data = 0;
 		return 0;
+	}
+}
+
+std::vector<std::string> lk::env_t::list_funcs()
+{
+	std::vector<std::string> list;
+	for (funchash_t::iterator it = m_funcHash.begin();
+			it != m_funcHash.end();
+			++it)
+		list.push_back( (*it).first );
+
+	return list;
 }
 
 size_t lk::env_t::insert_object( objref_t *o )
@@ -583,19 +706,105 @@ bool lk::env_t::destroy_object( objref_t *o )
 lk::objref_t *lk::env_t::query_object( size_t ref )
 {
 	ref--;
-	if (ref >= 0 && ref < m_objTable.size())
+	if (ref < m_objTable.size())
 		return m_objTable[ref];
 	else
 		return 0;
 }
 
-/*bool lk::invoke_t::call( const std::string &name, std::vector< vardata_t > &args, vardata_t &result )
+void lk::env_t::call( const std::string &name, std::vector< vardata_t > &args, vardata_t &result ) throw( lk::error_t )
 {
-	vardata_t *f = m_env->lookup(name, true);
-	if (!f) return false;
+	vardata_t *f = lookup(name, true);
+	if (!f)	throw lk::error_t("could not locate function name in environment: " + name );
 
-	if ( expr_t *define =
+	if ( expr_t *def = dynamic_cast<expr_t*>( f->deref().func() ))
+	{
+		list_t *argnames = dynamic_cast<list_t*>( def->left );
+		node_t *block = def->right;
+
+		env_t frame( this );
+
+		int nargs_expected = 0;
+		list_t *p = argnames;
+		while(p)
+		{
+			nargs_expected++;
+			p=p->next;
+		}
+
+		int nargs_given = args.size();
+		if (nargs_given < nargs_expected)
+			throw error_t( "too few arguments provided in env::call internal method to function: " + name );
+
+		vardata_t *__args = new vardata_t;
+		__args->empty_vector();
+
+		p = argnames;
+		for (size_t aidx=0; aidx < args.size(); aidx++ )
+		{
+			__args->vec()->push_back( vardata_t( args[aidx] ) );
+
+			if (p)
+			{
+				if (iden_t *id = dynamic_cast<iden_t*>(p->item))
+					frame.assign( id->name, new vardata_t( args[aidx] ));
+
+				p = p->next;
+			}
+		}
+
+		frame.assign("__args", __args);
+
+		unsigned int ctl_id = lk::CTL_NONE;
+		std::vector<std::string> errors;
+		if (!lk::eval( block, &frame, errors, result, 0, ctl_id, 0, 0))
+			throw error_t("error inside function call invoked from env::call");
+	}
+	else
+		throw error_t("function call fail: could not locate internal pointer to " + name);
+}
 
 
-	
-}*/
+bool lk::doc_t::info( fcall_t f, doc_t &d )
+{
+	if (f!=0)
+	{
+		lk::vardata_t dummy_var;
+		lk::invoke_t cxt("", 0, dummy_var, 0);
+		cxt.m_docPtr = &d; // possible b/c friend class
+		d.m_ok = false;
+		(*f)( cxt ); // each function begins LK_DOC which calls invoke_t::document(..), should set m_ok to true
+		return d.m_ok;
+	}
+	else
+		return false;
+}
+
+void lk::doc_t::copy_data( lk::doc_t *p )
+{
+	if (p == 0) return;
+	func_name = p->func_name;
+	notes = p->notes;
+	desc1 = p->desc1;
+	desc2 = p->desc2;
+	desc3 = p->desc3;
+	sig1 = p->sig1;
+	sig2 = p->sig2;
+	sig3 = p->sig3;
+	has_2 = p->has_2;
+	has_3 = p->has_3;
+}
+
+bool lk::invoke_t::doc_mode()
+{
+	return m_docPtr != 0;
+}
+
+void lk::invoke_t::document(doc_t d)
+{
+	if (m_docPtr != 0)
+	{
+		m_docPtr->copy_data(&d);
+		m_docPtr->m_ok = true;
+	}
+}

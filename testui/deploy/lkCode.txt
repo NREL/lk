@@ -1,14 +1,14 @@
 //c = in();
-
-my_callback = define(evt) {
-	out("my_callback was called with " + #__args + " arguments\n");
-};
+
+my_callback = define(evt) {
+	out("my_callback was called with " + #__args + " arguments\n");
+};
 
 a=b=c=d="asdfasdf";//1.40;
-//info(a,b);
-
-text = func_name(my_callback);
-
+//info(a,b);
+
+text = func_name(my_callback);
+
 my_callback("asdf", "asdf", "asdf");
 
 for (i=0;i<10;i++) out("Hello" + i + "\n");

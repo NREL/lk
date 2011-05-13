@@ -1,5 +1,6 @@
 #include <cstdarg>
 #include <cstdlib>
+#include <cstring>
 
 #include "lk_parse.h"
 
@@ -503,14 +504,9 @@ lk::node_t *lk::parser::unary()
 	case lk::lexer::OP_POUND:
 		skip();
 		return new lk::expr_t( line(), expr_t::SIZEOF, unary(), 0 );
-	/*
-	case lk::lexer::OP_BITAND:
+	case lk::lexer::OP_AT:
 		skip();
-		return new lk::expr_t( line(), expr_t::ADDROF, unary(), 0 );
-	case lk::lexer::OP_MULT:
-		skip();
-		return new lk::expr_t( line(), expr_t::DEREF, unary(), 0 );
-	*/
+		return new lk::expr_t( line(), expr_t::KEYSOF, unary(), 0 );
 	case lk::lexer::IDENTIFIER:
 		if (lex.text() == "typeof")
 		{
@@ -568,13 +564,7 @@ lk::node_t *lk::parser::postfix()
 
 			obj->append(x) is syntactic sugar for 
 					obj.append(obj, x)
-			and     obj{"append"}( obj{"append"}, x )
-		
-			syntactic translation copies the syntax tree for obj{"append"}
-			which if evaluated directly will slow down an unintelligent interpreter
-		
-			perhaps better to simply note the dereference operator and perform
-			the transformation at run-time (not what is done here, right now)
+			and     obj{"append"}( obj, x )
 
 			basic class definition of a pair with a method:
 		
@@ -610,13 +600,13 @@ lk::node_t *lk::parser::postfix()
 			match( lk::lexer::SEP_LPAREN );
 			list_t *arg_list = ternarylist( lk::lexer::SEP_COMMA, lk::lexer::SEP_RPAREN );
 			match( lk::lexer::SEP_RPAREN );
-
-			// augment argument list with copy of left hand primary expression first item
-			arg_list = new list_t( line(), 
-								left->make_copy(),
-								arg_list );
 			
-			left = new expr_t( line(), expr_t::CALL,
+
+			// at execution, the THISCALL mode
+			// will cause a reference to the result of
+			// the left hand primary expression to be passed
+			// as the first argument in the list
+			left = new expr_t( line(), expr_t::THISCALL,
 						new expr_t( line(), expr_t::HASH, 
 							left,  // primary expression on left of ->  (i.e. 'obj')
 							new literal_t( line(), method_iden )),
@@ -652,6 +642,35 @@ lk::node_t *lk::parser::primary()
 		n = ternary();
 		match(lk::lexer::SEP_RPAREN);
 		return n;
+	case lk::lexer::SEP_LBRACK:
+		skip();
+		n = ternarylist(lk::lexer::SEP_COMMA, lk::lexer::SEP_RBRACK);
+		match( lk::lexer::SEP_RBRACK );
+		return new lk::expr_t( line(), lk::expr_t::INITVEC, n, 0 );
+	case lk::lexer::SEP_LCURLY:
+		{
+			skip();
+			list_t *head=0, *tail=0;
+			while ( token() != lk::lexer::INVALID
+				&& token() != lk::lexer::END
+				&& token() != lk::lexer::SEP_RCURLY
+				&& !m_haltFlag )
+			{
+				list_t *link = new list_t( line(), assignment(), 0 );
+
+				if ( !head ) head = link;
+
+				if (tail) tail->next = link;
+
+				tail = link;
+
+				if ( token() != lk::lexer::SEP_RCURLY )
+					if (!match( lk::lexer::SEP_COMMA ))
+						m_haltFlag = true;
+			}
+			match(lk::lexer::SEP_RCURLY );
+			return new lk::expr_t( line(), lk::expr_t::INITHASH, head, 0 );
+		}
 	case lk::lexer::NUMBER:
 		n = new lk::constant_t( line(), lex.value() );
 		skip();
@@ -682,8 +701,14 @@ lk::node_t *lk::parser::primary()
 		}
 		else
 		{
-			n = new lk::iden_t( line(), lex.text() );
-			skip();
+			bool local = false;
+			if (lex.text() == "local")
+			{
+				local = true;
+				skip();
+			}
+			n = new lk::iden_t( line(), lex.text(), local );
+			match(lk::lexer::IDENTIFIER);
 		}
 		return n;
 	default:
@@ -718,13 +743,14 @@ lk::list_t *lk::parser::ternarylist( int septok, int endtok)
 	return head;
 }
 
+
 lk::list_t *lk::parser::identifierlist( int septok, int endtok)
 {
 	list_t *head=0, *tail=0;
 		
 	while ( !m_haltFlag && token(lk::lexer::IDENTIFIER) )
 	{
-		list_t *link = new list_t( line(), new iden_t( line(), lex.text() ), 0 );
+		list_t *link = new list_t( line(), new iden_t( line(), lex.text(), false ), 0 );
 		
 		if ( !head ) head = link;
 		
