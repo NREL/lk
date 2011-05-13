@@ -7,7 +7,7 @@
 
 namespace lk
 {
-	class parser
+	class LKEXPORT parser
 	{
 	public:
 		parser( input_base &input);

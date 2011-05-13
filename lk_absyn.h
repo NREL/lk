@@ -4,17 +4,24 @@
 #include <string>
 #include <vector>
 
+
+#if defined(WIN32)&&defined(__DLL__)
+#define LKEXPORT __declspec(dllexport)
+#else
+#define LKEXPORT
+#endif
+
 namespace lk {
 
 	extern int _node_alloc;
 	
-	class attr_t
+	class LKEXPORT attr_t
 	{
 	public:
 		virtual ~attr_t() {  };
 	};
 
-	class node_t
+	class LKEXPORT node_t
 	{
 	private:
 		int m_line;
@@ -25,7 +32,7 @@ namespace lk {
 		inline int line() { return m_line; }
 	};
 	
-	class list_t : public node_t
+	class LKEXPORT list_t : public node_t
 	{
 	public:
 		node_t *item;
@@ -34,7 +41,7 @@ namespace lk {
 		virtual ~list_t() { if (item) delete item; if (next) delete next; }
 	};
 					
-	class iter_t : public node_t
+	class LKEXPORT iter_t : public node_t
 	{
 	public:
 		node_t *init, *test, *adv, *block;
@@ -42,7 +49,7 @@ namespace lk {
 		virtual ~iter_t() { if (init) delete init; if (test) delete test; if (adv) delete adv; if (block) delete block; }
 	};
 	
-	class cond_t : public node_t
+	class LKEXPORT cond_t : public node_t
 	{
 	public:
 		node_t *test, *on_true, *on_false;
@@ -50,7 +57,7 @@ namespace lk {
 		virtual ~cond_t() { if (test) delete test; if (on_true) delete on_true; if (on_false) delete on_false; }
 	};
 	
-	class expr_t : public node_t
+	class LKEXPORT expr_t : public node_t
 	{
 	public:
 		enum {
@@ -96,7 +103,7 @@ namespace lk {
 		virtual ~expr_t() { if (left) delete left; if (right) delete right; }
 	};
 				
-	class iden_t : public node_t
+	class LKEXPORT iden_t : public node_t
 	{
 	public:
 		std::string name;
@@ -105,7 +112,7 @@ namespace lk {
 		virtual ~iden_t() { }
 	};
 				
-	class constant_t : public node_t
+	class LKEXPORT constant_t : public node_t
 	{
 	public:
 		double value;
@@ -113,7 +120,7 @@ namespace lk {
 		virtual ~constant_t() {  }
 	};
 	
-	class literal_t : public node_t
+	class LKEXPORT literal_t : public node_t
 	{
 	public:
 		std::string value;
@@ -121,14 +128,14 @@ namespace lk {
 		virtual ~literal_t() {  }
 	};
 
-	class null_t : public node_t
+	class LKEXPORT null_t : public node_t
 	{
 	public:
 		null_t( int line ) : node_t(line) {  }
 		virtual ~null_t() {  }
 	};
 
-	void pretty_print( std::string &str, node_t *root, int level );
+	void LKEXPORT pretty_print( std::string &str, node_t *root, int level );
 };
 
 #endif

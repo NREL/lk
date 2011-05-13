@@ -27,11 +27,11 @@ using std::tr1::unordered_map;
 
 namespace lk {
 
-	class vardata_t;
+	class LKEXPORT vardata_t;
 	typedef unordered_map< std::string, vardata_t* > varhash_t;
 		
 	
-	class error_t : public std::exception
+	class LKEXPORT error_t : public std::exception
 	{
 	public:
 		error_t() : text("general data exception") {  }
@@ -49,7 +49,7 @@ namespace lk {
 		virtual const char *what() const throw (){ return text.c_str(); }
 	};
 
-	class vardata_t
+	class LKEXPORT vardata_t
 	{
 	private:
 		unsigned char m_type;
@@ -129,7 +129,7 @@ namespace lk {
 
 	};
 	
-	class objref_t
+	class LKEXPORT objref_t
 	{
 	public:
 		virtual ~objref_t() {  }
@@ -141,14 +141,14 @@ namespace lk {
 
 	typedef void (*fcall_t)( lk::invoke_t& );
 
-	struct fcallinfo_t {
+	struct LKEXPORT fcallinfo_t {
 		fcall_t f;
 		void *user_data;
 	};
 
 	typedef unordered_map< std::string, fcallinfo_t > funchash_t;
 
-	class doc_t
+	class LKEXPORT doc_t
 	{
 	friend class invoke_t;
 	public:
@@ -195,7 +195,7 @@ namespace lk {
 		bool m_ok;
 	};
 
-	class invoke_t
+	class LKEXPORT invoke_t
 	{
 		friend class doc_t;
 	private:
@@ -233,7 +233,7 @@ namespace lk {
 		bool has_error() { return m_hasError; }
 	};
 	
-	class env_t
+	class LKEXPORT env_t
 	{
 	private:
 		env_t *m_parent;

@@ -10,7 +10,7 @@ namespace lk {
 
 	enum { CTL_NONE, CTL_BREAK, CTL_CONTINUE, CTL_RETURN, CTL_EXIT };
 
-	bool eval( node_t *root, 
+	LKEXPORT bool eval( node_t *root, 
 		env_t *env, 
 		std::vector< std::string > &errors, 
 		vardata_t &result,
