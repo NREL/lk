@@ -676,40 +676,53 @@ std::vector<std::string> lk::env_t::list_funcs()
 
 size_t lk::env_t::insert_object( objref_t *o )
 {
-	std::vector< objref_t* >::iterator pos = std::find(m_objTable.begin(), m_objTable.end(), o);
-	if ( pos != m_objTable.end())
+	if ( env_t *g = global() )
 	{
-		return (pos-m_objTable.begin()) + 1;
+		std::vector< objref_t* >::iterator pos = std::find(g->m_objTable.begin(), g->m_objTable.end(), o);
+		if ( pos != g->m_objTable.end())
+		{
+			return (pos - g->m_objTable.begin()) + 1;
+		}
+		else
+		{
+			g->m_objTable.push_back( o );
+			return g->m_objTable.size();
+		}
 	}
 	else
-	{
-		m_objTable.push_back( o );
-		return m_objTable.size();
-	}
+		return 0;
 }
 
 bool lk::env_t::destroy_object( objref_t *o )
 {
-	std::vector< objref_t* >::iterator pos = std::find(m_objTable.begin(), m_objTable.end(), o);
-	if (pos != m_objTable.end())
+	if ( env_t *g = global() )
 	{
-		if (*pos != 0)
-			delete (*pos);
+		std::vector< objref_t* >::iterator pos = std::find(g->m_objTable.begin(), g->m_objTable.end(), o);
+		if (pos != g->m_objTable.end())
+		{
+			if (*pos != 0)
+				delete (*pos);
 
-		m_objTable.erase( pos );
-		return true;
+			g->m_objTable.erase( pos );
+			return true;
+		}
+		else
+			return false;
 	}
-	else
-		return false;
+	else return false;
 }
 
 lk::objref_t *lk::env_t::query_object( size_t ref )
 {
-	ref--;
-	if (ref < m_objTable.size())
-		return m_objTable[ref];
-	else
-		return 0;
+	if ( env_t *g = global() )
+	{
+		ref--;
+		if (ref < g->m_objTable.size())
+			return g->m_objTable[ref];
+		else
+			return 0;
+	}
+	else return 0;
 }
 
 void lk::env_t::call( const std::string &name, std::vector< vardata_t > &args, vardata_t &result ) throw( lk::error_t )
