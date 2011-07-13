@@ -1,8 +1,9 @@
 VPATH = ..
 CC = gcc
 CXX = g++
-CFLAGS = -Wall -O2
+CFLAGS = -arch i386 -fPIC -Wall -O2
 CXXFLAGS = $(CFLAGS)
+LDFLAGS = -lm -lstdc++ -arch i386
 
 LIBNAME = lk
 TARGET = $(LIBNAME).dylib
@@ -16,7 +17,7 @@ OBJECTS = \
 	lk_stdlib.o
 
 $(TARGET) : $(OBJECTS)
-	$(CXX) -shared -o $(TARGET) $(OBJECTS) 
+	$(CXX) $(LDFLAGS) -dynamiclib -flat_namespace -shared -o $@ $^ 
 
 clean:
 	rm -rf *.o $(TARGET)
