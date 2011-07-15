@@ -1,9 +1,9 @@
 VPATH = ..
 CC = gcc
 CXX = g++
-CFLAGS = -arch i386 -fPIC -Wall -O2
+CFLAGS = -arch i386 -fPIC -Wall -O2 -D__WX__ -D__WXMAC__ `wx-config-dsa --cflags`
 CXXFLAGS = $(CFLAGS)
-LDFLAGS = -lm -lstdc++ -arch i386
+LDFLAGS = `wx-config-dsa --libs` -lm -lstdc++ -arch i386
 
 LIBNAME = lk
 TARGET = $(LIBNAME).dylib
