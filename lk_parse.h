@@ -49,9 +49,9 @@ namespace lk
 		
 		lexer lex;				
 		int m_tokType;		
-		std::string m_lexError;
+		lk_string m_lexError;
 		bool m_haltFlag;
-		std::vector<std::string> m_errorList;
+		std::vector<lk_string> m_errorList;
 	};
 };
 

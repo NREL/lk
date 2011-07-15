@@ -94,7 +94,7 @@ void lk::parser::error( const char *fmt, ... )
 		vsnprintf( p, 480, fmt, list );
 	#endif
 	
-	m_errorList.push_back(std::string(buf));
+	m_errorList.push_back(lk_string(buf));
 	va_end( list );
 }
 
@@ -594,7 +594,7 @@ lk::node_t *lk::parser::postfix()
 				skip();
 			}			
 
-			std::string method_iden = lex.text();			
+			lk_string method_iden = lex.text();			
 			skip();
 
 			match( lk::lexer::SEP_LPAREN );
@@ -702,12 +702,18 @@ lk::node_t *lk::parser::primary()
 		else
 		{
 			bool local = false;
-			if (lex.text() == "local")
+			bool constval = false;
+			
+			int nmod = 0;
+			while( nmod++ < 2 && (lex.text() == "local" || lex.text() == "const" ))
 			{
-				local = true;
+				if (lex.text() == "local") local = true;
+				else constval = true;
 				skip();
 			}
-			n = new lk::iden_t( line(), lex.text(), local );
+
+
+			n = new lk::iden_t( line(), lex.text(), local, constval );
 			match(lk::lexer::IDENTIFIER);
 		}
 		return n;
@@ -750,7 +756,7 @@ lk::list_t *lk::parser::identifierlist( int septok, int endtok)
 		
 	while ( !m_haltFlag && token(lk::lexer::IDENTIFIER) )
 	{
-		list_t *link = new list_t( line(), new iden_t( line(), lex.text(), false ), 0 );
+		list_t *link = new list_t( line(), new iden_t( line(), lex.text(), false, false ), 0 );
 		
 		if ( !head ) head = link;
 		

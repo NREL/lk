@@ -1,10 +1,73 @@
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #include <sstream>
 
 #include "lk_absyn.h"
 #include "lk_lex.h"
+
+
+#if defined(__WX__)
+
+lk_char lk::lower_char( lk_char c )
+{
+	return wxTolower(c);
+}
+
+lk_char lk::upper_char( lk_char c )
+{
+	return wxToupper(c);
+}
+
+bool lk::convert_integer(const lk_string &str, int *x)
+{
+	long lval;
+	bool ok = str.ToLong(&lval);
+	if (ok)
+	{
+		*x = (int) lval;
+		return true;
+	}
+	else return false;
+}
+
+bool lk::convert_double(const lk_string &str, double *x)
+{
+	return str.ToDouble(x);
+}
+
+#else
+
+lk_char lk::lower_char( lk_char c )
+{
+	return ::tolower( c );
+}
+
+lk_char lk::upper_char( lk_char c )
+{
+	return ::toupper( c );
+}
+
+bool lk::convert_integer(const lk_string &str, int *x)
+{
+	const lk_char *startp = str.c_str();
+	lk_char *endp = NULL;
+	*x = ::strtol( startp, &endp, 10 );
+	return !*endp && (endp!=startp);
+}
+
+bool lk::convert_double(const lk_string &str, double *x)
+{
+	const lk_char *startp = str.c_str();
+	lk_char *endp = NULL;
+	*x = ::strtod( startp, &endp );
+	return !*endp && (endp!=startp);
+}
+
+#endif
+
 
 int lk::_node_alloc = 0;
 
@@ -49,14 +112,14 @@ const char *lk::expr_t::operstr()
 	}
 }
 
-static std::string spacer(int lev)
+static lk_string spacer(int lev)
 {
-	std::string ret;
-	for (int i=0;i<lev;i++) ret += "   ";
+	lk_string ret;
+	for (int i=0;i<lev;i++) ret += lk_string("   ");
 	return ret;
 }
 
-void lk::pretty_print( std::string &str, node_t *root, int level )
+void lk::pretty_print( lk_string &str, node_t *root, int level )
 {
 	if (!root) return;
 

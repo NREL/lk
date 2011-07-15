@@ -399,7 +399,7 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 			}
 			else
 			{			
-				std::string str;
+				lk_string str;
 				lk::pretty_print( str, tree, 0 );
 				Post(str.c_str());
 				Post("\n\n");
@@ -412,23 +412,25 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 				env.register_funcs( lk::stdlib_basic() );
 				env.register_funcs( lk::stdlib_string() );
 				env.register_funcs( lk::stdlib_math() );
+				env.register_funcs( lk::stdlib_wxui() );
 
 
 				lk::vardata_t result;
 				unsigned int ctl_id = lk::CTL_NONE;
 				wxStopWatch sw;
-				std::vector<std::string> errors;
+				std::vector<lk_string> errors;
 				if ( lk::eval( tree, &env, errors, result, 0, ctl_id, 0, 0 ) )
 				{
 					long time = sw.Time();
 					applog("elapsed time: %ld msec\n", time);
 
-					const char *key = env.first();
-					while( key )
+					lk_string key;
+					lk::vardata_t *value;
+					bool has_more = env.first( key, value );
+					while( has_more )
 					{
-						lk::vardata_t *v = env.lookup(key, false);
-						applog("env{%s}=%s\n", key, v->as_string().c_str());
-						key = env.next();
+						applog("env{%s}=%s\n", key, value->as_string().c_str());
+						has_more = env.next( key, value );
 					}
 
 				}

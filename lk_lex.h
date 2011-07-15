@@ -1,7 +1,6 @@
 #ifndef __lk_lex_h
 #define __lk_lex_h
 
-#include <string>
 #include <cstdio>
 
 /* 
@@ -47,7 +46,7 @@ namespace lk {
 		char *m_buf;
 		char *m_p;
 	public:
-		input_string( const std::string &in );
+		input_string( const lk_string &in );
 		virtual ~input_string();
 		virtual char operator*();
 		virtual char operator++(int);
@@ -111,19 +110,19 @@ namespace lk {
 
 		int next();
 		
-		std::string text();
+		lk_string text();
 		double value();
 
 		int line();
-		std::string error();
+		lk_string error();
 
 	private:
 		void whitespace();
 		void comments();
 
-		std::string m_error;
+		lk_string m_error;
 		int m_line;
-		std::string m_buf;
+		lk_string m_buf;
 		double m_val;
 		
 		input_base &p;

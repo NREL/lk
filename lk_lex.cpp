@@ -53,7 +53,7 @@ char lk::input_stream::peek()
 	return 0;
 }
 
-lk::input_string::input_string( const std::string &in )
+lk::input_string::input_string( const lk_string &in )
 {
 	m_buf = new char[in.length()+1];
 	strcpy(m_buf, in.c_str());
@@ -89,7 +89,7 @@ lk::lexer::lexer( input_base &input )
 	m_val = 0.0;
 }	
 
-std::string lk::lexer::text()
+lk_string lk::lexer::text()
 {
 	return m_buf;
 }
@@ -104,7 +104,7 @@ int lk::lexer::line()
 	return m_line;
 }
 
-std::string lk::lexer::error()
+lk_string lk::lexer::error()
 {
 	return m_error;
 }
@@ -317,7 +317,7 @@ int lk::lexer::next()
 					p++; // skip escape sequence
 					while (*p && *p != '"') p++; // skip to end of string literal despite error
 					
-					m_error = std::string("invalid escape sequence \\") + cerr;
+					m_error = lk_string("invalid escape sequence \\") + cerr;
 					return INVALID;
 				}
 			}
@@ -339,7 +339,7 @@ int lk::lexer::next()
 		return LITERAL;
 	}
 
-	m_error = std::string("token beginning with '");
+	m_error = lk_string("token beginning with '");
 	m_error += *p;
 	m_error += "  ascii: ";
 	char buf[16];

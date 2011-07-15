@@ -1,17 +1,58 @@
 #ifndef __lk_absyn_h
 #define __lk_absyn_h
 
-#include <string>
 #include <vector>
-
 
 #if defined(WIN32)&&defined(__DLL__)
 #define LKEXPORT __declspec(dllexport)
+#define LKTEMPLATE
 #else
 #define LKEXPORT
+#define LKTEMPLATE extern
 #endif
 
-namespace lk {
+#ifdef _MSC_VER
+#include <unordered_map>
+using std::tr1::unordered_map;
+#pragma warning(disable: 4290)  // ignore warning: 'C++ exception specification ignored except to indicate a function is not __declspec(nothrow)'
+#else
+#include <tr1/unordered_map>
+using std::tr1::unordered_map;
+#endif
+
+
+#if defined(__WX__)
+#include <wx/string.h>
+#include <wx/hashmap.h>
+
+typedef wxChar lk_char;
+typedef wxString lk_string;
+
+typedef wxStringHash lk_string_hash;
+typedef wxStringEqual lk_string_equal;
+
+#else
+#include <string>
+
+typedef std::string::value_type lk_char;
+typedef std::string lk_string;
+
+#ifdef _MSC_VER
+typedef std::hash<std::string> lk_string_hash;
+#else
+typedef std::tr1::hash<std::string> lk_string_hash;
+#endif
+typedef std::equal_to<std::string> lk_string_equal;
+
+#endif
+
+namespace lk
+{
+	lk_char lower_char( lk_char c );
+	lk_char upper_char( lk_char c );
+	bool convert_integer( const lk_string &str, int *x );
+	bool convert_double( const lk_string &str, double *x );
+
 
 	extern int _node_alloc;
 	
@@ -106,9 +147,10 @@ namespace lk {
 	class LKEXPORT iden_t : public node_t
 	{
 	public:
-		std::string name;
+		lk_string name;
 		bool local;
-		iden_t(int line, const std::string &n, bool loc) : node_t(line), name(n), local(loc) {  }
+		bool constval;
+		iden_t(int line, const lk_string &n, bool loc, bool cons) : node_t(line), name(n), local(loc), constval(cons) {  }
 		virtual ~iden_t() { }
 	};
 				
@@ -123,8 +165,8 @@ namespace lk {
 	class LKEXPORT literal_t : public node_t
 	{
 	public:
-		std::string value;
-		literal_t(int line, const std::string &s) : node_t(line), value(s) {  }
+		lk_string value;
+		literal_t(int line, const lk_string &s) : node_t(line), value(s) {  }
 		virtual ~literal_t() {  }
 	};
 
@@ -135,7 +177,7 @@ namespace lk {
 		virtual ~null_t() {  }
 	};
 
-	void LKEXPORT pretty_print( std::string &str, node_t *root, int level );
+	void LKEXPORT pretty_print( lk_string &str, node_t *root, int level );
 };
 
 #endif

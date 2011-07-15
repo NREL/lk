@@ -3,10 +3,16 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <limits>
+#include <climits>
+#include <math.h>
+#include <float.h>
 
 #ifdef _WIN32
 #include <direct.h>
 #include <windows.h>
+
+#define lk_isnan ::_isnan
 
 // DIR,dirent for win32 taken May 2011
 // Copyright Kevlin Henney, 1997, 2003. All rights reserved.
@@ -24,6 +30,8 @@ void          rewinddir(DIR *);
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
+
+#define lk_isnan ::isnan
 #endif
 
 #include <sys/types.h>
@@ -44,15 +52,15 @@ class stdfile_t : public lk::objref_t
 {
 private:
 	FILE *m_fp;
-	std::string m_fileName;
+	lk_string m_fileName;
 public:
 	enum {READ, WRITE, APPEND};
 
 	stdfile_t() : m_fp(0) { }
-	stdfile_t(FILE *f, const std::string &n)
+	stdfile_t(FILE *f, const lk_string &n)
 		: m_fp(f), m_fileName(n) {  }
 
-	virtual std::string type_name() { return "file"; }
+	virtual lk_string type_name() { return "file"; }
 
 	virtual ~stdfile_t() {
 		if (m_fp)
@@ -63,11 +71,11 @@ public:
 		return m_fp;
 	}
 
-	std::string name() {
+	lk_string name() {
 		return m_fileName;
 	}
 
-	bool open(const std::string &name, int mode = READ)
+	bool open(const lk_string &name, int mode = READ)
 	{
 		close();
 
@@ -107,8 +115,8 @@ static void _open( lk::invoke_t &cxt )
 {
 	LK_DOC("open", "Opens a file for 'r'eading, 'w'riting, or 'a'ppending.", "(string:file, string:rwa):integer");
 
-	std::string name = cxt.arg(0).as_string();
-	std::string mode = lk::lower_case(cxt.arg(1).as_string());
+	lk_string name = cxt.arg(0).as_string();
+	lk_string mode = lk::lower_case(cxt.arg(1).as_string());
 
 	int m = stdfile_t::READ;
 	if (mode == "w" || mode == "write") m = stdfile_t::WRITE;
@@ -196,7 +204,7 @@ static void _read_line( lk::invoke_t &cxt )
 			cxt.env()->query_object( cxt.arg(0).as_unsigned()));
 	if (f && f->ok())
 	{
-		std::string buf;
+		lk_string buf;
 		cxt.result().assign( lk::read_line( *f, buf ) ? 1 : 0 );
 		cxt.arg(1).assign( buf );
 	}
@@ -215,10 +223,10 @@ static void _read( lk::invoke_t &cxt )
 
 	if (f && f->ok() && nchars >= 0)
 	{
-		char *buf = new char[nchars+1];
+		lk_char *buf = new lk_char[nchars+1];
 
 		int i=0;
-		char c;
+		lk_char c;
 		while (i<nchars && (c=fgetc( *f )) != EOF)
 			buf[i++] = c;
 
@@ -241,7 +249,7 @@ static void _write_line( lk::invoke_t &cxt )
 			cxt.env()->query_object( cxt.arg(0).as_unsigned()));
 	if (f && f->ok())
 	{
-		std::string buf = cxt.arg(1).as_string();
+		lk_string buf = cxt.arg(1).as_string();
 		fputs( (const char*)buf.c_str(), *f );
 		fputs( "\n", *f );
 		cxt.result().assign( 1.0 );
@@ -262,7 +270,7 @@ static void _write( lk::invoke_t &cxt )
 
 	if (f && f->ok() && nchars >= 0)
 	{
-		std::string buf = cxt.arg(1).as_string();
+		lk_string buf = cxt.arg(1).as_string();
 		buf.resize(nchars, ' ');
 		fputs( buf.c_str(), *f );
 		cxt.result().assign( 1.0 );
@@ -293,7 +301,7 @@ static void _to_bool( lk::invoke_t &cxt )
 static void _to_string( lk::invoke_t &cxt )
 {
 	LK_DOC("to_string", "Converts the argument[s] to a text string.", "([any]):string");
-	std::string buf;
+	lk_string buf;
 	for (size_t i=0;i<cxt.arg_count();i++)	buf += cxt.arg(i).as_string();
 	cxt.result().assign(buf);
 }
@@ -327,11 +335,11 @@ static void _dir_list( lk::invoke_t &cxt )
 	LK_DOC("dir_list", "List all the files in a directory. The extensions parameter is a comma separated list of extensions, or * to retrieve every item.",
 		   "(string:path, string:extensions, [boolean:list dirs also]):array");
 
-	std::string path = cxt.arg(0).as_string();
-	std::string ext = cxt.arg(1).as_string();
+	lk_string path = cxt.arg(0).as_string();
+	lk_string ext = cxt.arg(1).as_string();
 	bool dirs_also =  (cxt.arg_count() > 2)? cxt.arg(2).as_boolean() : false;
 
-	std::vector<std::string> list = lk::dir_list( path, ext, dirs_also );
+	std::vector<lk_string> list = lk::dir_list( path, ext, dirs_also );
 	cxt.result().empty_vector();
 	for (size_t i=0;i<list.size();i++)
 		cxt.result().vec_append( list[i] );
@@ -358,7 +366,7 @@ static void _remove_file( lk::invoke_t &cxt )
 static void _mkdir( lk::invoke_t &cxt )
 {
 	LK_DOC("mkdir", "Creates the specified directory, optionally creating directories as need for the full path.", "(string:path, {boolean:make_full=true}):boolean");
-	std::string s = cxt.arg(0).as_string();
+	lk_string s = cxt.arg(0).as_string();
 	bool f = true;
 	if (cxt.arg_count() > 0) f = cxt.arg(1).as_boolean();
 	cxt.result().assign( lk::mkdir( s.c_str(), f ) ? 1.0 : 0.0 );
@@ -390,7 +398,7 @@ static void _cwd( lk::invoke_t &cxt )
 
 	if (cxt.arg_count() == 1)
 	{
-		std::string path = cxt.arg(0).as_string();
+		lk_string path = cxt.arg(0).as_string();
 		if (lk::dir_exists(path.c_str()))
 		{
 			lk::set_cwd( path );
@@ -419,8 +427,8 @@ static void _write_text_file( lk::invoke_t &cxt )
 {
 	LK_DOC("write_text_file", "Writes data to a text file.", "(string:file, string:data):boolean");
 
-	std::string file = cxt.arg(0).as_string();
-	std::string data = cxt.arg(1).as_string();
+	lk_string file = cxt.arg(0).as_string();
+	lk_string data = cxt.arg(1).as_string();
 
 	FILE *fp = fopen(file.c_str(), "w");
 	if (!fp)
@@ -437,7 +445,7 @@ static void _write_text_file( lk::invoke_t &cxt )
 static void _sprintf( lk::invoke_t &cxt )
 {
 	LK_DOC("sprintf", "Returns a formatted string using standard C printf conventions, but adding the %m and %, specifiers for monetary and comma separated real numbers.", "(string:format, ...):string");
-	std::string fmt = cxt.arg(0).as_string();
+	lk_string fmt = cxt.arg(0).as_string();
 	std::vector< lk::vardata_t * > args;
 	for (size_t i=1;i<cxt.arg_count();i++)
 		args.push_back( & cxt.arg(i) );
@@ -448,10 +456,10 @@ static void _sprintf( lk::invoke_t &cxt )
 static void _strpos( lk::invoke_t &cxt )
 {
 	LK_DOC("strpos", "Locates the first instance of a character or substring in a string.", "(string, string):integer");
-	std::string s = cxt.arg(0).as_string();
-	std::string f = cxt.arg(1).as_string();
-	std::string::size_type idx = s.find(f);
-	cxt.result().assign( (idx!=std::string::npos) ? (int)idx : -1 );
+	lk_string s = cxt.arg(0).as_string();
+	lk_string f = cxt.arg(1).as_string();
+	lk_string::size_type idx = s.find(f);
+	cxt.result().assign( (idx!=lk_string::npos) ? (int)idx : -1 );
 }
 
 static void _first_of( lk::invoke_t &cxt )
@@ -470,7 +478,7 @@ static void _left( lk::invoke_t & cxt )
 {
 	LK_DOC("left", "Returns the leftmost n characters of a string.", "(string, integer:n):string");
 	size_t n = (size_t)cxt.arg(1).as_number();
-	std::string s = cxt.arg(0).as_string(), buf;
+	lk_string s = cxt.arg(0).as_string(), buf;
 	if (n >= s.length())
 	{
 		cxt.result().assign(s);
@@ -486,7 +494,7 @@ static void _right( lk::invoke_t &cxt )
 {
 	LK_DOC("right", "Returns the rightmost n characters of a string.", "(string, integer:n):string");
 	size_t n = (size_t)cxt.arg(1).as_number();
-	std::string s = cxt.arg(0).as_string(), buf;
+	lk_string s = cxt.arg(0).as_string(), buf;
 	if (n >= s.length())
 	{
 		cxt.result().assign(s);
@@ -502,11 +510,11 @@ static void _right( lk::invoke_t &cxt )
 static void _mid( lk::invoke_t &cxt )
 {
 	LK_DOC("mid", "Returns a subsection of a string.", "(string, integer:start, {integer:length}):string");
-	std::string s = cxt.arg(0).as_string();
+	lk_string s = cxt.arg(0).as_string();
 	size_t start = (size_t)cxt.arg(1).as_number();
 	if (start  > s.length()) start = s.length();
 	size_t len = cxt.arg_count() > 2 ? (size_t)cxt.arg(2).as_number() : 0;
-	cxt.result().assign( s.substr( start, (len==0) ? std::string::npos : len ) );
+	cxt.result().assign( s.substr( start, (len==0) ? lk_string::npos : len ) );
 }
 
 static void _strlen( lk::invoke_t &cxt )
@@ -518,7 +526,7 @@ static void _strlen( lk::invoke_t &cxt )
 static void _ascii( lk::invoke_t &cxt )
 {
 	LK_DOC("ascii", "Returns the ascii code of a character.", "(character):integer");
-	std::string s = cxt.arg(0).as_string();
+	lk_string s = cxt.arg(0).as_string();
 	int ch = 0;
 	if (s.length() > 0)
 		ch = (int) s[0];
@@ -528,30 +536,30 @@ static void _ascii( lk::invoke_t &cxt )
 static void _isalpha( lk::invoke_t &cxt )
 {
 	LK_DOC("isalpha", "Returns true if the argument is an alphabetic character A-Z,a-z.", "(character):boolean");
-	std::string s = cxt.arg(0).as_string();
+	lk_string s = cxt.arg(0).as_string();
 	cxt.result().assign( ::isalpha(s.length() > 0 ? (int)s[0] : 0) ? 1.0 : 0.0 );
 }
 
 static void _isdigit( lk::invoke_t &cxt )
 {
 	LK_DOC("isdigit", "Returns true if the argument is a numeric digit 0-9.", "(character):boolean");
-	std::string s = cxt.arg(0).as_string();
+	lk_string s = cxt.arg(0).as_string();
 	cxt.result().assign( ::isdigit(s.length() > 0 ? (int)s[0] : 0) ? 1.0 : 0.0 );
 }
 
 static void _isalnum( lk::invoke_t &cxt )
 {
 	LK_DOC("isalnum", "Returns true if the argument is an alphanumeric A-Z,a-z,0-9.", "(character):boolean");
-	std::string s = cxt.arg(0).as_string();
+	lk_string s = cxt.arg(0).as_string();
 	cxt.result().assign( ::isalnum(s.length() > 0 ? (int)s[0] : 0) ? 1.0 : 0.0 );
 }
 
 static void _char( lk::invoke_t &cxt )
 {
-	LK_DOC("char", "Returns a one character string from an ascii code.", "(integer):string");
-	unsigned char ascii = (unsigned char) (int) cxt.arg(0).as_number();
-	std::string b("0");
-	b[0] = (char)ascii;
+	LK_DOC("char", "Returns a string (one character long) from an ascii code.", "(integer):string");
+	lk_char ascii = (lk_char) (int) cxt.arg(0).as_number();
+	lk_string b("0");
+	b[0] = (lk_char)ascii;
 	cxt.result().assign( b );
 }
 
@@ -561,11 +569,11 @@ static void _ch( lk::invoke_t &cxt )
 			"Sets the character at the specified index in a string.", "(string, integer, character):void",
 			"Gets the character at the specified index in a string.", "(string, integer):character" );
 
-	std::string s = cxt.arg(0).as_string();
+	lk_string s = cxt.arg(0).as_string();
 	size_t pos = (size_t) cxt.arg(1).as_number();
 	if (cxt.arg_count() == 3)
 	{
-		std::string v = cxt.arg(2).as_string();
+		lk_string v = cxt.arg(2).as_string();
 		if (pos < s.length() && v.length() > 0)
 			s[pos] = v[0];
 
@@ -575,13 +583,13 @@ static void _ch( lk::invoke_t &cxt )
 	{
 		if (pos < s.length())
 		{
-			char b[2];
+			lk_char b[2];
 			b[0] = s[pos];
 			b[1] = 0;
-			cxt.result().assign( std::string( b ) );
+			cxt.result().assign( lk_string( b ) );
 		}
 		else
-			cxt.result().assign( std::string("") );
+			cxt.result().assign( lk_string("") );
 	}
 	else
 		cxt.error("invalid number of arguments to 'ch' function");
@@ -590,29 +598,29 @@ static void _ch( lk::invoke_t &cxt )
 static void _upper( lk::invoke_t &cxt )
 {
 	LK_DOC("upper", "Returns an upper case version of the supplied string.", "(string):string");
-	std::string s = cxt.arg(0).as_string();
-	std::string ret(s);
-	for (std::string::size_type i=0;i<ret.length();i++)
-		ret[i] = (char) toupper( ret[i] );
+	lk_string s = cxt.arg(0).as_string();
+	lk_string ret(s);
+	for (lk_string::size_type i=0;i<ret.length();i++)
+		ret[i] = (lk_char) toupper( ret[i] );
 	cxt.result().assign(ret);
 }
 
 static void _lower( lk::invoke_t &cxt )
 {
 	LK_DOC("lower", "Returns a lower case version of the supplied string.", "(string):string");
-	std::string s = cxt.arg(0).as_string();
-	std::string ret(s);
-	for (std::string::size_type i=0;i<ret.length();i++)
-		ret[i] = (char) tolower( ret[i] );
+	lk_string s = cxt.arg(0).as_string();
+	lk_string ret(s);
+	for (lk_string::size_type i=0;i<ret.length();i++)
+		ret[i] = (lk_char) tolower( ret[i] );
 	cxt.result().assign(ret);
 }
 
 static void _replace( lk::invoke_t &cxt )
 {
 	LK_DOC("replace", "Replaces all instances of s1 with s2 in the supplied string.", "(string, string:s1, string:s2):void");
-	std::string s = cxt.arg(0).as_string();
-	std::string s_old = cxt.arg(1).as_string();
-	std::string s_new = cxt.arg(2).as_string();
+	lk_string s = cxt.arg(0).as_string();
+	lk_string s_old = cxt.arg(1).as_string();
+	lk_string s_new = cxt.arg(2).as_string();
 
 	size_t uiCount = lk::replace( s, s_old, s_new );
 
@@ -625,12 +633,12 @@ static void _split( lk::invoke_t &cxt )
 	LK_DOC("split", "Splits a string into parts at the specified delimiter characters.", "(string:s, string:delims, {boolean:ret_empty=false}, {boolean:ret_delim=false}):array");
 	bool ret_empty = false;
 	bool ret_delim = false;
-	std::string str = cxt.arg(0).as_string();
-	std::string delim = cxt.arg(1).as_string();
+	lk_string str = cxt.arg(0).as_string();
+	lk_string delim = cxt.arg(1).as_string();
 	if (cxt.arg_count() >= 3) ret_empty = cxt.arg(2).as_boolean();
 	if (cxt.arg_count() >= 4) ret_delim = cxt.arg(3).as_boolean();
 
-	std::vector<std::string> list = lk::split( str, delim, ret_empty, ret_delim );
+	std::vector<lk_string> list = lk::split( str, delim, ret_empty, ret_delim );
 	cxt.result().empty_vector();
 	cxt.result().resize( list.size() );
 	for (size_t i=0;i<list.size();i++)
@@ -640,8 +648,8 @@ static void _split( lk::invoke_t &cxt )
 static void _join( lk::invoke_t &cxt )
 {
 	LK_DOC("join", "Joins an array of strings into a single one using the given delimiter.", "(array, string:delim):string");
-	std::string buf;
-	std::string delim = cxt.arg(1).as_string();
+	lk_string buf;
+	lk_string delim = cxt.arg(1).as_string();
 	lk::vardata_t &a = cxt.arg(0);
 	for (size_t i=0;i<a.length();i++)
 	{
@@ -656,7 +664,7 @@ static void _real_array( lk::invoke_t &cxt )
 {
 	LK_DOC("real_array", "Splits a whitespace delimited string into an array of real numbers.", "(string):array");
 
-	std::vector<std::string> list = lk::split( cxt.arg(0).as_string(), " \t\n\r,;:", false, false );
+	std::vector<lk_string> list = lk::split( cxt.arg(0).as_string(), " \t\n\r,;:", false, false );
 	cxt.result().empty_vector();
 	for (size_t i=0;i<list.size();i++)
 		cxt.result().vec_append( atof( list[i].c_str() ) );
@@ -755,7 +763,13 @@ static void _matan2( lk::invoke_t &cxt )
 static void _mnan( lk::invoke_t &cxt )
 {
 	LK_DOC("nan", "Returns the non-a-number (NAN) value.", "(void):real");
-	cxt.result().assign( lk::vardata_t::nanval );
+	cxt.result().assign( std::numeric_limits<double>::quiet_NaN() );
+}
+
+static void _misnan( lk::invoke_t &cxt )
+{
+	LK_DOC("isnan", "Returns true if the argument is NaN.", "(number):boolean");
+	cxt.result().assign( lk_isnan( cxt.arg(0).as_number() ) );
 }
 
 static void _mmod( lk::invoke_t &cxt )
@@ -765,101 +779,120 @@ static void _mmod( lk::invoke_t &cxt )
 }
 
 
-std::vector<lk::fcall_t> lk::stdlib_basic()
+
+#ifdef __WX__
+#include <wx/wx.h>
+
+static void _wx_msgbox( lk::invoke_t &cxt )
 {
-	std::vector<fcall_t> v;
-
-	v.push_back( _to_int );
-	v.push_back( _to_real );
-	v.push_back( _to_bool );
-	v.push_back( _to_string );
-	v.push_back( _alloc );
-
-	v.push_back( _dir_list );
-	v.push_back( _file_exists );
-	v.push_back( _dir_exists );
-	v.push_back( _remove_file );
-	v.push_back( _mkdir );
-	v.push_back( _path_only );
-	v.push_back( _file_only );
-	v.push_back( _ext_only );
-	v.push_back( _cwd );
-	v.push_back( _system );
-	v.push_back( _write_text_file );
-	v.push_back( _read_text_file );
-	v.push_back( _open );
-	v.push_back( _close );
-	v.push_back( _seek );
-	v.push_back( _tell );
-	v.push_back( _eof );
-	v.push_back( _flush );
-	v.push_back( _read_line );
-	v.push_back( _write_line );
-	v.push_back( _read );
-	v.push_back( _write );
-
-
-	return v;
+	LK_DOC("msgbox", "Shows a message dialog box.", "(string:message):none");
+	wxMessageBox( cxt.arg(0).as_string() );
 }
 
-std::vector<lk::fcall_t> lk::stdlib_string()
+lk::fcall_t* lk::stdlib_wxui()
 {
-	std::vector<fcall_t> v;
-
-	v.push_back( _sprintf );
-	v.push_back( _strlen );
-	v.push_back( _strpos );
-	v.push_back( _first_of );
-	v.push_back( _last_of );
-	v.push_back( _left );
-	v.push_back( _right );
-	v.push_back( _mid );
-	v.push_back( _ascii );
-	v.push_back( _char );
-	v.push_back( _ch );
-	v.push_back( _isdigit );
-	v.push_back( _isalpha );
-	v.push_back( _isalnum );
-	v.push_back( _upper );
-	v.push_back( _lower );
-	v.push_back( _replace );
-	v.push_back( _split );
-	v.push_back( _join );
-	v.push_back( _real_array );
-
-	return v;
+	static const lk::fcall_t vec[] = {
+		_wx_msgbox,
+		0 };
+	return (fcall_t*) vec;
 }
 
-std::vector<lk::fcall_t> lk::stdlib_math()
+#endif
+
+lk::fcall_t* lk::stdlib_basic()
 {
-	std::vector<fcall_t> v;
+	static const lk::fcall_t vec[] = {
+		_to_int,
+		_to_real,
+		_to_bool,
+		_to_string,
+		_alloc,
+		_dir_list,
+		_file_exists,
+		_dir_exists,
+		_remove_file,
+		_mkdir,
+		_path_only,
+		_file_only,
+		_ext_only,
+		_cwd,
+		_system,
+		_write_text_file,
+		_read_text_file,
+		_open,
+		_close,
+		_seek,
+		_tell,
+		_eof,
+		_flush,
+		_read_line,
+		_write_line,
+		_read,
+		_write,
+		0 };
 
-	v.push_back( _mceil );
-	v.push_back( _mfloor );
-	v.push_back( _msqrt );
-	v.push_back( _mpow );
-	v.push_back( _mexp );
-	v.push_back( _mlog );
-	v.push_back( _mlog10 );
-	v.push_back( _mpi );
-	v.push_back( _msin );
-	v.push_back( _mcos );
-	v.push_back( _mtan );
-	v.push_back( _masin );
-	v.push_back( _macos );
-	v.push_back( _matan );
-	v.push_back( _matan2 );
-	v.push_back( _mnan );
-	v.push_back( _mmod );
+	return (fcall_t*)vec;
+}
 
-	return v;
+lk::fcall_t* lk::stdlib_string()
+{
+	static const lk::fcall_t vec[] = {
+		_sprintf,
+		_strlen,
+		_strpos,
+		_first_of,
+		_last_of,
+		_left,
+		_right,
+		_mid,
+		_ascii,
+		_char,
+		_ch,
+		_isdigit,
+		_isalpha,
+		_isalnum,
+		_upper,
+		_lower,
+		_replace,
+		_split,
+		_join,
+		_real_array,
+		0 };
+
+	return (fcall_t*)vec;
+}
+
+lk::fcall_t* lk::stdlib_math()
+{
+	static const lk::fcall_t vec[] = {
+		_mceil,
+		_mfloor,
+		_msqrt,
+		_mpow,
+		_mexp,
+		_mlog,
+		_mlog10,
+		_mpi,
+		_msin,
+		_mcos,
+		_mtan,
+		_masin,
+		_macos,
+		_matan,
+		_matan2,
+		_mnan,
+		_misnan,
+		_mmod,
+		0 };
+		
+	return (fcall_t*)vec;
 }
 
 
-std::vector< std::string > lk::dir_list( const std::string &path, const std::string &extlist, bool ret_dirs )
+std::vector< lk_string > lk::dir_list( const lk_string &path, const lk_string &extlist, bool ret_dirs )
 {
-	std::vector< std::string > list;
-	std::vector< std::string > extensions = split(lower_case(extlist), ",");
+	std::vector< lk_string > list;
+	std::vector< lk_string > extensions = split(lower_case(extlist), ",");
 	DIR *dir;
 	struct dirent *ent;
 
@@ -868,20 +901,20 @@ std::vector< std::string > lk::dir_list( const std::string &path, const std::str
 
 	while( (ent=readdir(dir)) )
 	{
-		std::string item(ent->d_name);
+		lk_string item(ent->d_name);
 		if (item == "." || item == "..")
 			continue;
 
 		if ( extlist.empty()
 			|| extlist=="*"
-			||  ( ret_dirs && dir_exists( std::string(path + "/" + item ).c_str() )) )
+			||  ( ret_dirs && dir_exists( lk_string(path + "/" + item ).c_str() )) )
 		{
 			list.push_back( item );
 		}
 		else
 		{
 			bool found = false;
-			std::string ext = lower_case(ext_only( item ));
+			lk_string ext = lower_case(ext_only( item ));
 			for (size_t i=0;!found && i<extensions.size();i++)
 			{
 				if (ext == extensions[i])
@@ -903,27 +936,27 @@ std::vector< std::string > lk::dir_list( const std::string &path, const std::str
 #define va_copy(d, s) ((d)=(s))
 #endif
 
-std::vector< std::string > lk::split( const std::string &str, const std::string &delim, bool ret_empty, bool ret_delim )
+std::vector< lk_string > lk::split( const lk_string &str, const lk_string &delim, bool ret_empty, bool ret_delim )
 {
-	std::vector< std::string > list;
+	std::vector< lk_string > list;
 
-	char cur_delim[2] = {0,0};
-	std::string::size_type m_pos = 0;
-	std::string token;
+	lk_char cur_delim[2] = {0,0};
+	lk_string::size_type m_pos = 0;
+	lk_string token;
 
 	while (m_pos < str.length())
 	{
-		std::string::size_type pos = str.find_first_of(delim, m_pos);
-		if (pos == std::string::npos)
+		lk_string::size_type pos = str.find_first_of(delim, m_pos);
+		if (pos == lk_string::npos)
 		{
 			cur_delim[0] = 0;
-			token.assign(str, m_pos, std::string::npos);
+			token.assign(str, m_pos, lk_string::npos);
 			m_pos = str.length();
 		}
 		else
 		{
 			cur_delim[0] = str[pos];
-			std::string::size_type len = pos - m_pos;
+			lk_string::size_type len = pos - m_pos;
 			token.assign(str, m_pos, len);
 			m_pos = pos + 1;
 		}
@@ -934,16 +967,16 @@ std::vector< std::string > lk::split( const std::string &str, const std::string 
 		list.push_back( token );
 
 		if ( ret_delim && cur_delim[0] != 0 && m_pos < str.length() )
-			list.push_back( std::string( cur_delim ) );
+			list.push_back( lk_string( cur_delim ) );
 	}
 
 	return list;
 }
 
-std::string lk::join( const std::vector< std::string > &list, const std::string &delim )
+lk_string lk::join( const std::vector< lk_string > &list, const lk_string &delim )
 {
-	std::string str;
-	for (std::vector<std::string>::size_type i=0;i<list.size();i++)
+	lk_string str;
+	for (std::vector<lk_string>::size_type i=0;i<list.size();i++)
 	{
 		str += list[i];
 		if (i < list.size()-1)
@@ -952,17 +985,17 @@ std::string lk::join( const std::vector< std::string > &list, const std::string 
 	return str;
 }
 
-size_t lk::replace( std::string &s, const std::string &old_text, const std::string &new_text)
+size_t lk::replace( lk_string &s, const lk_string &old_text, const lk_string &new_text)
 {
 	const size_t uiOldLen = old_text.length();
 	const size_t uiNewLen = new_text.length();
 
-	std::string::size_type pos = 0;
+	lk_string::size_type pos = 0;
 	size_t uiCount = 0;
 	while(1)
 	{
 		pos = s.find(old_text, pos);
-		if ( pos == std::string::npos )
+		if ( pos == lk_string::npos )
 			break;
 
 		// replace this occurrence of the old string with the new one
@@ -978,57 +1011,19 @@ size_t lk::replace( std::string &s, const std::string &old_text, const std::stri
 	return uiCount;
 }
 
-bool lk::to_integer(const std::string &str, int *x)
+lk_string lk::lower_case( const lk_string &in )
 {
-	const char *startp = str.c_str();
-	char *endp = NULL;
-	*x = ::strtol( startp, &endp, 10 );
-	return !*endp && (endp!=startp);
-}
-
-bool lk::to_float(const std::string &str, float *x)
-{
-	double val;
-	bool ok = to_double(str, &val);
-	*x = (float) val;
-	return ok;
-}
-
-bool lk::to_double(const std::string &str, double *x)
-{
-	const char *startp = str.c_str();
-	char *endp = NULL;
-	*x = ::strtod( startp, &endp );
-	return !*endp && (endp!=startp);
-}
-
-std::string lk::to_string( int x, const char *fmt )
-{
-	char buf[64];
-	sprintf(buf, fmt, x);
-	return std::string(buf);
-}
-
-std::string lk::to_string( double x, const char *fmt )
-{
-	char buf[256];
-	sprintf(buf, fmt, x);
-	return std::string(buf);
-}
-
-std::string lk::lower_case( const std::string &in )
-{
-	std::string ret(in);
-	for (std::string::size_type i=0;i<ret.length();i++)
-		ret[i] = (char)tolower(ret[i]);
+	lk_string ret(in);
+	for (lk_string::size_type i=0;i<ret.length();i++)
+		ret[i] = lk::lower_char(ret[i]);
 	return ret;
 }
 
-std::string lk::upper_case( const std::string &in )
+lk_string lk::upper_case( const lk_string &in )
 {
-	std::string ret(in);
-	for (std::string::size_type i=0;i<ret.length();i++)
-		ret[i] = (char)toupper(ret[i]);
+	lk_string ret(in);
+	for (lk_string::size_type i=0;i<ret.length();i++)
+		ret[i] = lk::upper_char(ret[i]);
 	return ret;
 }
 
@@ -1090,11 +1085,11 @@ bool lk::mkdir( const char *path, bool make_full )
 {
 	if (make_full)
 	{
-		std::vector<std::string> parts = split( path, "/\\" );
+		std::vector<lk_string> parts = split( path, "/\\" );
 
 		if (parts.size() < 1) return false;
 
-		std::string cur_path = parts[0] + path_separator();
+		lk_string cur_path = parts[0] + path_separator();
 
 		for (size_t i=1;i<parts.size();i++)
 		{
@@ -1112,24 +1107,24 @@ bool lk::mkdir( const char *path, bool make_full )
 		return 0 == make_dir( path );
 }
 
-std::string lk::path_only( const std::string &path )
+lk_string lk::path_only( const lk_string &path )
 {
-	std::string::size_type pos = path.find_last_of("/\\");
-	if (pos==std::string::npos) return path;
+	lk_string::size_type pos = path.find_last_of("/\\");
+	if (pos==lk_string::npos) return path;
 	else return path.substr(0, pos);
 }
 
-std::string lk::name_only( const std::string &path )
+lk_string lk::name_only( const lk_string &path )
 {
-	std::string::size_type pos = path.find_last_of("/\\");
-	if (pos==std::string::npos) return path;
+	lk_string::size_type pos = path.find_last_of("/\\");
+	if (pos==lk_string::npos) return path;
 	else return path.substr(pos+1);
 }
 
-std::string lk::ext_only( const std::string &path )
+lk_string lk::ext_only( const lk_string &path )
 {
-	std::string::size_type pos = path.find_last_of('.');
-	if (pos==std::string::npos) return path;
+	lk_string::size_type pos = path.find_last_of('.');
+	if (pos==lk_string::npos) return path;
 	else return path.substr(pos+1);
 }
 
@@ -1142,7 +1137,7 @@ char lk::path_separator()
 #endif
 }
 
-std::string lk::get_cwd()
+lk_string lk::get_cwd()
 {
 	char buf[2048];
 #ifdef _WIN32
@@ -1151,10 +1146,10 @@ std::string lk::get_cwd()
 	::getcwd(buf, 2047);
 #endif
 	buf[2047] = 0;
-	return std::string(buf);
+	return lk_string(buf);
 }
 
-bool lk::set_cwd( const std::string &path )
+bool lk::set_cwd( const lk_string &path )
 {
 #ifdef _WIN32
 	return ::SetCurrentDirectoryA( path.c_str() ) != 0;
@@ -1163,9 +1158,9 @@ bool lk::set_cwd( const std::string &path )
 #endif
 }
 
-std::string lk::read_file( const std::string &file )
+lk_string lk::read_file( const lk_string &file )
 {
-	std::string buf;
+	lk_string buf;
 	char c;
 	FILE *fp = fopen(file.c_str(), "r");
 	if (fp)
@@ -1177,7 +1172,7 @@ std::string lk::read_file( const std::string &file )
 	return buf;
 }
 
-bool lk::read_line( FILE *fp, std::string &buf, int prealloc )
+bool lk::read_line( FILE *fp, lk_string &buf, int prealloc )
 {
 	int c;
 
@@ -1209,11 +1204,11 @@ bool lk::read_line( FILE *fp, std::string &buf, int prealloc )
 
 #ifdef _WIN32
 
-int lk::sync_piped_process::spawn(const std::string &command, const std::string &workdir)
+int lk::sync_piped_process::spawn(const lk_string &command, const lk_string &workdir)
 {
 	int result = 0;
 
-	std::string lastwd;
+	lk_string lastwd;
 	if ( !workdir.empty() )
 	{
 		lastwd = lk::get_cwd();
@@ -1275,7 +1270,7 @@ int lk::sync_piped_process::spawn(const std::string &command, const std::string 
 	DWORD nBytesRead;
 //	DWORD nCharsWritten;
 
-	std::string line;
+	lk_string line;
 	while (  WaitForSingleObject( pi.hProcess, 1 ) == WAIT_TIMEOUT
 		&& hStdoutReadEnd != INVALID_HANDLE_VALUE )
 	{
@@ -1353,11 +1348,11 @@ int lk::sync_piped_process::spawn(const std::string &command, const std::string 
 	return result;
 }
 #else
-int lk::sync_piped_process::spawn(const std::string &command, const std::string &workdir)
+int lk::sync_piped_process::spawn(const lk_string &command, const lk_string &workdir)
 {
-	std::string line;
+	lk_string line;
 
-	std::string lastwd;
+	lk_string lastwd;
 	if ( !workdir.empty() )
 	{
 		lastwd = lk::get_cwd();
@@ -1379,7 +1374,7 @@ int lk::sync_piped_process::spawn(const std::string &command, const std::string 
 
 #endif
 
-std::string lk::format(const char *fmt, ...)
+lk_string lk::format(const char *fmt, ...)
 {
 	if (!fmt || *fmt == 0) return "";
 
@@ -1414,7 +1409,7 @@ std::string lk::format(const char *fmt, ...)
 
 	va_end(arglist);
 
-	std::string s(buffer);
+	lk_string s(buffer);
 	if (buffer)
 		delete [] buffer;
 
@@ -1424,13 +1419,13 @@ std::string lk::format(const char *fmt, ...)
 
 #define TEMPLEN 128
 
-std::string lk::format_vl( const std::string &fmt, const std::vector< vardata_t* > &args )
+lk_string lk::format_vl( const lk_string &fmt, const std::vector< vardata_t* > &args )
 {
 	size_t argidx = 0;
 	char *pfmt = new char[fmt.length()+1];
 	char *p = pfmt;
 	strcpy(p,  (const char*) fmt.c_str());
-	std::string s;
+	lk_string s;
 
 	char temp[TEMPLEN];
 	char tempfmt[TEMPLEN];
@@ -1806,9 +1801,9 @@ size_t lk::format_vn(char *buffer, int maxlen, const char *fmt, va_list arglist)
 	else return (bp-buffer);
 }
 
-std::string lk::trim_to_columns(const std::string &str, int numcols)
+lk_string lk::trim_to_columns(const lk_string &str, int numcols)
 {
-	std::string buf;
+	lk_string buf;
 	int len = (int)str.length();
 	int col=0;
 	for (int i=0;i<len;i++)
@@ -1843,7 +1838,7 @@ std::string lk::trim_to_columns(const std::string &str, int numcols)
 	return buf;
 }
 
-static std::string _latexify_text( std::string s )
+static lk_string _latexify_text( lk_string s )
 {
 	lk::replace(s, "\\", "\\textbackslash ");
 	lk::replace(s, "$", "\\$");
@@ -1858,8 +1853,8 @@ static std::string _latexify_text( std::string s )
 	return s;
 }
 
-bool lk::tex_doc( const std::string &file,
-			  const std::string &title,
+bool lk::tex_doc( const lk_string &file,
+			  const lk_string &title,
 			  std::vector<fcall_t> lib )
 {
 	FILE *fp = fopen( file.c_str(),  "w" );
@@ -2031,3 +2026,4 @@ void rewinddir(DIR *dir)
 }
 
 #endif // WIN32 (for DIR,dirent)
+

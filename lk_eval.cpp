@@ -1,10 +1,11 @@
 #include <cstdio>
 #include <cstring>
 #include <cmath>
+#include <limits>
 
 #include "lk_eval.h"
 
-static std::string make_error( lk::node_t *n, const char *fmt, ...)
+static lk_string make_error( lk::node_t *n, const char *fmt, ...)
 {
 	char buf[512];
 
@@ -23,14 +24,14 @@ static std::string make_error( lk::node_t *n, const char *fmt, ...)
 	
 	va_end( list );
 
-	return std::string(buf);
+	return lk_string(buf);
 }
 
 #define ENV_MUTABLE 0x0001
 
 bool lk::eval( node_t *root, 
 		env_t *env, 
-		std::vector< std::string > &errors,
+		std::vector< lk_string > &errors,
 		vardata_t &result,
 		unsigned int flags,
 		unsigned int &ctl_id,
@@ -118,6 +119,7 @@ bool lk::eval( node_t *root,
 		{
 			bool ok = true;
 			vardata_t l, r;
+			double newval;
 		
 			switch( n->oper )
 			{	
@@ -146,17 +148,21 @@ bool lk::eval( node_t *root,
 				ok = ok && eval(n->left, env, errors, l, flags, ctl_id, cb_func, cb_data);
 				ok = ok && eval(n->right, env, errors, r, flags, ctl_id, cb_func, cb_data);
 				if (r.deref().num() == 0) 
-					result.assign( vardata_t::nanval );
+					result.assign( std::numeric_limits<double>::quiet_NaN() );
 				else
 					result.assign( l.deref().num() / r.deref().num() );
 				return ok;
 			case expr_t::INCR:
 				ok = ok && eval(n->left, env, errors, l, flags, ctl_id, cb_func, cb_data);
-				result.assign( ++l.deref().num() );
+				newval = l.deref().num() + 1;
+				l.deref().assign( newval );
+				result.assign( newval );
 				return ok;
 			case expr_t::DECR:
 				ok = ok && eval(n->left, env, errors, l, flags, ctl_id, cb_func, cb_data);
-				result.assign( --l.deref().num() );
+				newval = l.deref().num() - 1;
+				l.deref().assign( newval );
+				result.assign( newval );
 				return ok;
 			case expr_t::DEFINE:
 				result.assign( n );
@@ -395,7 +401,7 @@ bool lk::eval( node_t *root,
 						{
 							errors.push_back( make_error(cur_expr,
 														 "'this' parameter did not evaluate to a reference, rather %s!",
-														 thisobj.typestr().c_str()));
+														 thisobj.typestr()));
 							return false;
 						}
 
@@ -537,7 +543,7 @@ bool lk::eval( node_t *root,
 
 							if (ok)
 							{
-								std::string key = vkey.as_string();
+								lk_string key = vkey.as_string();
 								varhash_t *h = result.hash();
 								varhash_t::iterator it = h->find( key );
 								if (it != h->end())
@@ -588,6 +594,13 @@ bool lk::eval( node_t *root,
 		else if ( !x && (flags&ENV_MUTABLE)  )
 		{
 			x = new vardata_t;
+
+			if (n->constval)
+			{
+				x->set_flag( vardata_t::CONSTVAL );
+				x->clear_flag( vardata_t::ASSIGNED );
+			}
+
 			env->assign( n->name, x );
 			result.assign( x );
 			return true;

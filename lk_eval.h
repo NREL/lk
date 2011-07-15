@@ -1,8 +1,6 @@
 #ifndef __lk_eval_h
 #define __lk_eval_h
 
-#include <string>
-
 #include "lk_absyn.h"
 #include "lk_env.h"
 
@@ -12,7 +10,7 @@ namespace lk {
 
 	LKEXPORT bool eval( node_t *root, 
 		env_t *env, 
-		std::vector< std::string > &errors, 
+		std::vector< lk_string > &errors, 
 		vardata_t &result,
 		unsigned int flags, /* normally 0 */
 		unsigned int &ctl_id,

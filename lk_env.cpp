@@ -1,26 +1,21 @@
 #include <algorithm>
 #include <cstring>
 #include <cstdlib>
+#include <limits>
 
 #include "lk_env.h"
 #include "lk_eval.h"
 
-#if defined(_MSC_VER)||defined(WIN32)
-#define strcasecmp stricmp
-#endif
-
-
-static const unsigned long _nan[2]={0xffffffff, 0x7fffffff};
-const double lk::vardata_t::nanval = *( double* )_nan;
-
 lk::vardata_t::vardata_t()
 {
-	m_type = NULLVAL;
+	m_type = 0;
+	set_type( NULLVAL );
 }
 
 lk::vardata_t::vardata_t(const vardata_t &cp)
 {
-	m_type = NULLVAL;
+	m_type = 0;
+	set_type( NULLVAL );
 	copy( const_cast<vardata_t&>(cp) );
 }
 
@@ -29,54 +24,81 @@ lk::vardata_t::~vardata_t()
 	nullify();
 }
 
-bool lk::vardata_t::as_boolean()
+/* private member functions */
+void lk::vardata_t::set_type( unsigned char ty )
 {
-	if (m_type == NUMBER
+	m_type &= FLAGMASK; // clear all type info
+	m_type |= (ty&TYPEMASK); // set lower 4 bits to type
+}
+		
+void lk::vardata_t::assert_modify() throw( error_t )
+{
+	if ( flagval( CONSTVAL )
+		&& flagval( ASSIGNED ) )
+	{
+		throw error_t("cannot modify a constant value");
+	}
+
+	if ( flagval( CONSTVAL ) )
+		set_flag( ASSIGNED );
+}
+
+
+/* public interface */
+
+bool lk::vardata_t::as_boolean() const
+{
+	if (type() == NUMBER
 		&& m_u.v == 0.0) return false;
 
-	if (m_type == STRING
-		&& (strcasecmp( cstr(), "false" ) == 0
-			|| strcasecmp( cstr(), "f" ) == 0)) return false;
+	if (type() == STRING)
+	{
+		lk_string slower = str();
+		for( size_t i=0;i<slower.length();i++ )
+			slower[i] = lk::lower_char( slower[i] );
 
-	if (m_type == REFERENCE) return ref()->as_boolean();
+		if (slower == "false" || slower == "f") return false;
+	}
 
-	if (m_type == NULLVAL) return false;
+	if (type() == REFERENCE) return ref()->as_boolean();
+
+	if (type() == NULLVAL) return false;
 
 	return true;
 }
 
-unsigned int lk::vardata_t::as_unsigned()
+unsigned int lk::vardata_t::as_unsigned() const
 {
 	return (unsigned int)as_number();
 }
 
-int lk::vardata_t::as_integer()
+int lk::vardata_t::as_integer() const
 {
 	return (int)as_number();
 }
 
-std::string lk::vardata_t::as_string()
+lk_string lk::vardata_t::as_string() const
 {
-	switch (m_type)
+	switch ( type() )
 	{
 	case NULLVAL: return "<null>";
 	case REFERENCE: return ref()->as_string();
 	case NUMBER:
 		{
-			char buf[1024];
+			char buf[512];
 			if ( ((double)((int)m_u.v)) == m_u.v )
 				sprintf(buf, "%d", (int) m_u.v);
 			else
 				sprintf(buf, "%lg", m_u.v);
-			return std::string(buf);
+			return lk_string(buf);
 		}
 	case STRING:
-		return *reinterpret_cast< std::string* >(m_u.p);
+		return *reinterpret_cast< lk_string* >(m_u.p);
 	case VECTOR:
 		{
 			register std::vector<vardata_t> &v = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
 
-			std::string s;
+			lk_string s;
 			for ( size_t i=0;i<v.size();i++ )
 			{
 				s += v[i].as_string();
@@ -89,7 +111,7 @@ std::string lk::vardata_t::as_string()
 	case HASH:
 		{
 			register varhash_t &h = *reinterpret_cast< varhash_t* >(m_u.p);
-			std::string s("{ ");
+			lk_string s("{ ");
 
 			for ( varhash_t::iterator it = h.begin(); it != h.end(); ++it )
 			{
@@ -110,28 +132,30 @@ std::string lk::vardata_t::as_string()
 	}
 }
 
-double lk::vardata_t::as_number()
+double lk::vardata_t::as_number() const
 {
-	switch( m_type )
+	switch( type() )
 	{
 	case NULLVAL: return 0;
 	case NUMBER: return m_u.v;
-	case STRING: return atof( cstr() );
+	case STRING: return atof( (const char*) str().c_str() );
 	default:
-		return vardata_t::nanval;
+		return std::numeric_limits<double>::quiet_NaN();
 	}
 }
 
-bool lk::vardata_t::copy( vardata_t &rhs )
+bool lk::vardata_t::copy( vardata_t &rhs ) throw( error_t )
 {
-	switch( rhs.m_type )
+	switch( rhs.type() )
 	{
 	case NULLVAL:
+		assert_modify();
 		nullify();
 		return true;
 	case REFERENCE:
+		assert_modify();
 		nullify();
-		m_type = REFERENCE;
+		set_type( REFERENCE );
 		m_u.p = rhs.m_u.p;
 		return true;
 	case NUMBER:
@@ -166,27 +190,23 @@ bool lk::vardata_t::copy( vardata_t &rhs )
 			
 		}
 		return true;
-	case FUNCTION:
+	case FUNCTION:		
+		assert_modify();
 		nullify();
-		m_type = FUNCTION;
+		set_type( FUNCTION );
 		m_u.p = rhs.m_u.p;
 		return true;
-	/*case POINTER:
-		nullify();
-		m_type = POINTER;
-		m_u.p = rhs.m_u.p;
-		return true;*/
 
 	default:
 		return false;
 	}
 }
 
-bool lk::vardata_t::equals(vardata_t &rhs)
+bool lk::vardata_t::equals(vardata_t &rhs) const
 {
-	if (m_type != rhs.m_type) return false;
+	if (type() != rhs.type()) return false;
 
-	switch(m_type)
+	switch( type() )
 	{
 	case NULLVAL:
 		return true;
@@ -196,20 +216,16 @@ bool lk::vardata_t::equals(vardata_t &rhs)
 		return str() == rhs.str();
 	case FUNCTION:
 		return func() == rhs.func();
-	/*case POINTER:
-		return pointer() == rhs.pointer();*/
 	default:
 		return false;
 	}
-
-	return false;
 }
 
-bool lk::vardata_t::lessthan(vardata_t &rhs)
+bool lk::vardata_t::lessthan(vardata_t &rhs) const
 {
-	if (m_type != rhs.m_type) return false;
+	if (type() != rhs.type()) return false;
 
-	switch(m_type)
+	switch( type() )
 	{
 	case NUMBER:
 		return m_u.v < rhs.m_u.v;
@@ -218,13 +234,11 @@ bool lk::vardata_t::lessthan(vardata_t &rhs)
 	default:
 		return false;
 	}
-
-	return false;
 }
 
-std::string lk::vardata_t::typestr()
+const char *lk::vardata_t::typestr() const
 {
-	switch(m_type)
+	switch( type() )
 	{
 	case NULLVAL: return "null";
 	case REFERENCE: return "reference";
@@ -239,10 +253,10 @@ std::string lk::vardata_t::typestr()
 
 void lk::vardata_t::nullify()
 {
-	switch( m_type )
+	switch( type() )
 	{
 	case STRING:
-		delete reinterpret_cast<std::string*>(m_u.p);
+		delete reinterpret_cast<lk_string*>(m_u.p);
 		break;
 	case HASH:
 		{
@@ -262,13 +276,13 @@ void lk::vardata_t::nullify()
 	// are pointers into the abstract syntax tree
 	}
 
-	m_type = NULLVAL;
+	set_type( NULLVAL );
 }
 
 lk::vardata_t &lk::vardata_t::deref() throw (error_t)
 {
 	vardata_t *p = this;
-	while (p->m_type == REFERENCE)
+	while (p->type() == REFERENCE)
 		p = p->ref();
 
 	if (!p) throw error_t("dereference resulted in null target");
@@ -276,81 +290,84 @@ lk::vardata_t &lk::vardata_t::deref() throw (error_t)
 	return *p;
 }
 
-void lk::vardata_t::assign( double d )
+void lk::vardata_t::assign( double d ) throw( error_t )
 {
+	assert_modify();
+
 	nullify();
-	m_type = NUMBER;
+	set_type( NUMBER );
 	m_u.v = d;
 }
 
-void lk::vardata_t::assign( const char *s )
+void lk::vardata_t::assign( const char *s ) throw( error_t )
 {
-	if (m_type != STRING)
+	assert_modify();
+
+	if ( type() != STRING )
 	{
 		nullify();
-		m_type = STRING;
-		m_u.p = new std::string(s);
+		set_type( STRING );
+		m_u.p = new lk_string(s);
 	}
 	else
 	{
-		*reinterpret_cast<std::string*>(m_u.p) = s;
+		*reinterpret_cast<lk_string*>(m_u.p) = s;
 	}
 }
 
-/*void lk::vardata_t::assign_pointer( vardata_t *p )
+void lk::vardata_t::assign( const lk_string &s ) throw( error_t )
 {
-	if (m_type != POINTER)
+	assert_modify();
+
+	if ( type() != STRING)
 	{
 		nullify();
-		m_type = POINTER;
-	}
-
-	m_u.p = p;
-}*/
-
-void lk::vardata_t::assign( const std::string &s )
-{
-	if (m_type != STRING)
-	{
-		nullify();
-		m_type = STRING;
-		m_u.p = new std::string(s);
+		set_type( STRING );
+		m_u.p = new lk_string(s);
 	}
 	else
 	{
-		*reinterpret_cast<std::string*>(m_u.p) = s;
+		*reinterpret_cast<lk_string*>(m_u.p) = s;
 	}
 }
 
-void lk::vardata_t::empty_vector()
+void lk::vardata_t::empty_vector()  throw( error_t )
 {
+	assert_modify();
+
 	nullify();
-	m_type = VECTOR;
+	set_type( VECTOR );
 	m_u.p = new std::vector<vardata_t>;
 }
 
-void lk::vardata_t::empty_hash()
+void lk::vardata_t::empty_hash() throw( error_t )
 {
+	assert_modify();
+
 	nullify();
-	m_type = HASH;
+	set_type( HASH );
 	m_u.p = new varhash_t;
 }
 
-void lk::vardata_t::assign( const std::string &key, vardata_t *val )
+void lk::vardata_t::assign( const lk_string &key, vardata_t *val ) throw( error_t )
 {
-	if (m_type != HASH)
+	assert_modify();
+
+	if ( type() != HASH )
 	{
 		nullify();
-		m_type = HASH;
+		set_type( HASH );
 		m_u.p = new varhash_t;
 	}
 
 	(*reinterpret_cast< varhash_t* >(m_u.p))[ key ] = val;
 }
 
-void lk::vardata_t::unassign( const std::string &key )
+void lk::vardata_t::unassign( const lk_string &key ) throw( error_t )
 {
-	if (m_type != HASH) return;
+	assert_modify();
+
+	if (type() != HASH) return;
 
 	varhash_t &h = (*reinterpret_cast< varhash_t* >(m_u.p));
 			
@@ -362,27 +379,33 @@ void lk::vardata_t::unassign( const std::string &key )
 	}
 }
 
-void lk::vardata_t::assign( expr_t *func )
+void lk::vardata_t::assign( expr_t *func ) throw( error_t )
 {
+	assert_modify();
+
 	nullify();
-	m_type = FUNCTION;
+	set_type( FUNCTION );
 	m_u.p = func;
 }
 
-void lk::vardata_t::assign( vardata_t *ref )
+void lk::vardata_t::assign( vardata_t *ref ) throw( error_t )
 {
+	assert_modify();
+
 	nullify();
-	m_type = REFERENCE;
+	set_type( REFERENCE );
 	m_u.p = ref;
 }
 
 
-void lk::vardata_t::resize( size_t n )
+void lk::vardata_t::resize( size_t n ) throw( error_t )
 {
-	if ( m_type != VECTOR )
+	assert_modify();
+
+	if ( type() != VECTOR )
 	{
 		nullify();
-		m_type = VECTOR;
+		set_type( VECTOR );
 		m_u.p = new std::vector<vardata_t>;
 	}
 
@@ -390,55 +413,53 @@ void lk::vardata_t::resize( size_t n )
 }
 
 
-double &lk::vardata_t::num() throw(error_t)
+double lk::vardata_t::num() const throw(error_t) 
 {
-	if ( m_type != NUMBER ) throw error_t("access violation to non-numeric data");
+	if ( type() != NUMBER ) throw error_t("access violation to non-numeric data");
 	return m_u.v;
 }
 
-std::string &lk::vardata_t::str() throw(error_t)
+lk_string lk::vardata_t::str() const throw(error_t)
 {
-	if ( m_type != STRING ) throw error_t("access violation to non-string data");
-	return *reinterpret_cast<std::string*>(m_u.p);
+	if ( type() != STRING ) throw error_t("access violation to non-string data");
+	return *reinterpret_cast<lk_string*>(m_u.p);
 }
 
-const char *lk::vardata_t::cstr() throw(error_t)
+lk::vardata_t *lk::vardata_t::ref() const
 {
-	if ( m_type != STRING ) throw error_t("access violation to non-string data");
-	return reinterpret_cast<std::string*>(m_u.p)->c_str();
-}
-
-lk::vardata_t *lk::vardata_t::ref()
-{
-	if ( m_type != REFERENCE )
+	if ( type() != REFERENCE )
 		return 0;
 	else
 		return reinterpret_cast<vardata_t*>(m_u.p);
 }
 
-std::vector<lk::vardata_t> *lk::vardata_t::vec() throw(error_t)
+std::vector<lk::vardata_t> *lk::vardata_t::vec() const throw(error_t)
 {
-	if (m_type != VECTOR) throw error_t("access violation to non-array data");
+	if (type() != VECTOR) throw error_t("access violation to non-array data");
 	return reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
 }
 
 void lk::vardata_t::vec_append( double d ) throw(error_t)
 {
+	assert_modify();
+
 	vardata_t v;
 	v.assign(d);
 	vec()->push_back( v );
 }
 
-void lk::vardata_t::vec_append( const std::string &s ) throw(error_t)
+void lk::vardata_t::vec_append( const lk_string &s ) throw(error_t)
 {
+	assert_modify();
+
 	vardata_t v;
 	v.assign(s);
 	vec()->push_back( v );
 }
 
-size_t lk::vardata_t::length()
+size_t lk::vardata_t::length() const
 {
-	switch(m_type)
+	switch(type())
 	{
 	case VECTOR:
 		return reinterpret_cast<std::vector<vardata_t>* >(m_u.p)->size();
@@ -447,20 +468,22 @@ size_t lk::vardata_t::length()
 	}
 }
 
-lk::expr_t *lk::vardata_t::func() throw(error_t)
+lk::expr_t *lk::vardata_t::func() const throw(error_t)
 {
-	if (m_type != FUNCTION) throw error_t("access violation to non-function data");
+	if (type() != FUNCTION) throw error_t("access violation to non-function data");
 	return reinterpret_cast< expr_t* >(m_u.p);
 }
 
-lk::varhash_t *lk::vardata_t::hash() throw(error_t)
+lk::varhash_t *lk::vardata_t::hash() const throw(error_t)
 {
-	if ( m_type != HASH ) throw error_t("access violation to non-hash data");
+	if ( type() != HASH ) throw error_t("access violation to non-hash data");
 	return reinterpret_cast< varhash_t* > (m_u.p);
 }
 
-void lk::vardata_t::hash_item( const std::string &key, double d ) throw(error_t)
+void lk::vardata_t::hash_item( const lk_string &key, double d ) throw(error_t)
 {
+	assert_modify();
+
 	varhash_t *h = hash();
 	varhash_t::iterator it = h->find(key);
 	if (it != h->end())
@@ -473,8 +496,10 @@ void lk::vardata_t::hash_item( const std::string &key, double d ) throw(error_t)
 	}
 }
 
-void lk::vardata_t::hash_item( const std::string &key, const std::string &s ) throw(error_t)
+void lk::vardata_t::hash_item( const lk_string &key, const lk_string &s ) throw(error_t)
 {
+	assert_modify();
+
 	varhash_t *h = hash();
 	varhash_t::iterator it = h->find(key);
 	if (it != h->end())
@@ -487,8 +512,10 @@ void lk::vardata_t::hash_item( const std::string &key, const std::string &s ) th
 	}
 }
 
-void lk::vardata_t::hash_item( const std::string &key, const vardata_t &v ) throw(error_t)
+void lk::vardata_t::hash_item( const lk_string &key, const vardata_t &v ) throw(error_t)
 {
+	assert_modify();
+
 	varhash_t *h = hash();
 	varhash_t::iterator it = h->find(key);
 	if (it != h->end())
@@ -501,18 +528,18 @@ void lk::vardata_t::hash_item( const std::string &key, const vardata_t &v ) thro
 	}
 }
 
-lk::vardata_t *lk::vardata_t::index(size_t idx) throw(error_t)
+lk::vardata_t *lk::vardata_t::index(size_t idx) const throw(error_t)
 {
-	if (m_type != VECTOR) throw error_t("access violation to non-array data");
+	if (type() != VECTOR) throw error_t("access violation to non-array data");
 	register std::vector<vardata_t> &m = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
 	if (idx >= m.size()) throw error_t("array index out of bounds: %d (len: %d)", (int)idx, (int)m.size());
 
 	return &m[idx];
 }
 
-lk::vardata_t *lk::vardata_t::lookup( const std::string &key ) throw(error_t)
+lk::vardata_t *lk::vardata_t::lookup( const lk_string &key ) const throw(error_t)
 {
-	if (m_type != HASH) throw error_t("access violation to non-hash data");
+	if (type() != HASH) throw error_t("access violation to non-hash data");
 	register varhash_t &h = *reinterpret_cast< varhash_t* >(m_u.p);
 	varhash_t::iterator it = h.find( key );
 	if ( it != h.end() )
@@ -549,7 +576,7 @@ void lk::env_t::clear_vars()
 	m_varHash.clear();
 }
 
-void lk::env_t::assign( const std::string &name, vardata_t *value )
+void lk::env_t::assign( const lk_string &name, vardata_t *value )
 {
 	vardata_t *x = lookup(name, false);
 			
@@ -559,7 +586,7 @@ void lk::env_t::assign( const std::string &name, vardata_t *value )
 	m_varHash[name] = value;
 }
 
-void lk::env_t::unassign( const std::string &name )
+void lk::env_t::unassign( const lk_string &name )
 {
 	varhash_t::iterator it = m_varHash.find( name );
 	if (it != m_varHash.end())
@@ -569,7 +596,7 @@ void lk::env_t::unassign( const std::string &name )
 	}
 }
 
-lk::vardata_t *lk::env_t::lookup( const std::string &name, bool search_hierarchy )
+lk::vardata_t *lk::env_t::lookup( const lk_string &name, bool search_hierarchy )
 {
 	varhash_t::iterator it = m_varHash.find( name );
 	if ( it != m_varHash.end() )
@@ -580,24 +607,32 @@ lk::vardata_t *lk::env_t::lookup( const std::string &name, bool search_hierarchy
 		return 0;
 }
 		
-const char *lk::env_t::first()
+bool lk::env_t::first( lk_string &key, vardata_t *&value )
 {
 	m_varIter = m_varHash.begin();
 	if (m_varIter != m_varHash.end())
-		return m_varIter->first.c_str();
-	else
-		return 0;
+	{
+		key = m_varIter->first;
+		value = m_varIter->second;
+		return true;
+	}
+	else return false;
 }
 
-const char *lk::env_t::next()
+bool lk::env_t::next( lk_string &key, vardata_t *&value )
 {
-	if (m_varIter == m_varHash.end()) return NULL;
+	if (m_varIter == m_varHash.end()) return false;
 
 	++m_varIter;
 
-	if (m_varIter != m_varHash.end())	return m_varIter->first.c_str();
+	if (m_varIter != m_varHash.end())
+	{
+		key = m_varIter->first;
+		value = m_varIter->second;
+		return true;
+	}
 
-	return 0;
+	return false;
 }
 
 lk::env_t *lk::env_t::parent()
@@ -636,15 +671,24 @@ bool lk::env_t::register_func( fcall_t f, void *user_data )
 	return false;
 }
 
-bool lk::env_t::register_funcs( std::vector<fcall_t> l )
+bool lk::env_t::register_funcs( std::vector<fcall_t> l, void *user_data )
 {
 	bool ok = true;
 	for (size_t i=0;i<l.size();i++)
-		ok = ok && register_func( l[i] );
+		ok = ok && register_func( l[i], user_data );
 	return ok;
 }
 
-lk::fcall_t lk::env_t::lookup_func( const std::string &name, void **user_data )
+bool lk::env_t::register_funcs( fcall_t list[], void *user_data )
+{
+	bool ok = true;
+	int idx = 0;
+	while( ok && list[idx] != 0 )
+		ok = ok && register_func( list[idx++], user_data );
+	return ok;
+}
+
+lk::fcall_t lk::env_t::lookup_func( const lk_string &name, void **user_data )
 {
 	funchash_t::iterator it = m_funcHash.find( name );
 	if ( it != m_funcHash.end() )
@@ -663,9 +707,9 @@ lk::fcall_t lk::env_t::lookup_func( const std::string &name, void **user_data )
 	}
 }
 
-std::vector<std::string> lk::env_t::list_funcs()
+std::vector<lk_string> lk::env_t::list_funcs()
 {
-	std::vector<std::string> list;
+	std::vector<lk_string> list;
 	for (funchash_t::iterator it = m_funcHash.begin();
 			it != m_funcHash.end();
 			++it)
@@ -725,7 +769,7 @@ lk::objref_t *lk::env_t::query_object( size_t ref )
 	else return 0;
 }
 
-void lk::env_t::call( const std::string &name, std::vector< vardata_t > &args, vardata_t &result ) throw( lk::error_t )
+void lk::env_t::call( const lk_string &name, std::vector< vardata_t > &args, vardata_t &result ) throw( lk::error_t )
 {
 	vardata_t *f = lookup(name, true);
 	if (!f)	throw lk::error_t("could not locate function name in environment: " + name );
@@ -769,7 +813,7 @@ void lk::env_t::call( const std::string &name, std::vector< vardata_t > &args, v
 		frame.assign("__args", __args);
 
 		unsigned int ctl_id = lk::CTL_NONE;
-		std::vector<std::string> errors;
+		std::vector<lk_string> errors;
 		if (!lk::eval( block, &frame, errors, result, 0, ctl_id, 0, 0))
 			throw error_t("error inside function call invoked from env::call");
 	}
