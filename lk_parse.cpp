@@ -160,7 +160,28 @@ lk::node_t *lk::parser::statement()
 {
 	node_t *stmt = 0;
 	
-	if (lex.text() == "if")
+	if (lex.text() == "function")
+	{
+		skip();
+		// syntactic sugar for 'local const my_function = define(...) {  };'
+		// function my_function(...) {  }
+		if ( token() != lexer::IDENTIFIER )
+			error("function name missing");
+
+		lk_string name = lex.text();
+		skip();
+		
+		match( lk::lexer::SEP_LPAREN );
+		node_t *a = identifierlist( lk::lexer::SEP_COMMA, lk::lexer::SEP_RPAREN );
+		match( lk::lexer::SEP_RPAREN );
+		node_t *b = block();
+		
+		return new expr_t( line(), expr_t::ASSIGN,
+			new iden_t( line(), name, true, true ), 
+			new expr_t( line(), expr_t::DEFINE,
+				a, b ));
+	}
+	else if (lex.text() == "if")
 	{
 		return test();
 	}
@@ -192,7 +213,9 @@ lk::node_t *lk::parser::statement()
 		stmt = new expr_t( line(), expr_t::CONTINUE, 0, 0 );
 		skip();
 	}
-	else	
+	else if (lex.text() == "enum")
+		stmt = enumerate();
+	else 	
 		stmt = assignment();
 	
 	// require semicolon at end of a statement
@@ -207,6 +230,70 @@ lk::node_t *lk::parser::statement()
 			m_haltFlag = true;
 	}
 	return stmt;
+}
+
+lk::node_t *lk::parser::enumerate()
+{
+	match("enum");
+	match( lk::lexer::SEP_LCURLY );
+
+	double cur_value = 0;
+	list_t *head=0, *tail=0;
+
+	while ( !m_haltFlag && token(lk::lexer::IDENTIFIER) )
+	{
+		int line_num = line();
+		lk_string name = lex.text();
+		skip();
+
+		if (token(lk::lexer::OP_ASSIGN))
+		{
+			skip();
+			bool plus = false;
+			if (token(lk::lexer::OP_PLUS))
+			{
+				plus = true;
+				skip();
+			}
+
+			if (token(lk::lexer::NUMBER))
+			{
+				if (plus)
+					cur_value += lex.value() - 1.0; // to adjust for +1 already added
+				else if ( lex.value() > cur_value )
+					cur_value = lex.value();
+				else
+					error("values in enumeration must increase");
+
+				skip();
+			}
+			else
+				error("enumerate statements can only contain numeric assignments");
+
+		}
+
+		list_t *link = new list_t( line(), 
+			new expr_t( line(), expr_t::ASSIGN,
+				new iden_t( line_num, name, true, true ),
+				new constant_t( line(), cur_value ) ),
+			0 );
+
+		if (!head) head = link;
+		if (tail) tail->next = link;
+		tail = link;
+
+		cur_value += 1.0;
+
+		if ( token() != lk::lexer::SEP_RCURLY )
+			if ( !match( lk::lexer::SEP_COMMA ) )
+				m_haltFlag = true;
+	}
+
+	if ( !head ) error("enumeration must have one or more identifiers");
+
+	match( lk::lexer::SEP_RCURLY );
+
+	return head;
 }
 
 lk::node_t *lk::parser::test()

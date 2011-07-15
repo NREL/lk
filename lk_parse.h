@@ -16,6 +16,7 @@ namespace lk
 		node_t *block();
 		node_t *statement();
 		node_t *test();
+		node_t *enumerate();
 		node_t *loop();
 		node_t *define();
 		node_t *assignment();		

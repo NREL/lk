@@ -1,27 +1,59 @@
+enum { STARTING, RUNNING, STOPPED, EFF=+20, EFF1, EFF2,  ERROR1 = 100, ERROR2 };
+
+dir = replace(homedir(), "\\", "/");
+parts = split(dir, "/");
+
+exit;
+const pi = 3.1415926;
+//pi = 3.11;       // will cause an error
+
+value = 43;
+//const value = 51;     // will cause an error (value already exists)
+
+
+const names = [ "Linus", "David", "Aron" ];
+names[2] = "Ari";    // allowed
+//names = null;
+//names = "Patrick";    // will cause an error
+exit;
+
+
 const pi = 3.1415726;
-//out(x + "\n");
-pi2 = 2*pi;
-
-sq = 41;
-
-const make_square = define()
-{
-	local sq.side = 2;
-	const sq.scale_factor = 1.877;
-	return sq;
-};
-
-const unity = [ 1, 5, 3, 6];
-
-
-x = pi;
-
-s1 = make_square();
-s1.side = 24;
-s1.scale_factor = 2304;
-
-const s[0] = [3,5,1];
-
-s[0] = 1;
-
-x = 4;
+//out(x + "\n");
+pi2 = 2*pi;
+
+const sz = {"ab"=1, "bc"=2, "cd"=5 };
+sq = 41;
+
+trip = define(x) { return x*x*x; };
+
+function sqr(x) { return x*x; }
+
+
+//wx_msgbox("hello, world!");
+
+y = sqr(34);
+
+//sqr = define(){ a = 25;};
+
+const make_square = define()
+{
+	local sq.side = 2;
+	sq.scale_factor = 1.877;
+	return sq;
+};
+
+const unity = [ 1, 5, 3, 6];
+
+
+x = pi;
+
+s1 = make_square();
+s1.side = 24;
+s1.scale_factor = 2304;
+
+const s[0] = [3,5,1];
+
+s[0] = 1;
+
+x = 4;

@@ -270,6 +270,63 @@ program = "c:\\Windows\\notepad.exe"
 
 Note that for file names on a Windows computer, it is important to convert back slashes (\texttt{'\bslash'}) to forward slashes (\texttt{/}).  Otherwise, the file name may be translated incorrectly and the file won't be found.
 
+\subsection{Constants and Enumerations}
+
+LK allows constants to be specified using the \texttt{const} keyword.  Any type of variable can be declared constant, including numbers, strings, and functions (described later).  Attempting to assign a new value to a \texttt{const} variable will result in a run-time error when the script is executed.  Also, once a variable has been declared, it cannot be re-declared as \texttt{const} in a subsequent part of the program.  Arrays and tables behave slightly differently from numbers:  while the variable name referring to the array or table cannot be changed to another data type, the actual array or table contents are not protected by the \texttt{const} specifier.  Examples:
+
+\begin{verbatim}
+
+const pi = 3.1415926;
+pi = 3.11;       // will cause an error
+
+value = 43;
+const value = 51;     // will cause an error (value already exists)
+
+
+const names = [ "Linus", "David", "Aron" ];
+names[2] = "Ari";    // allowed because it changes the contents of array 'names'
+                     // but not the data type or size of 'names'
+
+names[3] = "Nora";   // not allowed because it changes the size of the 'names' array
+names = "Patrick";    // will cause an error
+
+
+const sqr = define(x) { return x*x; };  // function sqr can't being changed
+
+\end{verbatim}
+
+Sometimes it is desirable to specify many constants, perhaps to define various states in a program.  For this purpose, an \texttt{enum}, or \emph{enumerate} statement exists. The state of a motor could be indicated with the constants below, instead of with numbers, which makes a program much more readable.
+\begin{verbatim}
+enum { STARTING, RUNNING, STOPPED, ERROR  };
+
+motor_state = STOPPED;  
+\end{verbatim}
+
+Enumerations start assigning integer values to the names in the list, increasing by one.  It is possible to assign a custom values to names in the following ways:
+
+\begin{verbatim}
+enum { STARTING, RUNNING, STOPPED, EFF=+20, EFF1, EFF2,  ERROR1 = 100, ERROR2 };
+\end{verbatim}
+
+In this case, everything is the same as before until the EFF variable, for which the \texttt{+20} specifies that it should have a value 20 greater than the previous name in the enumeration: 22.  EFF1 and EFF2 have values 23 and 24.  It is also possible to jump to a known value, as with ERROR1.
+
+The \texttt{enum} statement is simply a more convenient syntax to make to multiple \texttt{const} assignments.  The enumeration above is semantically equivalent to:
+
+\begin{verbatim}
+const local STARTING = 0;
+const local RUNNING = STARTING + 1;
+const local STOPPED = RUNNING + 1;
+const local EFF = STOPPED + 20;
+const local EFF1 = EFF + 1;
+const local EFF2 = EFF1 + 1;
+const local ERROR1 = 100;
+const local ERROR2 = ERROR1 + 1;
+\end{verbatim}
+
+The meaning of the \texttt{local} specifier will be explained in later sections.
+
+
+
 \section{Flow Control}
 
 \subsection{Comparison Operators}
@@ -850,6 +907,31 @@ outln( sum(1,2,3,4,5) );  // prints 15
 outln( sum("a","b","c","d") );  // prints abcd
 \end{verbatim}
 
+
+\subsection{Alternate Declaration Syntax}
+
+Functions can also be defined using the \texttt{function} keyword, as below.  The syntax is simplified, and there is no semicolon required at the end because the definition does not comprise a statement in the usual sense.  Functions declared in this way can be defined with parameters and can return values, as before.
+
+\begin{verbatim}
+function show_welcome(name)
+{
+   outln("Thank you " + name + " for choosing LK.");
+   outln("This text will be displayed at the start of the script.");
+}
+\end{verbatim}
+
+In fact, this alternate syntax has an exact translation to the \texttt{define} syntax used elsewhere in this manual.  For example:
+
+\begin{verbatim}
+function show_welcome( <args> )  {  <statements>  }
+\end{verbatim}
+is exactly equivalent to
+\begin{verbatim}
+const local show_welcome = define( <args> )  {  <statements>  };
+\end{verbatim}
+
+The meaning of the \texttt{local} keyword will be explained in the next section.  The alternate syntax described here can help clarify programs and is generally easier for people familiar with other languages, at least initially.  It automatically enforces \emph{const-ness}, so that the function isn't inadvertently replaced later in the code by an assignment statement.
+
 \subsection{Environments and Scope}
 
 This sections reviews in technical detail the mechanisms in LK for storing information about data and function variables.  The rules for variable access are simple but important to understand for writing script code that works as expected in all situations.
@@ -985,18 +1067,18 @@ Note the use of a special variable called \texttt{this} in functions defined as 
 
 make_square = define(side)
 {
-   local o.label = "Square";
-   o.side = side;
+   local obj.label = "Square";
+   obj.side = side;
 
-   o.area = define() { return this.side*this.side; };  
-   o.perim = define() { return 4*this.side; };
-   o.scale_side = define(factor)
+   obj.area = define() { return this.side*this.side; };  
+   obj.perim = define() { return 4*this.side; };
+   obj.scale_side = define(factor)
    {
       this.side = this.side * factor;
       return this.side;
    };
    
-   return o;
+   return obj;
 };
 
 
@@ -1100,24 +1182,24 @@ outln( "Name: " + name + " Exists? " + file_exists(path) );
 outln( "Dir: " + dir + " Exists? " + dir_exists(dir));
 \end{verbatim}
 
-\subsection{Standard Dialogs}
+%\subsection{Standard Dialogs}
 
-To facilitate writing more interactive scripts, LK includes various dialog functions.  We have already used the \texttt{notice} and \texttt{yesno} functions in previous examples.
+%To facilitate writing more interactive scripts, LK includes various dialog functions.  We have already used the \texttt{notice} and \texttt{yesno} functions in previous examples.
 
-The \texttt{choose\_file} function pops up a file selection dialog to the user, prompting them to select a file.  \texttt{choose\_file} will accept three optional parameters: the path of the initial directory to show in the dialog, a wildcard filter like \texttt{"Text Files (*.txt)"} to limit the types of files shown in the list, and a dialog caption to display on the window.  Example:
+%The \texttt{choose\_file} function pops up a file selection dialog to the user, prompting them to select a file.  \texttt{choose\_file} will accept three optional parameters: the path of the initial directory to show in the dialog, a wildcard filter like \texttt{"Text Files (*.txt)"} to limit the types of files shown in the list, and a dialog caption to display on the window.  Example:
 
-\begin{verbatim}
-file = choose_file("c:/SAM", "Choose a DLL file", "Dynamic Link Libraries (*.dll)" );
-if (file == "") {
-   notice("You did not choose a file, quitting.");
-   exit;
-} else {
-   if ( ! yesno("Do you want to load:\n\n" + file)) exit;
-   
-   // proceed to load .dll file
-   outln("Loading " + file);
-}
-\end{verbatim}
+%\begin{verbatim}
+%file = choose_file("c:/SAM", "Choose a DLL file", "Dynamic Link Libraries (*.dll)" );
+%if (file == "") {
+%   notice("You did not choose a file, quitting.");
+%   exit;
+%} else {
+%   if ( ! yesno("Do you want to load:\n\n" + file)) exit;
+%   
+%   // proceed to load .dll file
+%   outln("Loading " + file);
+%}
+%\end{verbatim}
 
 \subsection{Calling Other Programs}
 
@@ -1138,7 +1220,7 @@ outln("cwd=" + cwd() );
 \end{verbatim}
 
 
-\section{Library Reference}
+\section{Standard Library Reference}
 \subsection{Basic and I/O Functions}
 {\large \texttt{\textbf{to\_int}}}\\
 \textsf{ (any):integer }\\
@@ -1250,32 +1332,6 @@ Reads data from a file, returning false if there is no more data to read.
 {\large \texttt{\textbf{write}}}\\
 \textsf{ (integer:filenum, string:buffer, integer:bytes):boolean }\\
 Writes data to a file.
-
-
-\subsection{Interface Functions}
-{\large \texttt{\textbf{choose\_file}}}\\
-\textsf{ ([string:initial path], [string:caption], [string:filter], [boolean:save dialog]):string }\\
-Show a file chooser dialog to select a file name for opening or saving. All of the arguments are options.  The filter should be a string like 'Text Files (*.txt)'
-
-{\large \texttt{\textbf{in}}}\\
-\textsf{ (...):void }\\
-get a line of standard input
-
-{\large \texttt{\textbf{notice}}}\\
-\textsf{ (string:message):void }\\
-Shows a message box with an ok button.
-
-{\large \texttt{\textbf{out}}}\\
-\textsf{ (...):void }\\
-send data to the standard output device.
-
-{\large \texttt{\textbf{outln}}}\\
-\textsf{ (...):void }\\
-send data to the standard output device, followed by a newline.
-
-{\large \texttt{\textbf{yesno}}}\\
-\textsf{ (string:message):boolean }\\
-Shows a message box with yes and no buttons.  Returns true if yes was clicked.
 
 \subsection{String Functions}
 {\large \texttt{\textbf{sprintf}}}\\
@@ -1429,167 +1485,6 @@ Returns the non-a-number (NAN) value.
 {\large \texttt{\textbf{mod}}}\\
 \textsf{ (integer:x, integer:y):integer }\\
 Returns the remainder after integer division of x by y.
-
-
-
-
-
-
-
-
-
-
-
-\subsection{SolTrace Functions}
-{\large \texttt{\textbf{dot}}}\\
-\textsf{ (array[3]:a, array[3]:b):real }\\
-Calculates the dot product between two 3 dimensional vectors.\\
-
-{\large \texttt{\textbf{euler}}}\\
-\textsf{ (array[3]:origin, array[3]:aimpoint, real:zrot):array[3] }\\
-Calculates the euler vector given an origin, aim point, and z rotation.\\
-
-{\large \texttt{\textbf{reftoloc}}}\\
-\textsf{ (array[3]:euler):array[3][3] }\\
-Calculates the 3x3 transform matrix from euler angles for going from reference to local coordinates.\\
-
-{\large \texttt{\textbf{loctoref}}}\\
-\textsf{ (array[3]:euler):array[3][3] }\\
-Calculates the 3x3 transform matrix from euler angles for going from local to reference coordinates.\\
-
-{\large \texttt{\textbf{toloc}}}\\
-\textsf{ (array[3]:posref, array[3]:cosref, array[3]:origin, array[3][3]:reftoloc, array[3]:posloc, array[3]:cosloc):void }\\
-Transforms a reference position/cosine point description to local coordinates given the transform matrix.\\
-
-{\large \texttt{\textbf{toref}}}\\
-\textsf{ (array[3]:posloc, array[3]:cosloc, array[3]:origin, array[3][3]:loctoref, array[3]:posref, array[3]:cosref):void }\\
-Transforms a local position/cosine point description to reference coordinates given the transform matrix.\\
-
-{\large \texttt{\textbf{transpose}}}\\
-\textsf{ (array[3][3]):array[3][3] }\\
-Transposes a 3x3 matrix.\\
-
-{\large \texttt{\textbf{matvecmult}}}\\
-\textsf{ (array[3][3]:m, array[3]:v):array[3] }\\
-Multiples a 3x3 matrix and a vector, returning the result.\\
-
-{\large \texttt{\textbf{workdir}}}\\
-\textsf{ (void):string }\\
-Returns the current working directory for SolTrace.\\
-
-{\large \texttt{\textbf{file\_name}}}\\
-\textsf{ (void):string }\\
-Returns the current SolTrace project file name.\\
-
-{\large \texttt{\textbf{save\_project}}}\\
-\textsf{ (\{string:optional file name\}):boolean }\\
-Saves the current SolTrace project as an .stinput file.\\
-
-{\large \texttt{\textbf{open\_project}}}\\
-\textsf{ (string:filename):boolean }\\
-Opens an existing SolTrace .stinput project file, without asking to save or close any currently opened project.\\
-
-{\large \texttt{\textbf{clear\_project}}}\\
-\textsf{ (void):void }\\
-Clears the current SolTrace project, without asking to save or close first.\\
-
-{\large \texttt{\textbf{trace}}}\\
-\textsf{ (void):void }\\
-Starts a new ray trace operation.\\
-
-{\large \texttt{\textbf{traceopt}}}\\
-Two modes of operation: Gets or sets ray trace parameters. For example: traceopt( \{"seed"=152, "cpus"=3\} ) sets the seed value to 152 and the number of CPUs to use to 3.\\\\
-\textsf{ (table:parameters):void }\\
-Sets various ray trace parameters. The argument is a table with keys \{rays,maxrays,cpus,seed\}, whose values are the corresponding integers.\\
-\\\textsf{ (void):table }\\
-Returns a table with the following five fields filled in with their integer values: \{rays,maxrays,cpus,seed\}\\
-
-{\large \texttt{\textbf{nintersect}}}\\
-Two modes of operation: returns the total number of intersections calculated, or the number of intersections with a particular element (stagenum, elementnum)\\\\
-\textsf{ (void):integer }\\
-Returns the number of ray intersections in the results.\\
-\\\textsf{ (integer:stagenum, integer:elementnum):integer }\\
-Returns the number of ray intersections with a particular element.\\
-
-{\large \texttt{\textbf{raydata}}}\\
-\textsf{ (integer:index):array }\\
-Returns the ray data as a 9 item array in stage coordinates [X,Y,Z,CosX,CosY,CosZ,Element,Stage,RayNum] for the specified intersection number. Use nintersect to get the number of intersections.\\
-
-{\large \texttt{\textbf{sundata}}}\\
-\textsf{ (void):table }\\
-Returns the number of generated sun rays and the extents as a table with fields \{nrays,xmin,xmax,ymin,ymax\}.\\
-
-{\large \texttt{\textbf{sunopt}}}\\
-Two modes of operation.  Gets or sets the sun shape parameters using a table with fields \{ptsrc:boolean, shape:character, sigma:real, halfwidth:real, x:real, y:real, z:real, lat:real, day:real, hour:real, userdata:array[array[2]]\}.\\\\
-\textsf{ (table:parameters):void }\\
-Sets various sun shape parameters. The argument is a table with keys \{ptsrc, shape, sigma, halfwidth, x, y, z, useldh, lat, day, hour, userdata\}.\\
-\\\textsf{ (void):table }\\
-Gets various sun shape parameters as a field indexed table.\\
-
-{\large \texttt{\textbf{addoptic}}}\\
-\textsf{ (string:name):void }\\
-Adds a new optical property set with the given name.\\
-
-{\large \texttt{\textbf{clearoptics}}}\\
-\textsf{ (void):void }\\
-Deletes all of the optical property sets.\\
-
-{\large \texttt{\textbf{listoptics}}}\\
-\textsf{ (void):array }\\
-Returns a list of all the optical property sets.\\
-
-{\large \texttt{\textbf{opticopt}}}\\
-Two modes of operation: gets or sets optical property information, using a table with fields \{dist=string, apstop=integer, surfnum=integer, difford=integer, refl=real, trans=real, errslope=real, errspec=real, refractr=real, refracti=real, grating=array[4]\}\\\\
-\textsf{ (string:name, integer:front or back, table:properties):void }\\
-Set various optical properties for the given optic name and side (1=front,2=back) with a table whose fields are \{dist, apstop, surfnum, difford, refl, trans, errslope, errspec, refractr, refracti, grating\}\\
-\\\textsf{ (string:name, integer:front or back):table }\\
-Get optical property information as table with named fields for the given optic name and side (1=front,2=back)\\
-
-{\large \texttt{\textbf{addstage}}}\\
-\textsf{ (string:name):void }\\
-Adds a stage to the system with the given name.  Sets the new stage as the currently active stage.\\
-
-{\large \texttt{\textbf{clearstages}}}\\
-\textsf{ (void):void }\\
-Clears all stages from the project.\\
-
-{\large \texttt{\textbf{liststages}}}\\
-\textsf{ (void):array }\\
-Returns a list of all the stage names.\\
-
-{\large \texttt{\textbf{stageopt}}}\\
-Two modes of operation. Gets or sets stage properties using a table with fields \{ virtual:boolean, multihit:boolean, tracethrough:boolean, x:real, y:real, z:real, ax:real, ay:real, az:real, zrot:real \}\\\\
-\textsf{ (string:stage name, table:properties):void }\\
-Set various stage properties for the given stage name with a table whose fields can include \{ virtual, multihit, tracethrough, x, y, z, ax, ay, az, zrot \}\\
-\\\textsf{ (string:stage name):table }\\
-Get stage properties for the given stage name as a table.\\
-
-{\large \texttt{\textbf{activestage}}}\\
-Two modes of operation: gets or sets the currently active stage that the various 'elementXX functions operate on.\\\\
-\textsf{ (string:stage name):string }\\
-Set the currently active stage.  Returns the active stage name also.\\
-\\\textsf{ (void):string }\\
-Get the currently active stage name.\\
-
-{\large \texttt{\textbf{addelement}}}\\
-\textsf{ ([integer:optional number of elements]):void }\\
-Adds one (or optionally more) elements to the active stage.\\
-
-{\large \texttt{\textbf{clearelements}}}\\
-\textsf{ (void):void }\\
-Clears all the elements from the currently active stage.\\
-
-{\large \texttt{\textbf{nelements}}}\\
-\textsf{ (void):integer }\\
-Returns the number of elements in the current stage.\\
-
-{\large \texttt{\textbf{elementopt}}}\\
-Two modes of operation: gets or sets various element properties for the given element in the currently active stage.  The parameters are transferred via a table with named fields \{ en:boolean, x:real, y:real, z:real, ax:real, ay:real, az:real, zrot:real, aper:array, surf:array, interact:string, optic:string, comment:string \}.\\\\
-\textsf{ (integer:element index, table:properties):void }\\
-Set various element properties for the specified element in the active stage. Table fields are \{ en, x, y, z, ax, ay, az, zrot, aper, surf, interact, optic, comment \}\\
-\\\textsf{ (integer:element index):table }\\
-Gets the properties of the specified element in the active stage.\\
-
 
 
 

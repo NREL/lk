@@ -588,6 +588,13 @@ bool lk::eval( node_t *root,
 
 		if (x)
 		{
+			if (n->constval)
+			{
+				errors.push_back( make_error(n, "overriding previous non-const identifier with const-ness not allowed: %s\n", n->name.c_str() ));
+				result.nullify();
+				return false;
+			}
+
 			result.assign( x );
 			return true;
 		}

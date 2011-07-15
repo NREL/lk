@@ -259,7 +259,7 @@ LKFrame::LKFrame()
 		wxPoint(0,0), wxSize(800,700), wxSP_LIVE_UPDATE|wxBORDER_NONE );
 
 	m_codeEdit = new CodeEdit( split_win, ID_EDITOR );
-	m_codeEdit->ApplyCppStyling();
+	m_codeEdit->ApplyLKStyling();
 	
 	m_txtOutput = new wxTextCtrl(split_win, ID_OUTPUT, wxEmptyString, wxDefaultPosition, wxDefaultSize,
 		wxTE_READONLY | wxTE_MULTILINE | wxHSCROLL | wxTE_DONTWRAP);

@@ -617,15 +617,14 @@ static void _lower( lk::invoke_t &cxt )
 
 static void _replace( lk::invoke_t &cxt )
 {
-	LK_DOC("replace", "Replaces all instances of s1 with s2 in the supplied string.", "(string, string:s1, string:s2):void");
+	LK_DOC("replace", "Replaces all instances of s1 with s2 in the supplied string.", "(string, string:s1, string:s2):string");
 	lk_string s = cxt.arg(0).as_string();
 	lk_string s_old = cxt.arg(1).as_string();
 	lk_string s_new = cxt.arg(2).as_string();
 
 	size_t uiCount = lk::replace( s, s_old, s_new );
 
-	cxt.arg(0).assign( s );
-	cxt.result().assign( uiCount );
+	cxt.result().assign( s );
 }
 
 static void _split( lk::invoke_t &cxt )
@@ -786,13 +785,100 @@ static void _mmod( lk::invoke_t &cxt )
 static void _wx_msgbox( lk::invoke_t &cxt )
 {
 	LK_DOC("msgbox", "Shows a message dialog box.", "(string:message):none");
-	wxMessageBox( cxt.arg(0).as_string() );
+	wxMessageBox( cxt.arg(0).as_string(), "Notice" );
+}
+
+static void _wx_yesno( lk::invoke_t &cxt )
+{
+	LK_DOC("yesno", "Shows a message box with yes and no buttons.  The function returns true when yes is clicked, false otherwise.", "(string:message):boolean");
+	cxt.result().assign( wxYES==wxMessageBox( cxt.arg(0).as_string(), "Query", wxYES_NO ) ? 1.0 : 0.0 );
+}
+
+static void _wx_choose_file( lk::invoke_t &cxt )
+{
+
+	LK_DOC( "choose_file", "Show a file chooser dialog to select a file name for opening or saving. All of the arguments are options.  The filter should be a string like 'Text Files (*.txt)|*.txt'", "([string:initial path], [string:caption], [string:filter], [boolean:save dialog], [boolean:multiple files]):string");
+
+	wxString caption = "Select a file";
+	wxString path = ::wxGetHomeDir();
+	wxString filter = "All Files (*.*)";
+
+	bool savedlg = false;
+	bool multiple = false;
+
+	if (cxt.arg_count() > 0)
+		path = cxt.arg(0).as_string().c_str();
+	if (cxt.arg_count() > 1)
+		caption = cxt.arg(1).as_string().c_str();
+	if (cxt.arg_count() > 2)
+		filter = cxt.arg(2).as_string().c_str();
+	if (cxt.arg_count() > 3)
+		savedlg = cxt.arg(3).as_boolean();
+	if (cxt.arg_count() > 4)
+		multiple = cxt.arg(4).as_boolean();
+
+	wxString file;
+	wxFileDialog fdlg( 0, caption,
+		path, wxEmptyString, filter, savedlg? wxFD_SAVE|wxFD_OVERWRITE_PROMPT : wxFD_OPEN );
+
+	if (fdlg.ShowModal())
+	{
+		if (multiple)
+		{
+			wxArrayString files;
+			fdlg.GetPaths(files);
+			cxt.result().empty_vector();
+			for (size_t i=0;i<files.Count();i++)
+				cxt.result().vec_append( files[i] );
+		}
+		else
+			cxt.result().assign( fdlg.GetPath() );
+	}
+}
+
+static void _wx_date_time( lk::invoke_t &cxt )
+{
+	LK_DOC( "date_time", "Returns a string containing the current date and time.", "(none):string");
+	cxt.result().assign( wxNow() );
+}
+
+static wxStopWatch _stopwatch;
+
+static void _wx_start_timer( lk::invoke_t &cxt )
+{
+	LK_DOC( "start_timer", "Starts or restarts a timer.", "(none):none" );
+	_stopwatch.Start();
+}
+
+static void _wx_elapsed_time( lk::invoke_t &cxt )
+{
+	LK_DOC( "elapsed_time", "Returns the number of milliseconds elapsed since the last call to start_timer.", "(none):integer");
+	cxt.result().assign( (double)_stopwatch.Time() );
+}
+
+static void _wx_millisleep( lk::invoke_t &cxt )
+{
+	LK_DOC( "millisleep", "Puts the application to sleep fro the specified number of milliseconds.", "(integer:milliseconds):none");
+	wxMilliSleep( (unsigned long) cxt.arg(0).as_number() );
+}
+
+static void _wx_homedir( lk::invoke_t &cxt )
+{
+	LK_DOC("homedir", "Returns the current user's home directory.", "(none):string");
+	cxt.result().assign( ::wxGetHomeDir() );
 }
 
 lk::fcall_t* lk::stdlib_wxui()
 {
 	static const lk::fcall_t vec[] = {
 		_wx_msgbox,
+		_wx_yesno,
+		_wx_choose_file,
+		_wx_date_time,
+		_wx_start_timer,
+		_wx_elapsed_time,
+		_wx_millisleep,
+		_wx_homedir,
 		0 };
 	return (fcall_t*) vec;
 }
