@@ -7,10 +7,20 @@
 
 namespace lk
 {
+	class LKEXPORT importer
+	{
+	public:
+		virtual bool read_source( const lk_string &path, 
+			lk_string *expandedPath, lk_string *data ) = 0;
+	};
+
 	class LKEXPORT parser
 	{
 	public:
-		parser( input_base &input);
+		parser( input_base &input, const lk_string &name = "" );
+
+		void set_importer( importer *imploc );
+		void set_importer( importer *imploc, const std::vector< lk_string > &imported_names );
 				
 		node_t *script();
 		node_t *block();
@@ -53,6 +63,9 @@ namespace lk
 		lk_string m_lexError;
 		bool m_haltFlag;
 		std::vector<lk_string> m_errorList;
+		importer *m_importer;
+		std::vector< lk_string > m_importNameList;
+		lk_string m_name;
 	};
 };
 

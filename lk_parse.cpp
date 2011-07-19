@@ -4,11 +4,24 @@
 
 #include "lk_parse.h"
 
-lk::parser::parser( input_base &input )
+lk::parser::parser( input_base &input, const lk_string &name )
 	: lex( input )
 {
+	m_importer = 0;
 	m_haltFlag = false;
 	m_tokType = lex.next();
+	m_name = name;
+}
+
+void lk::parser::set_importer( importer *i )
+{
+	m_importer = i;
+}
+
+void lk::parser::set_importer( importer *i, const std::vector< lk_string > &nameList )
+{
+	m_importer = i;
+	m_importNameList = nameList;
 }
 
 int lk::parser::token()
@@ -81,7 +94,10 @@ void lk::parser::error( const char *fmt, ... )
 {
 	char buf[512];
 
-	sprintf(buf, "[%d]: ", lex.line() );
+	if ( !m_name.empty() )
+		sprintf(buf, "[%s %d]: ", (const char*)m_name.c_str(), lex.line() );
+	else
+		sprintf(buf, "[%d]: ", lex.line() );
 
 	char *p = buf + strlen(buf);
 
@@ -213,8 +229,89 @@ lk::node_t *lk::parser::statement()
 		stmt = new expr_t( line(), expr_t::CONTINUE, 0, 0 );
 		skip();
 	}
+	else if ( lex.text() == "import" )
+	{
+		skip();
+		if ( token() != lk::lexer::LITERAL )
+		{
+			error("literal required after import statement");
+			skip();
+			if ( token() == lk::lexer::SEP_SEMI )
+				skip();
+
+			return statement();
+		}
+
+		lk_string path = lex.text();
+		lk_string expanded_path = path;
+		skip();
+
+		bool import_found = false;
+		lk_string src_text;
+		if ( m_importer != 0 )
+			import_found = m_importer->read_source( path, &expanded_path, &src_text );
+		else
+		{
+			FILE *fp = fopen( (const char*)path.c_str(), "r" );
+			if (fp)
+			{
+				import_found = true;
+				char c;
+				while ( (c=fgetc(fp))!=EOF )
+					src_text += c;
+				fclose(fp);
+			}
+		}
+
+		for (size_t k=0;k<m_importNameList.size();k++)
+		{
+			if (m_importNameList[k] == expanded_path)
+			{
+				error("circular import of %s impossible", (const char*)path.c_str());
+				m_haltFlag = true;
+				return 0;
+			}
+		}
+
+		if ( import_found )
+		{
+			m_importNameList.push_back( expanded_path );
+
+			lk::input_string p( src_text );
+			lk::parser parse( p, path );
+			parse.set_importer( m_importer, m_importNameList );
+
+			lk::node_t *tree = parse.script();
+
+			if ( parse.error_count() != 0
+				|| parse.token() != lk::lexer::END
+				|| tree == 0 )
+			{
+				error("parse errors in import '%s':", (const char*)path.c_str());
+				
+				int i=0;
+				while (const char *err = parse.error(i++))
+					error( "\t%s", err );
+				
+				if ( tree != 0 )
+					delete tree;
+
+				m_haltFlag = true;
+				return 0;
+			}
+			else
+				stmt = tree;
+		}
+		else
+		{
+			error("import '%s' could not be located", (const char*)path.c_str());
+			return 0;
+		}
+	}
 	else if (lex.text() == "enum")
+	{
 		stmt = enumerate();
+	}
 	else 	
 		stmt = assignment();
 	

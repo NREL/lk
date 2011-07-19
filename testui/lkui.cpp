@@ -395,7 +395,7 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 			if ( parse.error_count() != 0 
 				|| parse.token() != lk::lexer::END)
 			{
-				applog("!\tparsing did not reach end of input\n");
+				applog("parsing did not reach end of input\n");
 			}
 			else
 			{			
@@ -444,7 +444,7 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 			
 			int i=0;
 			while (const char *err = parse.error(i++))
-				applog("!\t%s\n", err);
+				applog("%s\n", err);
 
 
 		

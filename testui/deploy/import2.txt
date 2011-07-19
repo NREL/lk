@@ -1,0 +1,6 @@
+_import2 = 41;
+
+/*upser
+import "import1.txt";
+*/
+

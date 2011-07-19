@@ -1,7 +1,14 @@
+
+import "import1.txt";
+import "import2.txt";
+
+
 enum { STARTING, RUNNING, STOPPED, EFF=+20, EFF1, EFF2,  ERROR1 = 100, ERROR2 };
 
-dir = replace(homedir(), "\\", "/");
+dir = replace(homedir(), "\\", "/");
 parts = split(dir, "/");
+
+zz = triple(3);
 
 exit;
 const pi = 3.1415926;
