@@ -868,6 +868,12 @@ static void _wx_homedir( lk::invoke_t &cxt )
 	cxt.result().assign( ::wxGetHomeDir() );
 }
 
+static void _wx_uiyield( lk::invoke_t &cxt )
+{
+	LK_DOC("uiyield", "Yield to the user interface to process any pending events.", "(none):none");
+	wxYield();
+}
+
 lk::fcall_t* lk::stdlib_wxui()
 {
 	static const lk::fcall_t vec[] = {
@@ -879,6 +885,7 @@ lk::fcall_t* lk::stdlib_wxui()
 		_wx_elapsed_time,
 		_wx_millisleep,
 		_wx_homedir,
+		_wx_uiyield,
 		0 };
 	return (fcall_t*) vec;
 }
