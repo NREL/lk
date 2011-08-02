@@ -578,7 +578,7 @@ bool lk::eval( node_t *root,
 				break;
 			}
 		} catch ( lk::error_t &e ) {
-			errors.push_back( make_error(n, "!error: %s\n", e.text.c_str()));
+			errors.push_back( make_error(n, "!error: %s\n", (const char*)e.text.c_str()));
 			return false;
 		}
 	}
@@ -590,7 +590,7 @@ bool lk::eval( node_t *root,
 		{
 			if (n->constval)
 			{
-				errors.push_back( make_error(n, "overriding previous non-const identifier with const-ness not allowed: %s\n", n->name.c_str() ));
+				errors.push_back( make_error(n, "overriding previous non-const identifier with const-ness not allowed: %s\n", (const char*)n->name.c_str() ));
 				result.nullify();
 				return false;
 			}
@@ -614,7 +614,7 @@ bool lk::eval( node_t *root,
 		}
 		else
 		{
-			errors.push_back( make_error( n, "reference to unassigned variable: %s\n", n->name.c_str() ));
+			errors.push_back( make_error( n, "reference to unassigned variable: %s\n", (const char*)n->name.c_str() ));
 			result.nullify();
 			return false;
 		}

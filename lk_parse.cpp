@@ -34,11 +34,11 @@ bool lk::parser::token(int t)
 	return (m_tokType==t);
 }
 
-const char *lk::parser::error(int idx)
+lk_string lk::parser::error(int idx)
 {
 	if (idx >= 0 && idx < (int)m_errorList.size())
-		return m_errorList[idx].c_str();
-	return NULL;
+		return m_errorList[idx];
+	return lk_string("");
 }
 
 
@@ -52,7 +52,7 @@ bool lk::parser::match( const char *s )
 	
 	if ( lex.text() != s )
 	{
-		error("expected '%s' but found '%s'", s, lex.text().c_str());
+		error("expected '%s' but found '%s'", s, (const char*)lex.text().c_str());
 		return false;
 	}
 	
@@ -74,7 +74,7 @@ bool lk::parser::match(int t)
 		error("expected '%s' but found '%s' %s", 
 			lk::lexer::tokstr(t), 
 			lk::lexer::tokstr(m_tokType),
-			lex.text().c_str());
+			(const char*)lex.text().c_str());
 		return false;
 	}
 	
@@ -87,7 +87,7 @@ void lk::parser::skip()
 	m_tokType = lex.next();
 	
 	if (m_tokType == lk::lexer::INVALID)
-		error("invalid sequence in input: %s", lex.error().c_str());
+		error("invalid sequence in input: %s", (const char*)lex.error().c_str());
 }
 
 void lk::parser::error( const char *fmt, ... )
@@ -290,8 +290,8 @@ lk::node_t *lk::parser::statement()
 				error("parse errors in import '%s':", (const char*)path.c_str());
 				
 				int i=0;
-				while (const char *err = parse.error(i++))
-					error( "\t%s", err );
+				while ( i < parse.error_count() )
+					error( "\t%s", (const char*)parse.error(i++).c_str());
 				
 				if ( tree != 0 )
 					delete tree;

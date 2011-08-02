@@ -31,7 +31,11 @@ void          rewinddir(DIR *);
 #include <sys/stat.h>
 #include <dirent.h>
 
-#define lk_isnan ::isnan
+static inline bool lk_isnan( double d )
+{
+	volatile double val = d;
+	return (val != val);
+}
 #endif
 
 #include <sys/types.h>
@@ -85,7 +89,7 @@ public:
 		if (mode == APPEND) chmode[0] = 'a';
 		chmode[1] = 0;
 
-		m_fp = fopen( name.c_str(), chmode );
+		m_fp = fopen( (const char*) name.c_str(), chmode );
 		if (m_fp != 0)
 		{
 			m_fileName = name;
@@ -272,7 +276,7 @@ static void _write( lk::invoke_t &cxt )
 	{
 		lk_string buf = cxt.arg(1).as_string();
 		buf.resize(nchars, ' ');
-		fputs( buf.c_str(), *f );
+		fputs( (const char*)buf.c_str(), *f );
 		cxt.result().assign( 1.0 );
 	}
 	else
@@ -348,19 +352,19 @@ static void _dir_list( lk::invoke_t &cxt )
 static void _file_exists( lk::invoke_t &cxt )
 {
 	LK_DOC("file_exists", "Determines whether a file exists or not.", "(string):boolean");
-	cxt.result().assign( lk::file_exists( cxt.arg(0).as_string().c_str() ) ? 1.0 : 0.0 );
+	cxt.result().assign( lk::file_exists( (const char*)cxt.arg(0).as_string().c_str() ) ? 1.0 : 0.0 );
 }
 
 static void _dir_exists( lk::invoke_t &cxt )
 {
 	LK_DOC("dir_exists", "Determines whether the specified directory exists.", "(string):boolean");
-	cxt.result().assign( lk::dir_exists( cxt.arg(0).as_string().c_str() ) ? 1.0 : 0.0 );
+	cxt.result().assign( lk::dir_exists( (const char*)cxt.arg(0).as_string().c_str() ) ? 1.0 : 0.0 );
 }
 
 static void _remove_file( lk::invoke_t &cxt )
 {
 	LK_DOC("remove_file", "Deletes the specified file from the filesystem.", "(string):boolean");
-	cxt.result().assign( lk::remove_file( cxt.arg(0).as_string().c_str() ) ? 1.0 : 0.0 );
+	cxt.result().assign( lk::remove_file( (const char*)cxt.arg(0).as_string().c_str() ) ? 1.0 : 0.0 );
 }
 
 static void _mkdir( lk::invoke_t &cxt )
@@ -369,7 +373,7 @@ static void _mkdir( lk::invoke_t &cxt )
 	lk_string s = cxt.arg(0).as_string();
 	bool f = true;
 	if (cxt.arg_count() > 0) f = cxt.arg(1).as_boolean();
-	cxt.result().assign( lk::mkdir( s.c_str(), f ) ? 1.0 : 0.0 );
+	cxt.result().assign( lk::mkdir( (const char*)s.c_str(), f ) ? 1.0 : 0.0 );
 }
 
 static void _path_only( lk::invoke_t &cxt )
@@ -399,7 +403,7 @@ static void _cwd( lk::invoke_t &cxt )
 	if (cxt.arg_count() == 1)
 	{
 		lk_string path = cxt.arg(0).as_string();
-		if (lk::dir_exists(path.c_str()))
+		if (lk::dir_exists((const char*)path.c_str()))
 		{
 			lk::set_cwd( path );
 			cxt.result().assign( 1.0 );
@@ -414,7 +418,7 @@ static void _cwd( lk::invoke_t &cxt )
 static void _system( lk::invoke_t &cxt )
 {
 	LK_DOC("system", "Executes the system command specified, and returns the exit code.", "(string):integer");
-	cxt.result().assign( (double) ::system( cxt.arg(0).as_string().c_str() ) );
+	cxt.result().assign( (double) ::system( (const char*)cxt.arg(0).as_string().c_str() ) );
 }
 
 static void _read_text_file( lk::invoke_t &cxt )
@@ -430,14 +434,14 @@ static void _write_text_file( lk::invoke_t &cxt )
 	lk_string file = cxt.arg(0).as_string();
 	lk_string data = cxt.arg(1).as_string();
 
-	FILE *fp = fopen(file.c_str(), "w");
+	FILE *fp = fopen( (const char*) file.c_str(), "w");
 	if (!fp)
 	{
 		cxt.result().assign( 0.0 );
 		return;
 	}
 
-	fputs( data.c_str(), fp );
+	fputs( (const char*)data.c_str(), fp );
 	fclose(fp);
 	cxt.result().assign( 1.0 );
 }
@@ -520,7 +524,7 @@ static void _mid( lk::invoke_t &cxt )
 static void _strlen( lk::invoke_t &cxt )
 {
 	LK_DOC("strlen", "Returns the length of a string.", "(string):integer");
-	cxt.result().assign( (double)(int)strlen( cxt.arg(0).as_string().c_str() ) );
+	cxt.result().assign( (double)(int) cxt.arg(0).as_string().length() );
 }
 
 static void _ascii( lk::invoke_t &cxt )
@@ -622,7 +626,7 @@ static void _replace( lk::invoke_t &cxt )
 	lk_string s_old = cxt.arg(1).as_string();
 	lk_string s_new = cxt.arg(2).as_string();
 
-	size_t uiCount = lk::replace( s, s_old, s_new );
+	lk::replace( s, s_old, s_new );
 
 	cxt.result().assign( s );
 }
@@ -666,7 +670,7 @@ static void _real_array( lk::invoke_t &cxt )
 	std::vector<lk_string> list = lk::split( cxt.arg(0).as_string(), " \t\n\r,;:", false, false );
 	cxt.result().empty_vector();
 	for (size_t i=0;i<list.size();i++)
-		cxt.result().vec_append( atof( list[i].c_str() ) );
+		cxt.result().vec_append( atof( (const char*)list[i].c_str() ) );
 }
 
 static void _mceil( lk::invoke_t &cxt )
@@ -807,11 +811,11 @@ static void _wx_choose_file( lk::invoke_t &cxt )
 	bool multiple = false;
 
 	if (cxt.arg_count() > 0)
-		path = cxt.arg(0).as_string().c_str();
+		path = cxt.arg(0).as_string();
 	if (cxt.arg_count() > 1)
-		caption = cxt.arg(1).as_string().c_str();
+		caption = cxt.arg(1).as_string();
 	if (cxt.arg_count() > 2)
-		filter = cxt.arg(2).as_string().c_str();
+		filter = cxt.arg(2).as_string();
 	if (cxt.arg_count() > 3)
 		savedlg = cxt.arg(3).as_boolean();
 	if (cxt.arg_count() > 4)
@@ -989,7 +993,7 @@ std::vector< lk_string > lk::dir_list( const lk_string &path, const lk_string &e
 	DIR *dir;
 	struct dirent *ent;
 
-	dir = ::opendir( path.c_str() );
+	dir = ::opendir( (const char*)path.c_str() );
 	if (!dir) return list;
 
 	while( (ent=readdir(dir)) )
@@ -1000,7 +1004,7 @@ std::vector< lk_string > lk::dir_list( const lk_string &path, const lk_string &e
 
 		if ( extlist.empty()
 			|| extlist=="*"
-			||  ( ret_dirs && dir_exists( lk_string(path + "/" + item ).c_str() )) )
+			||  ( ret_dirs && dir_exists( (const char*)lk_string(path + "/" + item ).c_str() )) )
 		{
 			list.push_back( item );
 		}
@@ -1092,7 +1096,7 @@ size_t lk::replace( lk_string &s, const lk_string &old_text, const lk_string &ne
 			break;
 
 		// replace this occurrence of the old string with the new one
-		s.replace(pos, uiOldLen, new_text.c_str(), uiNewLen);
+		s.replace(pos, uiOldLen, new_text, uiNewLen);
 
 		// move past the string that was replaced
 		pos += uiNewLen;
@@ -1188,8 +1192,8 @@ bool lk::mkdir( const char *path, bool make_full )
 		{
 			cur_path += parts[i];
 
-			if ( !dir_exists(cur_path.c_str()) )
-				if (0 != make_dir( cur_path.c_str() ) ) return false;
+			if ( !dir_exists((const char*)cur_path.c_str()) )
+				if (0 != make_dir( (const char*)cur_path.c_str() ) ) return false;
 
 			cur_path += path_separator();
 		}
@@ -1245,9 +1249,9 @@ lk_string lk::get_cwd()
 bool lk::set_cwd( const lk_string &path )
 {
 #ifdef _WIN32
-	return ::SetCurrentDirectoryA( path.c_str() ) != 0;
+	return ::SetCurrentDirectoryA( (const char*)path.c_str() ) != 0;
 #else
-	return ::chdir( path.c_str() ) == 0;
+	return ::chdir( (const char*)path.c_str() ) == 0;
 #endif
 }
 
@@ -1255,7 +1259,7 @@ lk_string lk::read_file( const lk_string &file )
 {
 	lk_string buf;
 	char c;
-	FILE *fp = fopen(file.c_str(), "r");
+	FILE *fp = fopen( (const char*)file.c_str(), "r");
 	if (fp)
 	{
 		while ( (c=fgetc(fp))!=EOF )
@@ -1452,7 +1456,7 @@ int lk::sync_piped_process::spawn(const lk_string &command, const lk_string &wor
 		lk::set_cwd( workdir );
 	}
 
-	FILE *fp = popen( command.c_str(), "r" );
+	FILE *fp = popen( (const char*)command.c_str(), "r" );
 	if (!fp)
 		return -99;
 
@@ -1950,11 +1954,11 @@ bool lk::tex_doc( const lk_string &file,
 			  const lk_string &title,
 			  std::vector<fcall_t> lib )
 {
-	FILE *fp = fopen( file.c_str(),  "w" );
+	FILE *fp = fopen( (const char*)file.c_str(),  "w" );
 	if (!fp)
 		return false;
 
-	fprintf(fp, "\\subsection{%s}\n", title.c_str());
+	fprintf(fp, "\\subsection{%s}\n", (const char*)title.c_str());
 	for (size_t i=0;i<lib.size();i++)
 	{
 		lk::doc_t d;
@@ -1962,29 +1966,29 @@ bool lk::tex_doc( const lk_string &file,
 		{
 
 			fprintf(fp, "{\\large \\texttt{\\textbf{%s}}}\\\\\n",
-					_latexify_text(d.func_name).c_str() );
+					(const char*)_latexify_text(d.func_name).c_str() );
 
 			if (!d.notes.empty())
 			{
-				fprintf(fp, "%s\\\\\\\\\n", _latexify_text(d.notes).c_str());
+				fprintf(fp, "%s\\\\\\\\\n", (const char*)_latexify_text(d.notes).c_str());
 			}
 
 			fprintf(fp, "\\textsf{ %s }\\\\\n%s\\\\\n",
-					_latexify_text(d.sig1).c_str(),
-					_latexify_text(d.desc1).c_str() );
+					(const char*)_latexify_text(d.sig1).c_str(),
+					(const char*)_latexify_text(d.desc1).c_str() );
 
 			if (d.has_2)
 			{
 				fprintf(fp, "\\\\\\textsf{ %s }\\\\\n%s\\\\\n",
-						_latexify_text(d.sig2).c_str(),
-						_latexify_text(d.desc2).c_str() );
+						(const char*)_latexify_text(d.sig2).c_str(),
+						(const char*)_latexify_text(d.desc2).c_str() );
 			}
 
 			if (d.has_3)
 			{
 				fprintf(fp, "\\\\\\textsf{ %s }\\\\\n%s\\\\\n",
-						_latexify_text(d.sig3).c_str(),
-						_latexify_text(d.desc3).c_str() );
+						(const char*)_latexify_text(d.sig3).c_str(),
+						(const char*)_latexify_text(d.desc3).c_str() );
 			}
 
 

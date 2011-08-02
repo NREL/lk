@@ -44,7 +44,7 @@ namespace lk
 		
 		int line() { return lex.line(); }
 		int error_count() { return m_errorList.size(); }
-		const char *error(int idx);
+		lk_string error(int idx);
 		
 		int token();
 		bool token(int t);
