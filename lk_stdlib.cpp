@@ -8,6 +8,10 @@
 #include <math.h>
 #include <float.h>
 
+#ifndef M_PI
+#define M_PI 3.141592653589793238462643
+#endif
+
 #ifdef _WIN32
 #include <direct.h>
 #include <windows.h>
@@ -727,10 +731,22 @@ static void _msin( lk::invoke_t &cxt )
 	cxt.result().assign( ::sin( cxt.arg(0).as_number() ));
 }
 
+static void _msind( lk::invoke_t &cxt )
+{
+	LK_DOC("sind", "Computes the sine of x (degrees)", "(real:x):real");
+	cxt.result().assign( ::sin( cxt.arg(0).as_number() * M_PI / 180 ) );
+}
+
 static void _mcos( lk::invoke_t &cxt )
 {
 	LK_DOC("cos", "Computes the cosine of x (radians)", "(real:x):real");
 	cxt.result().assign( ::cos( cxt.arg(0).as_number() ));
+}
+
+static void _mcosd( lk::invoke_t &cxt )
+{
+	LK_DOC("cosd", "Computes the cosine of x (degrees)", "(real:x):real");
+	cxt.result().assign( ::cos( cxt.arg(0).as_number() * M_PI / 180 ));
 }
 
 static void _mtan( lk::invoke_t &cxt )
@@ -739,11 +755,24 @@ static void _mtan( lk::invoke_t &cxt )
 	cxt.result().assign( ::tan( cxt.arg(0).as_number() ));
 }
 
+static void _mtand( lk::invoke_t &cxt )
+{
+	LK_DOC("tand", "Computes the tangent of x (degrees)", "(real:x):real");
+	cxt.result().assign( ::tan( cxt.arg(0).as_number() * M_PI / 180 ));
+}
+
 static void _masin( lk::invoke_t &cxt )
 {
 	LK_DOC("asin", "Computes the arc sine of x, result is in radians, -pi/2 to pi/2.", "(real:x):real");
 	cxt.result().assign( ::asin( cxt.arg(0).as_number() ));
 }
+
+static void _masind( lk::invoke_t &cxt )
+{
+	LK_DOC("asind", "Computes the arc sine of x, result is in degrees, -90 to 90.", "(real:x):real");
+	cxt.result().assign( ::asin( cxt.arg(0).as_number() ) * 180 / M_PI );
+}
+
 
 static void _macos( lk::invoke_t &cxt )
 {
@@ -751,16 +780,35 @@ static void _macos( lk::invoke_t &cxt )
 	cxt.result().assign( ::acos( cxt.arg(0).as_number() ));
 }
 
+static void _macosd( lk::invoke_t &cxt )
+{
+	LK_DOC("acosd", "Computes the arc cosine of x, result is in degrees, 0 to 180.", "(real:x):real");
+	cxt.result().assign( ::acos( cxt.arg(0).as_number() ) * 180 / M_PI );
+}
+
+
 static void _matan( lk::invoke_t &cxt )
 {
 	LK_DOC("atan", "Computes the arc tangent of x, result is in radians, -pi/2 to pi/2.", "(real:x):real");
 	cxt.result().assign( ::asin( cxt.arg(0).as_number() ));
 }
 
+static void _matand( lk::invoke_t &cxt )
+{
+	LK_DOC("atand", "Computes the arc tangent of x, result is in degrees, -90 to 90.", "(real:x):real");
+	cxt.result().assign( ::asin( cxt.arg(0).as_number() ) * 180 / M_PI );
+}
+
 static void _matan2( lk::invoke_t &cxt )
 {
-	LK_DOC("atan2", "Computes the arc tangent using both x and y to determine the quadrant of the result.", "(real:x, real:y):real");
+	LK_DOC("atan2", "Computes the arc tangent using both x and y to determine the quadrant of the result, result is in radians.", "(real:x, real:y):real");
 	cxt.result().assign( ::atan2( cxt.arg(0).as_number(), cxt.arg(1).as_number() ));
+}
+
+static void _matan2d( lk::invoke_t &cxt )
+{
+	LK_DOC("atan2d", "Computes the arc tangent using both x and y to determine the quadrant of the result, result is in degrees.", "(real:x, real:y):real");
+	cxt.result().assign( ::atan2( cxt.arg(0).as_number(), cxt.arg(1).as_number() ) * 180 / M_PI);
 }
 
 static void _mnan( lk::invoke_t &cxt )
@@ -977,6 +1025,13 @@ lk::fcall_t* lk::stdlib_math()
 		_macos,
 		_matan,
 		_matan2,
+		_msind,
+		_mcosd,
+		_mtand,
+		_masind,
+		_macosd,
+		_matand,
+		_matan2d,
 		_mnan,
 		_misnan,
 		_mmod,
