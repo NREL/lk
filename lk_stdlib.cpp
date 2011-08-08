@@ -725,6 +725,19 @@ static void _mpi( lk::invoke_t &cxt )
 	cxt.result().assign( 3.14156295358979323846264338327950 );
 }
 
+static void _mabs( lk::invoke_t &cxt )
+{
+	LK_DOC("abs", "Returns the absolute value of a number.", "(real:x):real");
+	cxt.result().assign( ::fabs( cxt.arg(0).as_number() ) );
+}
+
+static void _msgn( lk::invoke_t &cxt )
+{
+	LK_DOC("sgn", "Returns 1 if the argument is greater than zero, 0 if argument is 0, otherwise -1.", "(real:x):real");
+	double x = cxt.arg(0).as_number();
+	cxt.result().assign( x > 0 ? 1.0 : ( x == 0 ? 0.0 : -1.0 ) );
+}
+
 static void _msin( lk::invoke_t &cxt )
 {
 	LK_DOC("sin", "Computes the sine of x (radians)", "(real:x):real");
@@ -1018,6 +1031,8 @@ lk::fcall_t* lk::stdlib_math()
 		_mlog,
 		_mlog10,
 		_mpi,
+		_msgn,
+		_mabs,
 		_msin,
 		_mcos,
 		_mtan,
