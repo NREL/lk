@@ -1166,7 +1166,11 @@ size_t lk::replace( lk_string &s, const lk_string &old_text, const lk_string &ne
 			break;
 
 		// replace this occurrence of the old string with the new one
+#ifdef __WX__
 		s.replace(pos, uiOldLen, new_text, uiNewLen);
+#else
+		s.replace(pos, uiOldLen, new_text.c_str(), uiNewLen);
+#endif
 
 		// move past the string that was replaced
 		pos += uiNewLen;
