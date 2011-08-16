@@ -2026,17 +2026,18 @@ static lk_string _latexify_text( lk_string s )
 
 bool lk::tex_doc( const lk_string &file,
 			  const lk_string &title,
-			  std::vector<fcall_t> lib )
+			  fcall_t *lib )
 {
 	FILE *fp = fopen( (const char*)file.c_str(),  "w" );
 	if (!fp)
 		return false;
 
 	fprintf(fp, "\\subsection{%s}\n", (const char*)title.c_str());
-	for (size_t i=0;i<lib.size();i++)
+	size_t i=0;
+	while ( fcall_t f = lib[i++] )
 	{
 		lk::doc_t d;
-		if ( lk::doc_t::info(lib[i], d))
+		if ( lk::doc_t::info(f, d))
 		{
 
 			fprintf(fp, "{\\large \\texttt{\\textbf{%s}}}\\\\\n",
