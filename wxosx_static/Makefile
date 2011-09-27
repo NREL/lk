@@ -1,7 +1,7 @@
 VPATH = ..
 CC = gcc
 CXX = g++
-CFLAGS = -fPIC -Wall -O2 -D__WX__ -D__WXMAC__ `wx-config-29 --cflags`
+CFLAGS = -fPIC -Wall -O2 -D__WX__ -D__WXMAC__ `wx-config-dsa --cflags`
 CXXFLAGS = $(CFLAGS)
 
 LIBNAME = lk
