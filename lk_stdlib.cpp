@@ -2024,6 +2024,44 @@ static lk_string _latexify_text( lk_string s )
 	return s;
 }
 
+static lk_string format_sig(const lk_string &s)
+{
+	lk_string fmt = s;
+	lk::replace( fmt, "(", "<b>(</b>" );
+	lk::replace( fmt, ")", "<b>)</b>" );
+	lk::replace( fmt, "integer", "<font color=#aa0099>integer</font>" );
+	lk::replace( fmt, "real", "<font color=#aa0099>real</font>" );
+	lk::replace( fmt, "string", "<font color=#aa0099>string</font>" );
+	lk::replace( fmt, "number", "<font color=#aa0099>number</font>" );
+	lk::replace( fmt, "array", "<font color=#aa0099>array</font>" );
+	lk::replace( fmt, "character", "<font color=#aa0099>character</font>" );
+	lk::replace( fmt, "boolean", "<font color=#aa0099>boolean</font>" );
+	lk::replace( fmt, "null", "<font color=#aa0099>null</font>" );
+	lk::replace( fmt, "any", "<font color=#aa0099>any</font>" );
+	lk::replace( fmt, "void", "<font color=#777777>void</font>" );
+	lk::replace( fmt, "none", "<font color=#777777>none</font>" );
+	return fmt;
+}
+
+lk_string lk::html_doc( const lk_string &title, fcall_t *lib )
+{
+	lk_string data = "<h3>" + title + "</h3>\n";
+	size_t i=0;
+	while ( fcall_t f = lib[i++] )
+	{
+		lk::doc_t d;
+		if (lk::doc_t::info( f, d ))
+		{
+			data += "<b><font size=+1 color=#0066aa>" + d.func_name + "</font></b>&nbsp<font size=+1>" + format_sig(d.sig1) + "</font><br><i>" + d.desc1 + "</i>\n";
+			if (d.has_2) data += "<br><br><b><font size=+1 color=#0066aa>" + d.func_name + "</font></b>&nbsp<font size=+1>" + format_sig(d.sig2)  + "</font><br><i>" + d.desc2 + "</i>\n";
+			if (d.has_3) data += "<br><br><b><font size=+1 color=#0066aa>" + d.func_name + "</font></b>&nbsp<font size=+1>" + format_sig(d.sig3)  + "</font><br><i>" + d.desc3 + "</i>\n";
+			data += "<hr>\n";
+		}
+	}
+
+	return data;
+}
+
 bool lk::tex_doc( const lk_string &file,
 			  const lk_string &title,
 			  fcall_t *lib )

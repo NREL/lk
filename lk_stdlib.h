@@ -19,6 +19,7 @@ namespace lk {
 	LKEXPORT bool tex_doc( const lk_string &file,
 				  const lk_string &title,
 				  fcall_t *lib );
+	LKEXPORT lk_string html_doc( const lk_string &title, fcall_t *lib );
 
 
 	LKEXPORT std::vector< lk_string > dir_list( const lk_string &dir, const lk_string &extlist, bool ret_dirs=false );
