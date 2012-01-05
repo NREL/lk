@@ -16,6 +16,11 @@ int main(int argc, char *argv[])
 	printf("generating lk_math.tex...\n");
 	lk::tex_doc( "lk_math.tex", "Math Functions", lk::stdlib_math() );
 	
+#ifdef __WX__
+	printf("generating lk_wx.tex...\n");
+	lk::tex_doc( "lk_wx.tex", "GUI Functions", lk::stdlib_wxui() );
+#endif
+	
 	printf("done.\n");	
 	return 0;
 }
