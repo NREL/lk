@@ -2034,6 +2034,7 @@ static lk_string format_sig(const lk_string &s)
 	lk::replace( fmt, "string", "<font color=#aa0099>string</font>" );
 	lk::replace( fmt, "number", "<font color=#aa0099>number</font>" );
 	lk::replace( fmt, "array", "<font color=#aa0099>array</font>" );
+	lk::replace( fmt, "table", "<font color=#aa0099>table</font>" );
 	lk::replace( fmt, "character", "<font color=#aa0099>character</font>" );
 	lk::replace( fmt, "boolean", "<font color=#aa0099>boolean</font>" );
 	lk::replace( fmt, "null", "<font color=#aa0099>null</font>" );
