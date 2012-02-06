@@ -37,17 +37,16 @@ trip = define(x) { return x*x*x; };
 function sqr(x) { return x*x; }
 
 
-//wx_msgbox("hello, world!");
+msgbox("hello, world!");
 
 y = sqr(34);
 
 //sqr = define(){ a = 25;};
 
-const make_square = define()
-{
-	local sq.side = 2;
-	sq.scale_factor = 1.877;
-	return sq;
+const make_square = define({	
+local sq.side = 2;	
+sq.scale_factor = 1.877;	
+return sq;
 };
 
 const unity = [ 1, 5, 3, 6];

@@ -442,11 +442,8 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 				}
 			}
 			
-			int i=0;
-			while (const char *err = parse.error(i++))
-				applog("%s\n", err);
-
-
+			for (int i=0; i<parse.error_count(); i++ )
+				Post( parse.error(i)  + "\n" );
 		
 			delete tree;
 		

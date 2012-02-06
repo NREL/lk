@@ -95,10 +95,10 @@ void lk::parser::error( const char *fmt, ... )
 	char buf[512];
 
 	if ( !m_name.empty() )
-		sprintf(buf, "[%s %d]: ", (const char*)m_name.c_str(), lex.line() );
+		sprintf(buf, "[%s line %d]: ", (const char*)m_name.c_str(), lex.line() );
 	else
-		sprintf(buf, "[%d]: ", lex.line() );
-
+		sprintf(buf, "[line %d]: ", lex.line());
+	
 	char *p = buf + strlen(buf);
 
 	va_list list;
@@ -163,7 +163,11 @@ lk::node_t *lk::parser::block()
 		}
 		
 		if (!match( lk::lexer::SEP_RCURLY ))
+		{
 			m_haltFlag = true;
+			if (n) delete n;
+			return 0;
+		}
 			
 		return n;
 	}
@@ -315,17 +319,20 @@ lk::node_t *lk::parser::statement()
 	else 	
 		stmt = assignment();
 	
-	// require semicolon at end of a statement
-	if (!match(lk::lexer::SEP_SEMI))
+	if ( stmt == 0 )
 	{
-		while (token() != lk::lexer::END
-			&& token() != lk::lexer::INVALID
-			&& token() != lk::lexer::SEP_SEMI)
-			skip();
-		
-		if (!match(lk::lexer::SEP_SEMI))
-			m_haltFlag = true;
+		error("empty program statement encountered");
+		return 0;
 	}
+
+	// require semicolon at end of a statement
+	if ( !match(lk::lexer::SEP_SEMI) )
+	{
+		if ( stmt != 0 ) delete stmt;
+		m_haltFlag = true;
+		return 0;
+	}
+
 	return stmt;
 }
 
@@ -475,6 +482,7 @@ lk::node_t *lk::parser::loop()
 	else
 	{
 		error("invalid looping construct");
+		m_haltFlag = true;
 	}
 
 	return it;
