@@ -803,13 +803,13 @@ static void _macosd( lk::invoke_t &cxt )
 static void _matan( lk::invoke_t &cxt )
 {
 	LK_DOC("atan", "Computes the arc tangent of x, result is in radians, -pi/2 to pi/2.", "(real:x):real");
-	cxt.result().assign( ::asin( cxt.arg(0).as_number() ));
+	cxt.result().assign( ::atan( cxt.arg(0).as_number() ));
 }
 
 static void _matand( lk::invoke_t &cxt )
 {
 	LK_DOC("atand", "Computes the arc tangent of x, result is in degrees, -90 to 90.", "(real:x):real");
-	cxt.result().assign( ::asin( cxt.arg(0).as_number() ) * 180 / M_PI );
+	cxt.result().assign( ::atan( cxt.arg(0).as_number() ) * 180 / M_PI );
 }
 
 static void _matan2( lk::invoke_t &cxt )
