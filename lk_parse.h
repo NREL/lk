@@ -49,13 +49,14 @@ namespace lk
 		int token();
 		bool token(int t);
 		
+		void skip();
+		bool match(int t);
+		bool match( const char *s );
+		
 	private:
 		list_t *ternarylist( int septok, int endtok );
 		list_t *identifierlist( int septok, int endtok );
 	
-		void skip();
-		bool match(int t);
-		bool match( const char *s );
 		void error( const char *fmt, ... );
 		
 		lexer lex;				

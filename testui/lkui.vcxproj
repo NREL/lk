@@ -161,6 +161,7 @@
     <ClCompile Include="..\lk_lex.cpp" />
     <ClCompile Include="..\lk_parse.cpp" />
     <ClCompile Include="..\lk_stdlib.cpp" />
+    <ClCompile Include="lksolve.cpp" />
     <ClCompile Include="lkui.cpp" />
   </ItemGroup>
   <ItemGroup>
