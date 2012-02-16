@@ -171,8 +171,6 @@
     <ClInclude Include="..\lk_lex.h" />
     <ClInclude Include="..\lk_parse.h" />
     <ClInclude Include="..\lk_stdlib.h" />
-    <ClInclude Include="6parmod.h" />
-    <ClInclude Include="gamma.h" />
     <ClInclude Include="jacobian.h" />
     <ClInclude Include="lkui.h" />
     <ClInclude Include="lu.h" />

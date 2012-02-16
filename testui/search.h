@@ -1,17 +1,18 @@
 
-template< typename Real, typename F, int n >
-Real fminsum ( Real x[n], Real f[n], F &func )
+template< typename Real, typename F >
+Real fminsum ( Real *x, Real *f, const int n, F &func )
 {
 	Real sum=0;
-	func(x, f);
+	func(x, f, n);
 	for (int i=0;i<n;i++)
 		sum += f[i]*f[i];
 	return 0.5*sum;
 }
 	
-template< typename Real, typename F, int n >
-bool search( Real xold[n], const Real fold, Real g[n], Real p[n],
-			Real x[n], Real &f, const Real stpmax, bool &check, F &func, Real fvec[n])
+template< typename Real, typename F >
+bool search( Real *xold, const Real fold, Real *g, Real *p,
+			Real *x, Real &f, const Real stpmax, bool &check, F &func, Real *fvec,
+			const int n)
 {
 	const Real ALF=1.0e-4, TOLX = std::numeric_limits<Real>::epsilon();
 	Real a,alam,alam2=0.0,alamin,b,disc,f2=0.0;
@@ -49,7 +50,7 @@ bool search( Real xold[n], const Real fold, Real g[n], Real p[n],
 		for (i=0;i<n;i++)
 			x[i]=xold[i]+alam*p[i];
 			
-		f = fminsum<Real, F, n>( x, fvec, func );
+		f = fminsum<Real, F>( x, fvec, n, func );
 		if ( (f) != (f) )
 			return false;
 			

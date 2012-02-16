@@ -1,14 +1,15 @@
 
 
-template< typename Real, int n >
-bool lu_decomp( const Real a[n][n], 
-				Real lu[n][n],
-				int permute[n] )
+template< typename Real >
+bool lu_decomp( Real **a, 
+				Real **lu,
+				int *permute,
+				const int n )
 {
 	const Real TINY = 1.0e-40;
 	int i, imax, j, k;
 	Real big, temp;
-	Real vv[n];
+	Real *vv = new Real[n];
 	
 	// copy over A matrix to LU
 	for ( i=0; i < n; i++)
@@ -23,7 +24,11 @@ bool lu_decomp( const Real a[n][n],
 			if ( (temp = fabs(lu[i][j])) > big )
 				big = temp;
 				
-		if ( big == 0.0 ) return false;
+		if ( big == 0.0 )
+		{
+			delete [] vv;
+			return false;
+		}
 		vv[i] = 1.0 / big;
 	}
 	
@@ -63,13 +68,14 @@ bool lu_decomp( const Real a[n][n],
 				lu[i][j] -= temp*lu[k][j];
 		}
 	}
-	
+
+	delete [] vv;	
 	return true;
 }
 
-template< typename Real, int n >
-void lu_solve( const Real lu[n][n], const int permute[n],
-		Real b[n], Real x[n])
+template< typename Real >
+void lu_solve( Real **lu, const int *permute,
+		Real *b, Real *x, const int n)
 {
 // given LU decomposition and permutation vector, solve the 
 // set of linear equations Ax = b.  The solution is returned in x,

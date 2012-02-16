@@ -1,23 +1,32 @@
 
 template< typename Real > Real mymax( Real a, Real b ) { return a > b ? a : b; }
 
-template< typename Real, typename F, int n >
-int newton( Real x[n], Real residual[n], bool &check, F &func, 
+template< typename Real, typename F >
+int newton( Real *x, Real *residual, const int n, bool &check, F &func, 
 	int MAXITER, const Real TOLF, const Real TOLMIN, const Real STPMX,
-	bool (*notify)(int iter, Real x[], Real resid[], const int n, void *) = 0,
+	bool (*notify)(int iter, Real *, Real *, const int, void *) = 0,
 	void *notify_data = 0)
 {
 	const Real TOLX = std::numeric_limits<Real>::epsilon();
 	
 	int i,j,its;
 	Real den,f,fold,stpmax,sum,temp,test;
-	Real g[n],p[n],xold[n];
-	Real fjac[n][n];
-	
-	Real lu[n][n];
-	int permute[n];
+	Real *g = new Real[n];
+	Real *p = new Real[n];
+	Real *xold = new Real[n];
+	Real **fjac = new Real*[n];	
+	Real **lu = new Real*[n];
+	for (i=0;i<n;i++)
+	{
+		fjac[i] = new Real[n];
+		lu[i] = new Real[n];
+	}
+
+	int *permute = new int[n];
+
+#define NEWT_FREEMEM() { delete [] g; delete [] p; delete [] xold; delete [] permute; for (int k=0;k<n;k++) { delete [] fjac[k]; delete [] lu[k]; } delete [] fjac; delete [] lu; }
 		
-	f = fminsum<Real, F, n>(x, residual, func);
+	f = fminsum<Real, F>(x, residual, n, func);
 	test=0.0;
 	for (i=0;i<n;i++)
 		if (fabs(residual[i]) > test) 
@@ -26,6 +35,7 @@ int newton( Real x[n], Real residual[n], bool &check, F &func,
 	if (test < 0.01*TOLF)
 	{
 		check = false;
+		NEWT_FREEMEM();
 		return 0;
 	}
 	
@@ -40,10 +50,13 @@ int newton( Real x[n], Real residual[n], bool &check, F &func,
 		{
 			bool ok = (*notify)(its, x, residual, n, notify_data);
 			if (!ok)
+			{
+				NEWT_FREEMEM();
 				return -3;
+			}
 		}
 
-		jacobian<Real, F, n, n>( x, residual, fjac, func, 1e-8 );
+		jacobian<Real, F>( x, residual, fjac, n, n, func, 1e-8 );
 		
 		for (i=0;i<n;i++) 
 		{
@@ -61,11 +74,14 @@ int newton( Real x[n], Real residual[n], bool &check, F &func,
 			p[i] = -residual[i];
 		
 				
-		if (!lu_decomp<Real, n>( fjac, lu, permute )) return false;			
-		lu_solve<Real, n>( lu, permute, p, p );
+		if (!lu_decomp<Real>( fjac, lu, permute, n )) { NEWT_FREEMEM(); return false; }
+		lu_solve<Real>( lu, permute, p, p, n );
 		
-		if (!search<Real, F, n>(xold, fold, g, p, x, f, stpmax, check, func, residual))
+		if (!search<Real, F>(xold, fold, g, p, x, f, stpmax, check, func, residual, n))
+		{
+			NEWT_FREEMEM();
 			return -2;
+		}
 		
 		test=0.0;
 		for (i=0;i<n;i++)
@@ -74,6 +90,7 @@ int newton( Real x[n], Real residual[n], bool &check, F &func,
 				
 		if (test < TOLF)
 		{
+			NEWT_FREEMEM();
 			check=false;
 			return its+1;
 		}
@@ -86,6 +103,7 @@ int newton( Real x[n], Real residual[n], bool &check, F &func,
 				if (temp > test) test=temp;
 			}
 			check=(test < TOLMIN) ? true : false;
+			NEWT_FREEMEM();
 			return its+1;
 		}
 		
@@ -96,8 +114,11 @@ int newton( Real x[n], Real residual[n], bool &check, F &func,
 		}
 		
 		if (test < TOLX)
+		{
+			NEWT_FREEMEM();
 			return its+1;
+		}
 	}
-	
+#undef NEWT_FREEMEM
 	return -1;
 }

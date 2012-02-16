@@ -1,14 +1,14 @@
 
-template< typename Real, typename F, int n, int m >
-void jacobian( Real x[n], Real f[m], Real J[n][m], F &func, Real epsrel )
+template< typename Real, typename F >
+void jacobian( Real *x, Real *f, Real **J, const int n, const int m, F &func, Real epsrel )
 {
 	// create copy of x input vector
-	Real x1[n];
+	Real *x1 = new Real[n];
 	for ( int j=0; j < n; j++ )
 		x1[j] = x[j];
 	
 	// storage for result of calculating function at x1
-	Real f1[m];
+	Real *f1 = new Real[m];
 	
 	for ( int j=0 ; j < n; j++ )
 	{
@@ -22,7 +22,7 @@ void jacobian( Real x[n], Real f[m], Real J[n][m], F &func, Real epsrel )
 		x1[j] = xj + dx;
 		dx = x1[j] - xj; // trick from NR to reduce finite precision error, esp with float or double
 		
-		func( x1, f1 );
+		func( x1, f1, n );
 		
 		// replace original xj value
 		x1[j] = xj;
@@ -32,4 +32,7 @@ void jacobian( Real x[n], Real f[m], Real J[n][m], F &func, Real epsrel )
 		for ( int i=0; i < m; i++ )
 			J[i][j] = ( f1[i] - f[i] ) / dx;
 	}
+
+	delete [] x1;
+	delete [] f1;
 }
