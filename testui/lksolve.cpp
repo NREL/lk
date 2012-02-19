@@ -25,7 +25,7 @@
 #include "search.h"
 #include "lu.h"
 
-enum { ID_SOLVE = 8145 };
+enum { ID_SOLVE = 8145, ID_DEMO };
 
 double bessj0(double x)
 {
@@ -352,7 +352,7 @@ namespace lk {
 
 		int solve( int max_iter, double ftol, double appfac, wxTextCtrl *log)
 		{
-			if (!parse()) return false;
+			if (!parse()) return -1;
 
 			m_varList.clear();
 			for ( size_t i=0;i<m_eqnList.size();i++)
@@ -363,7 +363,7 @@ namespace lk {
 			if ( n != (int)m_eqnList.size() )
 			{
 				error("#equations(%d) != #variables(%d)", m_eqnList.size(), n);
-				return false;
+				return -2;
 			}
 
 			// set all initial conditions NaN variables to 1
@@ -682,6 +682,15 @@ namespace lk {
 	};
 };
 
+static const char *eqn_default=
+"h=500;\n"
+"D=0.1;\n"
+"r=D/2;\n"
+"k=20;\n"
+"Biot=(h*r/2)/k;\n"
+"lambda*besj1(lambda)-Biot*besj0(lambda)=0;\n"
+"C=1/lambda*besj1(lambda)/(1/2*(besj0(lambda)^2 + besj1(lambda)^2));\n";
+
 class LKSolve : public wxFrame
 {
 private:
@@ -694,7 +703,7 @@ private:
 
 public:
 	LKSolve( )
-		: wxFrame( NULL, wxID_ANY, "LKSolve", wxDefaultPosition, wxSize(800,600) )
+		: wxFrame( NULL, wxID_ANY, "frees", wxDefaultPosition, wxSize(800,600) )
 	{
 		wxBoxSizer *tools = new wxBoxSizer( wxHORIZONTAL );
 		tools->Add( new wxButton(this, ID_SOLVE, "Solve" ) );
@@ -705,6 +714,7 @@ public:
 		tools->Add( new wxStaticText(this, wxID_ANY, "   Appfac:") );
 		tools->Add( m_appFac = new wxTextCtrl(this, wxID_ANY, "0.2") );
 		tools->Add( m_showIters = new wxCheckBox(this, wxID_ANY, "Show intermediates") );
+		tools->Add( new wxButton(this, ID_DEMO, "Demo" ) );
 		m_showIters->SetValue( false );
 
 		tools->AddStretchSpacer();
@@ -717,6 +727,8 @@ public:
 		m_output->SetFont( wxFont(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Consolas") );
 		m_output->SetForegroundColour( *wxBLUE );
 		
+		m_input->SetValue( eqn_default );
+
 		split->SplitHorizontally( m_input, m_output );
 
 		wxBoxSizer *sz = new wxBoxSizer( wxVERTICAL );
@@ -740,6 +752,11 @@ public:
 		entries[6].Set( wxACCEL_NORMAL, WXK_F5, ID_START );*/
 		SetAcceleratorTable( wxAcceleratorTable(1,entries) );
 
+	}
+
+	void OnDemo( wxCommandEvent & )
+	{
+		m_input->SetValue(eqn_default);
 	}
 
 	void OnSolve( wxCommandEvent & )
@@ -784,11 +801,13 @@ public:
 
 BEGIN_EVENT_TABLE( LKSolve, wxFrame )
 	EVT_BUTTON( ID_SOLVE, LKSolve::OnSolve )
+	EVT_BUTTON( ID_DEMO, LKSolve::OnDemo )
 	EVT_CLOSE( LKSolve::OnCloseFrame )
 END_EVENT_TABLE()
 
 void new_solver()
 {
+	wxLog::EnableLogging( false );
 	LKSolve *l = new LKSolve;
 	l->Show();
 }
