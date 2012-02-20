@@ -9,6 +9,7 @@
 
 #include <sstream>
 
+#include <exception>
 #include <algorithm>
 #include <limits>
 #include <numeric>
@@ -25,7 +26,7 @@
 #include "search.h"
 #include "lu.h"
 
-enum { ID_SOLVE = 8145, ID_DEMO };
+enum { ID_SOLVE = 8145, ID_DEMO, ID_CMDLINE };
 
 double bessj0(double x)
 {
@@ -235,6 +236,15 @@ namespace lk {
 		t->AppendText( text );
 		return true;
 	}
+		
+	class evalexception : public std::exception
+	{
+	private:
+		lk_string m_err;
+	public:
+		evalexception( lk_string s ) : m_err(s) {  }
+		virtual const char *what() { return (const char*)m_err.c_str(); }
+	};
 
 	class eqnsolve
 	{
@@ -313,6 +323,7 @@ namespace lk {
 		}
 
 	public:
+
 		eqnsolve( input_base &input )
 			: lex( input )
 		{
@@ -383,9 +394,16 @@ namespace lk {
 				x[i] = m_values[ m_varList[i] ]; // initial values
 			
 			bool check = false;
-			int niter = newton<double, eqnsolve>( x, resid, n, check, *this, 
+			int niter = -1;
+			
+			try {
+				niter = newton<double, eqnsolve>( x, resid, n, check, *this, 
 					max_iter, ftol, ftol, appfac,
 					nsolver_callback, log);
+			} catch( evalexception &ex ) {
+				error( ex.what() );
+				niter = -9;
+			}
 
 			for( int i=0; i < n; i++)
 				m_values[ m_varList[i] ] = x[i];
@@ -411,7 +429,7 @@ namespace lk {
 		}
 		
 		
-		void operator() ( const double *x, double *f, int n )
+		void operator() ( const double *x, double *f, int n ) throw( evalexception )
 		{
 			int i;
 			for( i=0; i < n; i++)
@@ -421,10 +439,8 @@ namespace lk {
 			for( i=0;i < n;i++)
 				f[i] = eval_eqn( m_eqnList[i], m_values );
 		}
-	private:
-
 	
-		double eval_eqn( lk::node_t *n, valtab_t &t )
+		double eval_eqn( lk::node_t *n, valtab_t &t ) throw( evalexception )
 		{
 			if ( !n ) return std::numeric_limits<double>::quiet_NaN();
 			if ( lk::expr_t *e = dynamic_cast<lk::expr_t*>( n ) )
@@ -441,7 +457,7 @@ namespace lk {
 					return a * b;
 				case lk::expr_t::DIV:
 					{
-						if ( b == 0 ) return std::numeric_limits<double>::quiet_NaN();
+						if ( b == 0 ) throw evalexception("divide by zero");
 						else return a / b;
 					}
 				case lk::expr_t::EXP:
@@ -453,6 +469,8 @@ namespace lk {
 			}
 			else if ( lk::iden_t *i = dynamic_cast<lk::iden_t*>( n ))
 			{
+				if (t.find( i->name ) == t.end())
+					throw evalexception("variable not assigned: " + i->name);
 				return t[i->name];
 			}
 			else if ( lk::constant_t *c = dynamic_cast<lk::constant_t*>( n ))
@@ -461,6 +479,36 @@ namespace lk {
 			}
 			else if ( funccall_t *f = dynamic_cast<funccall_t*>( n ))
 			{
+#define DTOR 0.0174532925
+				/*
+				
+		_mceil,
+		_mfloor,
+		_msqrt,
+		_mpow,
+		_mexp,
+		_mlog,
+		_mlog10,
+		_mpi,
+		_msgn,
+		_mabs,
+		_msin,
+		_mcos,
+		_mtan,
+		_masin,
+		_macos,
+		_matan,
+		_matan2,
+		_msind,
+		_mcosd,
+		_mtand,
+		_masind,
+		_macosd,
+		_matand,
+		_matan2d,
+		_mnan,
+		_misnan,
+		_mmod, */
 
 				if (f->name == "sin" && f->args.size() == 1 )
 					return ::sin( eval_eqn( f->args[0], t ) );			
@@ -468,6 +516,20 @@ namespace lk {
 					return ::cos( eval_eqn( f->args[0], t ) );			
 				else if (f->name == "tan" && f->args.size() == 1 )
 					return ::tan( eval_eqn( f->args[0], t ) );
+				else if (f->name == "sind" && f->args.size() == 1 )
+					return ::sin( DTOR*eval_eqn( f->args[0], t ) );			
+				else if (f->name == "cosd" && f->args.size() == 1 )
+					return ::cos( DTOR*eval_eqn( f->args[0], t ) );			
+				else if (f->name == "tand" && f->args.size() == 1 )
+					return ::tan( DTOR*eval_eqn( f->args[0], t ) );
+				else if (f->name == "exp" && f->args.size() == 1 )
+					return ::exp( eval_eqn( f->args[0], t ) );
+				else if (f->name == "ln" && f->args.size() == 1 )
+					return ::log( eval_eqn( f->args[0], t ) );
+				else if (f->name == "log10" && f->args.size() == 1 )
+					return ::log10( eval_eqn( f->args[0], t ) );
+				else if (f->name == "pow" && f->args.size() == 2)
+					return ::pow( eval_eqn( f->args[0], t ), eval_eqn( f->args[1], t ) );
 				else if (f->name == "besj0" && f->args.size() == 1 )
 					return ::bessj0( eval_eqn(f->args[0], t) );
 				else if (f->name == "besj1" && f->args.size() == 1 )
@@ -484,9 +546,11 @@ namespace lk {
 					return ::bessk0( eval_eqn(f->args[0], t) );
 				else if (f->name == "besk1" && f->args.size() == 1 )
 					return ::bessk1( eval_eqn(f->args[0], t) );
+				else
+					throw evalexception( "undefined function: " + f->name );
 			}
 
-			return std::numeric_limits<double>::quiet_NaN();
+			throw evalexception("internal error: faulty equation");
 
 		}
 		
@@ -700,6 +764,8 @@ private:
 	wxTextCtrl *m_fTol;
 	wxTextCtrl *m_appFac;
 	wxCheckBox *m_showIters;
+	wxTextCtrl *m_cmdLine;
+	lk::valtab_t m_evalEnv;
 
 public:
 	LKSolve( )
@@ -725,7 +791,12 @@ public:
 		m_input->SetFont( wxFont(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Consolas") );
 		m_output = new wxTextCtrl( split, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE );
 		m_output->SetFont( wxFont(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Consolas") );
-		m_output->SetForegroundColour( *wxBLUE );
+		m_output->SetForegroundColour( "FOREST GREEN" );
+
+		m_cmdLine = new wxTextCtrl( this, ID_CMDLINE, "" );
+		m_cmdLine->SetFont( wxFont(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Consolas") );
+		m_cmdLine->SetForegroundColour( *wxBLUE );
+
 		
 		m_input->SetValue( eqn_default );
 
@@ -734,6 +805,7 @@ public:
 		wxBoxSizer *sz = new wxBoxSizer( wxVERTICAL );
 		sz->Add( tools, 0, wxALL|wxEXPAND );
 		sz->Add( split,  1, wxALL|wxEXPAND );
+		sz->Add( m_cmdLine, 0, wxALL|wxEXPAND );
 		SetSizer( sz );
 
 		m_input->SetFocus();
@@ -751,7 +823,7 @@ public:
 		entries[5].Set( wxACCEL_NORMAL, WXK_F4, ID_ADD_VARIABLE );
 		entries[6].Set( wxACCEL_NORMAL, WXK_F5, ID_START );*/
 		SetAcceleratorTable( wxAcceleratorTable(1,entries) );
-
+		m_cmdLine->SetFocus();
 	}
 
 	void OnDemo( wxCommandEvent & )
@@ -796,10 +868,91 @@ public:
 
 	}
 
+	void OnCmdLine( wxCommandEvent & )
+	{
+		static wxString fmt = "%lg";
+		m_output->AppendText( ">> " + m_cmdLine->GetValue() + "\n");
+
+		wxString text = m_cmdLine->GetValue().Trim().Trim(false);
+		wxString var_assign = "ans";
+		if (text == "q" || text == "quit")
+			Close();
+		else if ( text == "clr" || text == "clear" )
+		{
+			m_output->Clear();
+			m_cmdLine->Clear();
+			return;
+		}
+		else if ( text == "erase" )
+		{
+			m_evalEnv = lk::valtab_t();
+			m_output->AppendText("erased all variables\n");
+			m_cmdLine->Clear();
+			return;
+		}
+		else if (text == "env")
+		{
+			for( lk::valtab_t::iterator it = m_evalEnv.begin(); it != m_evalEnv.end(); ++it )
+				m_output->AppendText( (*it).first + " = " + wxString::Format(fmt.c_str(), (*it).second )  + "\n" );
+			m_cmdLine->Clear();
+			return;
+		}
+		else if ( text.Index('=') != wxNOT_FOUND )
+		{
+			int pos = text.Index('=');
+			var_assign = text.Left(pos).Trim().Trim(false);
+			text = text.Mid(pos+1);
+			m_cmdLine->Clear();
+		}
+		else if ( text == "long" )
+		{
+			fmt = "%.15lf";
+			m_output->AppendText("format set to long\n");
+			m_cmdLine->Clear();
+			return;
+		}
+		else if ( text == "short" )
+		{
+			fmt = "%lg";
+			m_output->AppendText("format set to short\n");
+			m_cmdLine->Clear();
+			return;
+		}
+		
+		lk::input_string input( text );
+		lk::eqnsolve ee( input );
+
+		lk::node_t *tree = ee.additive();
+		std::vector<lk_string> err = ee.errors();
+		if ( tree == 0 || err.size() > 0 )
+		{
+			if (tree) delete tree;
+			for (size_t i=0;i<err.size();i++)
+				m_output->AppendText( err[i] + "\n" );
+			m_cmdLine->SelectAll();
+		}
+		else
+		{
+			double result = 0;
+			try {
+				result = ee.eval_eqn( tree, m_evalEnv );
+				m_evalEnv[ var_assign ] = result;
+				m_output->AppendText( var_assign + " = " + wxString::Format(fmt.c_str(), result )  + "\n");			
+			} catch( lk::evalexception &ex ) {
+				m_output->AppendText( wxString(ex.what()) + "\n");
+			}
+			
+			m_cmdLine->Clear();
+			delete tree;
+		}
+
+	}
+
 	DECLARE_EVENT_TABLE()
 };
 
 BEGIN_EVENT_TABLE( LKSolve, wxFrame )
+	EVT_TEXT_ENTER( ID_CMDLINE, LKSolve::OnCmdLine )
 	EVT_BUTTON( ID_SOLVE, LKSolve::OnSolve )
 	EVT_BUTTON( ID_DEMO, LKSolve::OnDemo )
 	EVT_CLOSE( LKSolve::OnCloseFrame )
