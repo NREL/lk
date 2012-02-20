@@ -4,6 +4,7 @@
 #include <wx/tokenzr.h>
 #include <wx/busyinfo.h>
 #include <wx/splitter.h>
+#include <wx/config.h>
 
 #include <math.h>
 
@@ -361,6 +362,18 @@ namespace lk {
 #define myisnan isnan
 #endif
 
+		void set_env( valtab_t &e )
+		{
+			for (lk::valtab_t::iterator it = e.begin(); it != e.end(); ++it)
+				m_values[ it->first ] = it->second;
+		}
+
+		void get_env( valtab_t &e )
+		{
+			for (lk::valtab_t::iterator it = m_values.begin(); it != m_values.end(); ++it)
+				e[ it->first ] = it->second;
+		}
+
 		int solve( int max_iter, double ftol, double appfac, wxTextCtrl *log)
 		{
 			if (!parse()) return -1;
@@ -423,10 +436,12 @@ namespace lk {
 			for ( valtab_t::iterator it = m_values.begin();
 				it != m_values.end();
 				++it )
-				oss << (*it).first  << '=' << (*it).second << std::endl;
+				oss << (*it).first  << " = " << (*it).second << std::endl;
 
 			return lk_string( oss.str() );
 		}
+
+
 		
 		
 		void operator() ( const double *x, double *f, int n ) throw( evalexception )
@@ -769,8 +784,10 @@ private:
 
 public:
 	LKSolve( )
-		: wxFrame( NULL, wxID_ANY, "frees", wxDefaultPosition, wxSize(800,600) )
+		: wxFrame( NULL, wxID_ANY, "FREES", wxDefaultPosition, wxSize(730,600) )
 	{
+		SetIcon( wxICON( appicon ) );
+
 		wxBoxSizer *tools = new wxBoxSizer( wxHORIZONTAL );
 		tools->Add( new wxButton(this, ID_SOLVE, "Solve" ) );
 		tools->Add( new wxStaticText(this, wxID_ANY, "   MaxIter:") );
@@ -800,6 +817,15 @@ public:
 		
 		m_input->SetValue( eqn_default );
 
+		
+		wxString eqns, hist;
+		wxConfig cfg("FREES", "apdsoft");
+		cfg.Read("eqns", &eqns);
+		cfg.Read("hist", &hist);
+
+		if (!eqns.IsEmpty()) m_input->SetValue(eqns);
+		m_output->SetValue(hist);
+
 		split->SplitHorizontally( m_input, m_output );
 
 		wxBoxSizer *sz = new wxBoxSizer( wxVERTICAL );
@@ -810,20 +836,18 @@ public:
 
 		m_input->SetFocus();
 
-		wxFFileInputStream file( "solver.txt" );
-		if (file.IsOk())
-			m_input->SetValue( wxDataInputStream(file).ReadString() );
 
 		wxAcceleratorEntry entries[7];
 		entries[0].Set( wxACCEL_NORMAL, WXK_F5, ID_SOLVE );
-		/*entries[1].Set( wxACCEL_CTRL,   's',  wxID_SAVE );
-		entries[2].Set( wxACCEL_CTRL,   'o',  wxID_OPEN );
+		entries[1].Set( wxACCEL_NORMAL, WXK_ESCAPE,  wxID_CLOSE );
+		/*entries[2].Set( wxACCEL_CTRL,   'o',  wxID_OPEN );
 		entries[3].Set( wxACCEL_NORMAL, WXK_F2, wxID_PREFERENCES );
 		entries[4].Set( wxACCEL_NORMAL, WXK_F3, ID_SHOW_STATS );
 		entries[5].Set( wxACCEL_NORMAL, WXK_F4, ID_ADD_VARIABLE );
 		entries[6].Set( wxACCEL_NORMAL, WXK_F5, ID_START );*/
-		SetAcceleratorTable( wxAcceleratorTable(1,entries) );
+		SetAcceleratorTable( wxAcceleratorTable(2,entries) );
 		m_cmdLine->SetFocus();
+			
 	}
 
 	void OnDemo( wxCommandEvent & )
@@ -838,9 +862,8 @@ public:
 
 		lk::input_string p( m_input->GetValue() );
 		lk::eqnsolve ee( p );
-
-		m_output->Clear();
-
+		ee.set_env( m_evalEnv );
+				
 		wxStopWatch sw;
 		int code = ee.solve( atoi( m_maxIter->GetValue().c_str() ),
 			atof( m_fTol->GetValue().c_str() ),
@@ -854,21 +877,21 @@ public:
 		{
 			m_output->AppendText(wxString::Format("solved ok (%d iter, %.3lf sec)\n\n", code, sw.Time()/1000.0));
 			m_output->AppendText(ee.variables());
+			ee.get_env( m_evalEnv );
 		}
 
 	}
 
 	void OnCloseFrame( wxCloseEvent & )
 	{
-		wxFFileOutputStream file( "solver.txt" );
-		if (file.IsOk())
-			wxDataOutputStream(file).WriteString( m_input->GetValue() );
-
+		wxConfig cfg("FREES", "apdsoft");
+		cfg.Write("eqns", m_input->GetValue());
+		cfg.Write("hist", m_output->GetValue());
 		Destroy();
 
 	}
 
-	void OnCmdLine( wxCommandEvent & )
+	void OnCmdLine( wxCommandEvent &evt )
 	{
 		static wxString fmt = "%lg";
 		m_output->AppendText( ">> " + m_cmdLine->GetValue() + "\n");
@@ -877,7 +900,13 @@ public:
 		wxString var_assign = "ans";
 		if (text == "q" || text == "quit")
 			Close();
-		else if ( text == "clr" || text == "clear" )
+		else if ( text == "help" || text == "?" )
+		{
+			m_output->AppendText("commands: help quit clear erase short long solve env\n");
+			m_cmdLine->Clear();
+			return;
+		}
+		else if ( text == "clear" )
 		{
 			m_output->Clear();
 			m_cmdLine->Clear();
@@ -887,6 +916,12 @@ public:
 		{
 			m_evalEnv = lk::valtab_t();
 			m_output->AppendText("erased all variables\n");
+			m_cmdLine->Clear();
+			return;
+		}
+		else if ( text == "solve" )
+		{
+			OnSolve( evt );
 			m_cmdLine->Clear();
 			return;
 		}
@@ -946,6 +981,12 @@ public:
 			delete tree;
 		}
 
+
+	}
+	
+	void OnCloseRequest( wxCommandEvent & )
+	{
+		Close();
 	}
 
 	DECLARE_EVENT_TABLE()
@@ -956,6 +997,7 @@ BEGIN_EVENT_TABLE( LKSolve, wxFrame )
 	EVT_BUTTON( ID_SOLVE, LKSolve::OnSolve )
 	EVT_BUTTON( ID_DEMO, LKSolve::OnDemo )
 	EVT_CLOSE( LKSolve::OnCloseFrame )
+	EVT_MENU( wxID_CLOSE, LKSolve::OnCloseRequest )
 END_EVENT_TABLE()
 
 void new_solver()
