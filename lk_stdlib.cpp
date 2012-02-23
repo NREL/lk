@@ -8,6 +8,9 @@
 #include <math.h>
 #include <float.h>
 
+#include "lk_bessel.h"
+
+
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643
 #endif
@@ -842,7 +845,53 @@ static void _mmod( lk::invoke_t &cxt )
 	cxt.result().assign( (double) (((int)cxt.arg(0).as_number()) % ((int)cxt.arg(1).as_number())));
 }
 
+static void _mbesj0( lk::invoke_t &cxt )
+{
+	LK_DOC("besj0", "Computes the value of the Bessel function of the first kind, order 0, J0(x)", "(real:x):real");
+	cxt.result().assign( ::besj0( cxt.arg(0).as_number() ));
+}
 
+static void _mbesj1( lk::invoke_t &cxt )
+{
+	LK_DOC("besj1", "Computes the value of the Bessel function of the first kind, order 1, J1(x)", "(real:x):real");
+	cxt.result().assign( ::besj1( cxt.arg(0).as_number() ));
+}
+
+static void _mbesy0( lk::invoke_t &cxt )
+{
+	LK_DOC("besy0", "Computes the value of the Bessel function of the second kind, order 0, Y0(x)", "(real:x):real");
+	cxt.result().assign( ::besy0( cxt.arg(0).as_number() ));
+}
+
+static void _mbesy1( lk::invoke_t &cxt )
+{
+	LK_DOC("besy1", "Computes the value of the Bessel function of the second kind, order 1, Y1(x)", "(real:x):real");
+	cxt.result().assign( ::besy1( cxt.arg(0).as_number() ));
+}
+
+static void _mbesi0( lk::invoke_t &cxt )
+{
+	LK_DOC("besi0", "Computes the value of the modified Bessel function of the first kind, order 0, I0(x)", "(real:x):real");
+	cxt.result().assign( ::besi0( cxt.arg(0).as_number() ));
+}
+
+static void _mbesi1( lk::invoke_t &cxt )
+{
+	LK_DOC("besi1", "Computes the value of the modified Bessel function of the first kind, order 1, I1(x)", "(real:x):real");
+	cxt.result().assign( ::besi1( cxt.arg(0).as_number() ));
+}
+
+static void _mbesk0( lk::invoke_t &cxt )
+{
+	LK_DOC("besk0", "Computes the value of the modified Bessel function of the second kind, order 0, K0(x)", "(real:x):real");
+	cxt.result().assign( ::besk0( cxt.arg(0).as_number() ));
+}
+
+static void _mbesk1( lk::invoke_t &cxt )
+{
+	LK_DOC("besk1", "Computes the value of the modified Bessel function of the second kind, order 1, K1(x)", "(real:x):real");
+	cxt.result().assign( ::besk1( cxt.arg(0).as_number() ));
+}
 
 #ifdef __WX__
 #include <wx/wx.h>
@@ -1023,6 +1072,14 @@ lk::fcall_t* lk::stdlib_string()
 lk::fcall_t* lk::stdlib_math()
 {
 	static const lk::fcall_t vec[] = {
+		_mbesj0,
+		_mbesj1,
+		_mbesy0,
+		_mbesy1,
+		_mbesi0,
+		_mbesi1,
+		_mbesk0,
+		_mbesk1,
 		_mceil,
 		_mfloor,
 		_msqrt,

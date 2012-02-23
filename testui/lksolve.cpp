@@ -29,199 +29,8 @@
 
 enum { ID_SOLVE = 8145, ID_DEMO, ID_CMDLINE };
 
-double bessj0(double x)
-{
-	double ax,z;
-	double xx,y,ans,ans1,ans2;
-
-	if ((ax=fabs(x)) < 8.0) {
-		y=x*x;
-		ans1=57568490574.0+y*(-13362590354.0+y*(651619640.7
-			+y*(-11214424.18+y*(77392.33017+y*(-184.9052456)))));
-		ans2=57568490411.0+y*(1029532985.0+y*(9494680.718
-			+y*(59272.64853+y*(267.8532712+y*1.0))));
-		ans=ans1/ans2;
-	} else {
-		z=8.0/ax;
-		y=z*z;
-		xx=ax-0.785398164;
-		ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
-			+y*(-0.2073370639e-5+y*0.2093887211e-6)));
-		ans2 = -0.1562499995e-1+y*(0.1430488765e-3
-			+y*(-0.6911147651e-5+y*(0.7621095161e-6
-			-y*0.934945152e-7)));
-		ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
-	}
-	return ans;
-}
-
-double bessj1(double x)
-{
-	double ax,z;
-	double xx,y,ans,ans1,ans2;
-
-	if ((ax=fabs(x)) < 8.0) {
-		y=x*x;
-		ans1=x*(72362614232.0+y*(-7895059235.0+y*(242396853.1
-			+y*(-2972611.439+y*(15704.48260+y*(-30.16036606))))));
-		ans2=144725228442.0+y*(2300535178.0+y*(18583304.74
-			+y*(99447.43394+y*(376.9991397+y*1.0))));
-		ans=ans1/ans2;
-	} else {
-		z=8.0/ax;
-		y=z*z;
-		xx=ax-2.356194491;
-		ans1=1.0+y*(0.183105e-2+y*(-0.3516396496e-4
-			+y*(0.2457520174e-5+y*(-0.240337019e-6))));
-		ans2=0.04687499995+y*(-0.2002690873e-3
-			+y*(0.8449199096e-5+y*(-0.88228987e-6
-			+y*0.105787412e-6)));
-		ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
-		if (x < 0.0) ans = -ans;
-	}
-	return ans;
-}
-
-double bessy0(double x)
-{
-	double bessj0(double x);
-	double z;
-	double xx,y,ans,ans1,ans2;
-
-	if (x < 8.0) {
-		y=x*x;
-		ans1 = -2957821389.0+y*(7062834065.0+y*(-512359803.6
-			+y*(10879881.29+y*(-86327.92757+y*228.4622733))));
-		ans2=40076544269.0+y*(745249964.8+y*(7189466.438
-			+y*(47447.26470+y*(226.1030244+y*1.0))));
-		ans=(ans1/ans2)+0.636619772*bessj0(x)*log(x);
-	} else {
-		z=8.0/x;
-		y=z*z;
-		xx=x-0.785398164;
-		ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
-			+y*(-0.2073370639e-5+y*0.2093887211e-6)));
-		ans2 = -0.1562499995e-1+y*(0.1430488765e-3
-			+y*(-0.6911147651e-5+y*(0.7621095161e-6
-			+y*(-0.934945152e-7))));
-		ans=sqrt(0.636619772/x)*(sin(xx)*ans1+z*cos(xx)*ans2);
-	}
-	return ans;
-}
-
-double bessy1(double x)
-{
-	double bessj1(double x);
-	double z;
-	double xx,y,ans,ans1,ans2;
-
-	if (x < 8.0) {
-		y=x*x;
-		ans1=x*(-0.4900604943e13+y*(0.1275274390e13
-			+y*(-0.5153438139e11+y*(0.7349264551e9
-			+y*(-0.4237922726e7+y*0.8511937935e4)))));
-		ans2=0.2499580570e14+y*(0.4244419664e12
-			+y*(0.3733650367e10+y*(0.2245904002e8
-			+y*(0.1020426050e6+y*(0.3549632885e3+y)))));
-		ans=(ans1/ans2)+0.636619772*(bessj1(x)*log(x)-1.0/x);
-	} else {
-		z=8.0/x;
-		y=z*z;
-		xx=x-2.356194491;
-		ans1=1.0+y*(0.183105e-2+y*(-0.3516396496e-4
-			+y*(0.2457520174e-5+y*(-0.240337019e-6))));
-		ans2=0.04687499995+y*(-0.2002690873e-3
-			+y*(0.8449199096e-5+y*(-0.88228987e-6
-			+y*0.105787412e-6)));
-		ans=sqrt(0.636619772/x)*(sin(xx)*ans1+z*cos(xx)*ans2);
-	}
-	return ans;
-}
-
-
-double bessi0(double x)
-{
-	double ax,ans;
-	double y;
-
-	if ((ax=fabs(x)) < 3.75) {
-		y=x/3.75;
-		y*=y;
-		ans=1.0+y*(3.5156229+y*(3.0899424+y*(1.2067492
-			+y*(0.2659732+y*(0.360768e-1+y*0.45813e-2)))));
-	} else {
-		y=3.75/ax;
-		ans=(exp(ax)/sqrt(ax))*(0.39894228+y*(0.1328592e-1
-			+y*(0.225319e-2+y*(-0.157565e-2+y*(0.916281e-2
-			+y*(-0.2057706e-1+y*(0.2635537e-1+y*(-0.1647633e-1
-			+y*0.392377e-2))))))));
-	}
-	return ans;
-}
-
-double bessk0(double x)
-{
-	double bessi0(double x);
-	double y,ans;
-
-	if (x <= 2.0) {
-		y=x*x/4.0;
-		ans=(-log(x/2.0)*bessi0(x))+(-0.57721566+y*(0.42278420
-			+y*(0.23069756+y*(0.3488590e-1+y*(0.262698e-2
-			+y*(0.10750e-3+y*0.74e-5))))));
-	} else {
-		y=2.0/x;
-		ans=(exp(-x)/sqrt(x))*(1.25331414+y*(-0.7832358e-1
-			+y*(0.2189568e-1+y*(-0.1062446e-1+y*(0.587872e-2
-			+y*(-0.251540e-2+y*0.53208e-3))))));
-	}
-	return ans;
-}
-
-double bessi1(double x)
-{
-	double ax,ans;
-	double y;
-
-	if ((ax=fabs(x)) < 3.75) {
-		y=x/3.75;
-		y*=y;
-		ans=ax*(0.5+y*(0.87890594+y*(0.51498869+y*(0.15084934
-			+y*(0.2658733e-1+y*(0.301532e-2+y*0.32411e-3))))));
-	} else {
-		y=3.75/ax;
-		ans=0.2282967e-1+y*(-0.2895312e-1+y*(0.1787654e-1
-			-y*0.420059e-2));
-		ans=0.39894228+y*(-0.3988024e-1+y*(-0.362018e-2
-			+y*(0.163801e-2+y*(-0.1031555e-1+y*ans))));
-		ans *= (exp(ax)/sqrt(ax));
-	}
-	return x < 0.0 ? -ans : ans;
-}
-
-double bessk1(double x)
-{
-	double bessi1(double x);
-	double y,ans;
-
-	if (x <= 2.0) {
-		y=x*x/4.0;
-		ans=(log(x/2.0)*bessi1(x))+(1.0/x)*(1.0+y*(0.15443144
-			+y*(-0.67278579+y*(-0.18156897+y*(-0.1919402e-1
-			+y*(-0.110404e-2+y*(-0.4686e-4)))))));
-	} else {
-		y=2.0/x;
-		ans=(exp(-x)/sqrt(x))*(1.25331414+y*(0.23498619
-			+y*(-0.3655620e-1+y*(0.1504268e-1+y*(-0.780353e-2
-			+y*(0.325614e-2+y*(-0.68245e-3)))))));
-	}
-	return ans;
-}
-
-
-
 namespace lk {
-	typedef unordered_map< lk_string, double, lk_string_hash, lk_string_equal > valtab_t;
+	//typedef unordered_map< lk_string, double, lk_string_hash, lk_string_equal > valtab_t;
 		
 	bool nsolver_callback( int iter, double *x, double *resid, const int n, void *data)
 	{
@@ -260,8 +69,8 @@ namespace lk {
 			virtual ~funccall_t() { for (size_t i=0;i<args.size();i++) delete args[i]; }
 		};
 
+		lk::env_t *m_envPtr;
 		bool m_parsed;
-		valtab_t m_values;
 		bool m_haltFlag;
 		lexer lex;				
 		int m_tokType;	
@@ -331,20 +140,21 @@ namespace lk {
 			m_haltFlag = false;
 			m_tokType = lex.next();
 			m_parsed = false;
+			m_envPtr = 0;
 		}
 
-		void set( const lk_string &name, double val )
+		void set( lk::env_t &ee, const lk_string &name, double val )
 		{
-			m_values[name] = val;
+			lk::vardata_t *v = new lk::vardata_t;
+			v->assign( val );
+			ee.assign( name, v );
 		}
 
-		double get( const lk_string &name )
+		double get( lk::env_t &ee, const lk_string &name )
 		{
-			valtab_t::iterator it = m_values.find( name );
-			if ( it != m_values.end() )
-				return (*it).second;
-			else
-				return std::numeric_limits<double>::quiet_NaN();
+			lk::vardata_t *v = ee.lookup( name, true );
+			if ( !v || v->type() != lk::vardata_t::NUMBER ) return std::numeric_limits<double>::quiet_NaN();
+			else return v->num();
 		}
 
 		std::vector< lk_string > errors() { return m_errorList; }
@@ -362,24 +172,12 @@ namespace lk {
 #define myisnan isnan
 #endif
 
-		void set_env( valtab_t &e )
-		{
-			for (lk::valtab_t::iterator it = e.begin(); it != e.end(); ++it)
-				m_values[ it->first ] = it->second;
-		}
-
-		void get_env( valtab_t &e )
-		{
-			for (lk::valtab_t::iterator it = m_values.begin(); it != m_values.end(); ++it)
-				e[ it->first ] = it->second;
-		}
-
-		lk::node_t *reduce_eqn( lk::node_t *root, valtab_t &values, double &result, int nreduc ) throw( evalexception )
+		lk::node_t *reduce_eqn( lk::node_t *root, lk::env_t &env, double &result, int nreduc ) throw( evalexception )
 		{
 			if ( lk::expr_t *e = dynamic_cast<lk::expr_t*>( root ) )
 			{
 				double a;
-				lk::node_t *lhs = reduce_eqn( e->left, values, a, nreduc );
+				lk::node_t *lhs = reduce_eqn( e->left, env, a, nreduc );
 				if ( lhs == 0 && e->right == 0 && e->oper == lk::expr_t::NEG )
 				{
 					delete e->left;
@@ -390,7 +188,7 @@ namespace lk {
 				}
 				
 				double b;
-				lk::node_t *rhs = reduce_eqn( e->right, values, b, nreduc );
+				lk::node_t *rhs = reduce_eqn( e->right, env, b, nreduc );
 				if ( lhs == 0 && rhs == 0 )
 				{
 					switch( e->oper )
@@ -444,12 +242,26 @@ namespace lk {
 
 					
 					// check here there is just a variable and a value operation
-					bool found_var = false;
-					bool found_val = false;
-					if (found_var && found_val)
+					lk::iden_t *iden = 0;
+					lk::constant_t *cons = 0;
+					if ( (iden = dynamic_cast< lk::iden_t*>( e->left ))
+						&& (cons = dynamic_cast< lk::constant_t*>( e->right ))
+						&& ( e->oper == lk::expr_t::PLUS || e->oper == lk::expr_t::MINUS ))
 					{
 						nreduc++;
-						result = std::numeric_limits<double>::quiet_NaN(); // need to calculate this
+						double fac = (e->oper==lk::expr_t::PLUS) ? -1.0 : 1.0;
+						set( env, iden->name, fac*cons->value );
+						result = fac*cons->value;
+						return 0;
+					}
+					else if ((iden = dynamic_cast< lk::iden_t*>( e->right ))
+						&& (cons = dynamic_cast< lk::constant_t*>( e->left ))
+						&& ( e->oper == lk::expr_t::PLUS || e->oper == lk::expr_t::MINUS ))
+					{
+						nreduc++;
+						double fac = (e->oper==lk::expr_t::PLUS) ? -1.0 : 1.0;
+						set( env, iden->name, fac*cons->value);
+						result = fac*cons->value;
 						return 0;
 					}
 					
@@ -464,41 +276,82 @@ namespace lk {
 			}
 			else if ( lk::iden_t *i = dynamic_cast<lk::iden_t*>( root ) )
 			{
-				if ( m_values.find( i->name ) != m_values.end() )
+				if ( lk::vardata_t *v = env.lookup(i->name, true)  )
 				{
-					result = m_values[i->name];
-					nreduc++;
-					return 0;
+					if ( v->type() == lk::vardata_t::NUMBER )
+					{
+						result = v->num();
+						nreduc++;
+						return 0;
+					}
 				}
 			}
 			else if ( funccall_t *f = dynamic_cast<funccall_t*>( root ))
 			{
-				if (f->args.size() > 0)
-				{
-					double xarg;
-					lk::node_t *reduced_arg = reduce_eqn( f->args[0], values, xarg, nreduc );
-					if ( reduced_arg == 0 )
-					{
 				
-						if (f->name == "sin" && f->args.size() == 1 )
-							result = ::sin( xarg );			
-						else if (f->name == "cos" && f->args.size() == 1 )
-							result = ::cos( xarg );			
-						else if (f->name == "tan" && f->args.size() == 1 )
-							result = ::tan( xarg );
-						else
-							throw evalexception("undefined function in reduction sequence: " + f->name );
-					
-						nreduc++;
-						return 0;
+				void *ud = 0;
+				lk::fcall_t fobj = env.lookup_func( f->name, &ud);
+				if ( fobj == 0 )
+					throw evalexception("undefined function: " + f->name );
+
+				lk::vardata_t zz;
+				lk::invoke_t ivk( f->name, &env, zz, ud );
+				std::vector< lk::node_t* > reduced_args;
+				std::vector< double > arg_vals;
+				bool all_reduced = true;
+
+				for (size_t i=0;i<f->args.size();i++)
+				{
+					double xarg = 0;
+					lk::node_t *reduced = reduce_eqn( f->args[i], env, xarg, nreduc );
+					reduced_args.push_back( reduced );
+					arg_vals.push_back( xarg );
+
+					if ( reduced == 0 )
+					{
+						lk::vardata_t ivkarg;
+						ivkarg.assign( xarg );
+						ivk.arg_list().push_back( ivkarg );
 					}
+					else
+						all_reduced = false;
+				}
+
+				if ( all_reduced == false )
+				{
+					for (size_t i=0;i<f->args.size();i++)
+					{
+						if ( f->args[i] != reduced_args[i] )
+						{
+							delete f->args[i];
+							f->args[i] = reduced_args[i];
+						}
+					}
+
+					return f;
+				}
+				else
+				{
+					try {
+						fobj( ivk );
+					} catch( lk::error_t &err )
+					{
+						error( err.what() );
+						throw evalexception("reduce failed in function call: " + f->name );
+					}
+					
+					if (ivk.result().type() != lk::vardata_t::NUMBER )
+						throw evalexception("function " + f->name + " did not return a number, instead: " + ivk.result().typestr() );
+
+					result = ivk.result().num();
+					return 0;
 				}
 			}
 
 			return root;				
 		}
 
-		bool reduce()
+		bool reduce( lk::env_t &env )
 		{
 			
 			int nreduc;
@@ -510,22 +363,91 @@ namespace lk {
 					++it )
 				{
 					double result;
-					*it = reduce_eqn( *it, m_values, result, nreduc );
+					try {
+						lk::node_t *reduced = reduce_eqn( *it, env, result, nreduc );
+						if (reduced == 0)
+						{
+							delete *it;
+							*it = 0;
+						}
+					} catch( evalexception &ex )
+					{
+						error( ex.what() );
+						return false;
+					}
 				}
+
+				size_t i=0;
+				while( i<m_eqnList.size() )
+				{
+					if ( m_eqnList[i] == 0 )
+						m_eqnList.erase( m_eqnList.begin() + i );
+					else
+						i++;
+				}
+
 			} while ( nreduc > 0 );
 
-			return false;
+			return true;
 		}
 
-		int solve( int max_iter, double ftol, double appfac, wxTextCtrl *log)
+		lk_string print_eqn( lk::node_t *root )
+		{
+			if ( lk::expr_t *e = dynamic_cast<lk::expr_t*>(root) )
+			{
+				lk_string str = "(" + print_eqn( e->left );
+				str += e->operstr();
+				str += print_eqn(e->right);
+				str += ")";
+				return str;
+			}
+			else if ( lk::iden_t *i = dynamic_cast<lk::iden_t*>(root) )
+			{
+				return i->name;
+			}
+			else if ( lk::constant_t *c = dynamic_cast<lk::constant_t*>(root) )
+			{
+				return wxString::Format("%lg",c->value);
+			}
+			else if ( funccall_t *f = dynamic_cast< funccall_t* > (root) )
+			{
+				lk_string str = f->name + "(";
+				for (size_t i=0;i<f->args.size();i++)
+					str += print_eqn( f->args[i] ) + wxString((i<f->args.size()-1)?",":")");
+				return str;
+			}
+
+			return wxEmptyString;
+		}
+
+		int solve( lk::env_t &env, int max_iter, double ftol, double appfac, wxTextCtrl *log)
 		{
 			if (!parse()) return -1;
 
-			//if (!reduce()) return -2;
+			if ( log != 0 )
+			{
+				log->AppendText( "\nParsed equations:\n");
+				for (size_t i=0;i<m_eqnList.size();i++)
+					log->AppendText("\t" + print_eqn( m_eqnList[i] ) +"\n");
+			}
+
+		
+			// do reduction in empty environment to avoid eliminating all eqns
+			// if variables already have values assigned.
+			lk::env_t ereduce;
+			ereduce.register_funcs( lk::stdlib_math() );
+			if (!reduce( ereduce )) return -2;
+			
+			if ( log != 0 )
+			{
+				log->AppendText( "\nReduced equations:\n");
+				for (size_t i=0;i<m_eqnList.size();i++)
+					log->AppendText("\t" + print_eqn( m_eqnList[i] ) +"\n");
+			}
 
 			m_varList.clear();
 			for ( size_t i=0;i<m_eqnList.size();i++)
-			find_names( m_eqnList[i], m_varList );
+				find_names( m_eqnList[i], m_varList );
 			
 			int n = m_varList.size();
 
@@ -538,8 +460,8 @@ namespace lk {
 			// set all initial conditions NaN variables to 1
 			for ( int i=0;i<n;i++ )
 			{
-				if ( myisnan( get(m_varList[i]) ) )
-					set( m_varList[i], 1 );
+				if ( myisnan( get(env, m_varList[i]) ) )
+					set(env, m_varList[i], 1 );
 			}
 
 			double *x = new double[n];
@@ -549,11 +471,12 @@ namespace lk {
 				x[i] = resid[i] = 0.0;
 
 			for (int i=0;i<n;i++)
-				x[i] = m_values[ m_varList[i] ]; // initial values
+				x[i] = get(env, m_varList[i] ); // initial values
 			
 			bool check = false;
 			int niter = -1;
 			
+			m_envPtr = &env;
 			try {
 				niter = newton<double, eqnsolve>( x, resid, n, check, *this, 
 					max_iter, ftol, ftol, appfac,
@@ -562,9 +485,20 @@ namespace lk {
 				error( ex.what() );
 				niter = -9;
 			}
+			m_envPtr = 0;
 
 			for( int i=0; i < n; i++)
-				m_values[ m_varList[i] ] = x[i];
+				set(env, m_varList[i], x[i] );
+
+			// copy over all variables assigned in 'ereduce' environment
+			lk_string key;
+			lk::vardata_t *var;
+			bool has_more = ereduce.first( key, var );
+			while( has_more )
+			{
+				set( env, key, var->as_number() );
+				has_more = ereduce.next( key, var );
+			}
 
 			delete [] x;
 			delete [] resid;
@@ -573,16 +507,19 @@ namespace lk {
 			return niter;
 		}
 
-		lk_string variables()
+		lk_string variables(lk::env_t &env)
 		{
 			std::stringstream oss;
 			oss.setf(std::ios::fixed);
 			oss.precision(15);
-			for ( valtab_t::iterator it = m_values.begin();
-				it != m_values.end();
-				++it )
-				oss << (*it).first  << " = " << (*it).second << std::endl;
-
+			lk_string key;
+			lk::vardata_t *v;
+			bool next = env.first( key, v );
+			while( next )
+			{
+				oss << key  << " = " << v->as_number() << std::endl;
+				next = env.next( key, v );
+			}
 			return lk_string( oss.str() );
 		}
 
@@ -591,16 +528,18 @@ namespace lk {
 		
 		void operator() ( const double *x, double *f, int n ) throw( evalexception )
 		{
+			if (m_envPtr == 0 )
+				throw evalexception("internal null environment pointer");
 			int i;
 			for( i=0; i < n; i++)
-				m_values[ m_varList[i] ] = x[i];
+				set( *m_envPtr, m_varList[i], x[i] );
 
 			// solve each eqn to get f[i];
 			for( i=0;i < n;i++)
-				f[i] = eval_eqn( m_eqnList[i], m_values );
+				f[i] = eval_eqn( m_eqnList[i], *m_envPtr );
 		}
 	
-		double eval_eqn( lk::node_t *n, valtab_t &t ) throw( evalexception )
+		double eval_eqn( lk::node_t *n, lk::env_t &t ) throw( evalexception )
 		{
 			if ( !n ) return std::numeric_limits<double>::quiet_NaN();
 			if ( lk::expr_t *e = dynamic_cast<lk::expr_t*>( n ) )
@@ -629,9 +568,10 @@ namespace lk {
 			}
 			else if ( lk::iden_t *i = dynamic_cast<lk::iden_t*>( n ))
 			{
-				if (t.find( i->name ) == t.end())
-					throw evalexception("variable not assigned: " + i->name);
-				return t[i->name];
+				lk::vardata_t *v = t.lookup( i->name, true );
+				if ( v == 0 || v->type() != lk::vardata_t::NUMBER )
+					throw evalexception("variable not assigned or not a number: " + i->name);
+				return v->num();
 			}
 			else if ( lk::constant_t *c = dynamic_cast<lk::constant_t*>( n ))
 			{
@@ -639,75 +579,31 @@ namespace lk {
 			}
 			else if ( funccall_t *f = dynamic_cast<funccall_t*>( n ))
 			{
-#define DTOR 0.0174532925
-				/*
-				
-		_mceil,
-		_mfloor,
-		_msqrt,
-		_mpow,
-		_mexp,
-		_mlog,
-		_mlog10,
-		_mpi,
-		_msgn,
-		_mabs,
-		_msin,
-		_mcos,
-		_mtan,
-		_masin,
-		_macos,
-		_matan,
-		_matan2,
-		_msind,
-		_mcosd,
-		_mtand,
-		_masind,
-		_macosd,
-		_matand,
-		_matan2d,
-		_mnan,
-		_misnan,
-		_mmod, */
-
-				if (f->name == "sin" && f->args.size() == 1 )
-					return ::sin( eval_eqn( f->args[0], t ) );			
-				else if (f->name == "cos" && f->args.size() == 1 )
-					return ::cos( eval_eqn( f->args[0], t ) );			
-				else if (f->name == "tan" && f->args.size() == 1 )
-					return ::tan( eval_eqn( f->args[0], t ) );
-				else if (f->name == "sind" && f->args.size() == 1 )
-					return ::sin( DTOR*eval_eqn( f->args[0], t ) );			
-				else if (f->name == "cosd" && f->args.size() == 1 )
-					return ::cos( DTOR*eval_eqn( f->args[0], t ) );			
-				else if (f->name == "tand" && f->args.size() == 1 )
-					return ::tan( DTOR*eval_eqn( f->args[0], t ) );
-				else if (f->name == "exp" && f->args.size() == 1 )
-					return ::exp( eval_eqn( f->args[0], t ) );
-				else if (f->name == "ln" && f->args.size() == 1 )
-					return ::log( eval_eqn( f->args[0], t ) );
-				else if (f->name == "log10" && f->args.size() == 1 )
-					return ::log10( eval_eqn( f->args[0], t ) );
-				else if (f->name == "pow" && f->args.size() == 2)
-					return ::pow( eval_eqn( f->args[0], t ), eval_eqn( f->args[1], t ) );
-				else if (f->name == "besj0" && f->args.size() == 1 )
-					return ::bessj0( eval_eqn(f->args[0], t) );
-				else if (f->name == "besj1" && f->args.size() == 1 )
-					return ::bessj1( eval_eqn(f->args[0], t) );
-				else if (f->name == "besy0" && f->args.size() == 1 )
-					return ::bessy0( eval_eqn(f->args[0], t) );
-				else if (f->name == "besy1" && f->args.size() == 1 )
-					return ::bessy1( eval_eqn(f->args[0], t) );
-				else if (f->name == "besi0" && f->args.size() == 1 )
-					return ::bessi0( eval_eqn(f->args[0], t) );
-				else if (f->name == "besi1" && f->args.size() == 1 )
-					return ::bessi1( eval_eqn(f->args[0], t) );
-				else if (f->name == "besk0" && f->args.size() == 1 )
-					return ::bessk0( eval_eqn(f->args[0], t) );
-				else if (f->name == "besk1" && f->args.size() == 1 )
-					return ::bessk1( eval_eqn(f->args[0], t) );
-				else
+				void *ud = 0;
+				lk::fcall_t fobj = t.lookup_func( f->name, &ud );
+				if ( fobj == 0 )
 					throw evalexception( "undefined function: " + f->name );
+
+				lk::vardata_t zz;
+				lk::invoke_t ivk( f->name, &t, zz, ud );
+				for (size_t i=0;i<f->args.size();i++)
+				{
+					lk::vardata_t arg;
+					arg.assign( eval_eqn( f->args[i], t ) );
+					ivk.arg_list().push_back( arg );
+				}
+
+				try {
+					fobj( ivk );
+				} catch( lk::error_t &e )
+				{
+					error( e.what() );
+					throw evalexception("function evaluation error in: " + f->name + " " + lk_string(e.what() ) );
+				}
+
+				if (ivk.result().type() != lk::vardata_t::NUMBER )
+					throw evalexception("function " + f->name + " did not return a number, instead: " + ivk.result().typestr() );
+				return ivk.result().num();
 			}
 
 			throw evalexception("internal error: faulty equation");
@@ -925,7 +821,7 @@ private:
 	wxTextCtrl *m_appFac;
 	wxCheckBox *m_showIters;
 	wxTextCtrl *m_cmdLine;
-	lk::valtab_t m_evalEnv;
+	lk::env_t m_evalEnv;
 
 public:
 	LKSolve( )
@@ -982,6 +878,8 @@ public:
 		m_input->SetFocus();
 
 
+		m_evalEnv.register_funcs( lk::stdlib_math() );
+
 		wxAcceleratorEntry entries[7];
 		entries[0].Set( wxACCEL_NORMAL, WXK_F5, ID_SOLVE );
 		entries[1].Set( wxACCEL_NORMAL, WXK_ESCAPE,  wxID_CLOSE );
@@ -1007,10 +905,9 @@ public:
 
 		lk::input_string p( m_input->GetValue() );
 		lk::eqnsolve ee( p );
-		ee.set_env( m_evalEnv );
 				
 		wxStopWatch sw;
-		int code = ee.solve( atoi( m_maxIter->GetValue().c_str() ),
+		int code = ee.solve( m_evalEnv, atoi( m_maxIter->GetValue().c_str() ),
 			atof( m_fTol->GetValue().c_str() ),
 			atof( m_appFac->GetValue().c_str() ),
 			m_showIters->GetValue() ? m_output : 0 );
@@ -1021,8 +918,7 @@ public:
 		else
 		{
 			m_output->AppendText(wxString::Format("solved ok (%d iter, %.3lf sec)\n\n", code, sw.Time()/1000.0));
-			m_output->AppendText(ee.variables());
-			ee.get_env( m_evalEnv );
+			m_output->AppendText(ee.variables(m_evalEnv));
 		}
 
 	}
@@ -1059,7 +955,7 @@ public:
 		}
 		else if ( text == "erase" )
 		{
-			m_evalEnv = lk::valtab_t();
+			m_evalEnv.clear_vars();
 			m_output->AppendText("erased all variables\n");
 			m_cmdLine->Clear();
 			return;
@@ -1072,8 +968,14 @@ public:
 		}
 		else if (text == "env")
 		{
-			for( lk::valtab_t::iterator it = m_evalEnv.begin(); it != m_evalEnv.end(); ++it )
-				m_output->AppendText( (*it).first + " = " + wxString::Format(fmt.c_str(), (*it).second )  + "\n" );
+			lk_string key;
+			lk::vardata_t *v;
+			bool next = m_evalEnv.first( key, v );
+			while( next )
+			{
+				m_output->AppendText( key + " = " + wxString::Format(fmt.c_str(), v->as_number() )  + "\n" );
+				next = m_evalEnv.next( key, v );
+			}
 			m_cmdLine->Clear();
 			return;
 		}
@@ -1116,7 +1018,9 @@ public:
 			double result = 0;
 			try {
 				result = ee.eval_eqn( tree, m_evalEnv );
-				m_evalEnv[ var_assign ] = result;
+				lk::vardata_t *var = new lk::vardata_t;
+				var->assign( result );
+				m_evalEnv.assign( var_assign, var );
 				m_output->AppendText( var_assign + " = " + wxString::Format(fmt.c_str(), result )  + "\n");			
 			} catch( lk::evalexception &ex ) {
 				m_output->AppendText( wxString(ex.what()) + "\n");
