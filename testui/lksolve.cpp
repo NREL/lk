@@ -374,9 +374,154 @@ namespace lk {
 				e[ it->first ] = it->second;
 		}
 
+		lk::node_t *reduce_eqn( lk::node_t *root, valtab_t &values, double &result, int nreduc ) throw( evalexception )
+		{
+			if ( lk::expr_t *e = dynamic_cast<lk::expr_t*>( root ) )
+			{
+				double a;
+				lk::node_t *lhs = reduce_eqn( e->left, values, a, nreduc );
+				if ( lhs == 0 && e->right == 0 && e->oper == lk::expr_t::NEG )
+				{
+					delete e->left;
+					e->left = 0;
+					result = a;
+					nreduc++;
+					return 0;
+				}
+				
+				double b;
+				lk::node_t *rhs = reduce_eqn( e->right, values, b, nreduc );
+				if ( lhs == 0 && rhs == 0 )
+				{
+					switch( e->oper )
+					{
+					case lk::expr_t::PLUS:
+						result = a + b;
+						break;
+					case lk::expr_t::MINUS:
+						result = a - b;
+						break;
+					case lk::expr_t::MULT:
+						result = a * b;
+						break;
+					case lk::expr_t::DIV:
+						{
+							if ( b == 0 ) throw evalexception("divide by zero in equation reduction");
+							else result = a / b;
+							break;
+						}
+					case lk::expr_t::EXP:
+						result = pow( a, b );
+						break;
+					default:
+						throw evalexception("invalid operation encountered during equation reduction");
+					}
+
+					if (e->left) delete e->left;
+					e->left = 0;
+					if (e->right) delete e->right;
+					e->right = 0;					
+					nreduc++;
+					return 0;
+				}
+				else
+				{
+					if (lhs == 0)
+					{
+						if (e->left) delete e->left;
+						e->left = new lk::constant_t( e->line(), a );
+					}
+					else if (e->left != lhs )
+						throw evalexception( "internal reduce error on lhs side of expr");
+
+					if (rhs == 0)
+					{
+						if (e->right) delete e->right;
+						e->right = new lk::constant_t( e->line(), b );
+					}
+					else if (e->right != rhs )
+						throw evalexception( "internal reduce error on rhs side of expr");
+
+					
+					// check here there is just a variable and a value operation
+					bool found_var = false;
+					bool found_val = false;
+					if (found_var && found_val)
+					{
+						nreduc++;
+						result = std::numeric_limits<double>::quiet_NaN(); // need to calculate this
+						return 0;
+					}
+					
+					return e;
+				}
+			}
+			else if ( lk::constant_t *c = dynamic_cast<lk::constant_t*>( root ) )
+			{
+				result = c->value;
+				nreduc++;
+				return 0;
+			}
+			else if ( lk::iden_t *i = dynamic_cast<lk::iden_t*>( root ) )
+			{
+				if ( m_values.find( i->name ) != m_values.end() )
+				{
+					result = m_values[i->name];
+					nreduc++;
+					return 0;
+				}
+			}
+			else if ( funccall_t *f = dynamic_cast<funccall_t*>( root ))
+			{
+				if (f->args.size() > 0)
+				{
+					double xarg;
+					lk::node_t *reduced_arg = reduce_eqn( f->args[0], values, xarg, nreduc );
+					if ( reduced_arg == 0 )
+					{
+				
+						if (f->name == "sin" && f->args.size() == 1 )
+							result = ::sin( xarg );			
+						else if (f->name == "cos" && f->args.size() == 1 )
+							result = ::cos( xarg );			
+						else if (f->name == "tan" && f->args.size() == 1 )
+							result = ::tan( xarg );
+						else
+							throw evalexception("undefined function in reduction sequence: " + f->name );
+					
+						nreduc++;
+						return 0;
+					}
+				}
+			}
+
+			return root;				
+		}
+
+		bool reduce()
+		{
+			
+			int nreduc;
+			do
+			{
+				nreduc = 0;
+				for (std::vector<lk::node_t*>::iterator it = m_eqnList.begin();
+					it != m_eqnList.end();
+					++it )
+				{
+					double result;
+					*it = reduce_eqn( *it, m_values, result, nreduc );
+				}
+			} while ( nreduc > 0 );
+
+			return false;
+		}
+
 		int solve( int max_iter, double ftol, double appfac, wxTextCtrl *log)
 		{
 			if (!parse()) return -1;
+
+			//if (!reduce()) return -2;
 
 			m_varList.clear();
 			for ( size_t i=0;i<m_eqnList.size();i++)
