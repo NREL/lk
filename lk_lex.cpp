@@ -296,11 +296,13 @@ int lk::lexer::next()
 	}
 	
 	// scan literal strings
-	if ( *p == '"' )
+	if ( *p == '"' || *p == '\'' )
 	{
+		char qclose = *p;
+
 		p++;
 		
-		while ( *p && *p != '"' )
+		while ( *p && *p != qclose )
 		{
 			if ( *p == '\\' && p.peek() != 0 )
 			{
@@ -308,6 +310,7 @@ int lk::lexer::next()
 				switch (p.peek())
 				{
 				case '"':  m_buf += '"';  p++; break;
+				case '\'': m_buf += '\''; p++; break;
 				case 'n':  m_buf += '\n'; p++; break;
 				case 'r':  m_buf += '\r'; p++; break;
 				case 't':  m_buf += '\t'; p++; break;
@@ -315,7 +318,7 @@ int lk::lexer::next()
 				default:
 					cerr = *p;
 					p++; // skip escape sequence
-					while (*p && *p != '"') p++; // skip to end of string literal despite error
+					while (*p && *p != qclose) p++; // skip to end of string literal despite error
 					
 					m_error = lk_string("invalid escape sequence \\") + cerr;
 					return INVALID;
@@ -323,7 +326,7 @@ int lk::lexer::next()
 			}
 			else if (*p == '\n')
 			{
-				while (*p && *p != '"') p++; // skip to end of string literal despite error
+				while (*p && *p != qclose) p++; // skip to end of string literal despite error
 				
 				m_error = "newline found within string literal";
 				return INVALID;

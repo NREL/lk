@@ -148,9 +148,9 @@ namespace lk
 	{
 	public:
 		lk_string name;
-		bool local;
+		bool common;
 		bool constval;
-		iden_t(int line, const lk_string &n, bool loc, bool cons) : node_t(line), name(n), local(loc), constval(cons) {  }
+		iden_t(int line, const lk_string &n, bool com, bool cons) : node_t(line), name(n), common(com), constval(cons) {  }
 		virtual ~iden_t() { }
 	};
 				

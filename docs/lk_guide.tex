@@ -23,9 +23,9 @@
 \maketitle
 \vspace{3in}
 \begin{abstract}
-The LK (Language Kit) language is a simple but powerful scripting language that is designed to be small, fast, and easily embedded in other applications.  It allows users to extend the built-in functionality of programs, and provides a cross-platform standard library of function calls.  The core LK engine, including lexical analyzer, parser, and evaluator comprises less than 3500 lines of ISO-standard C++ code, and is only dependent on the Standard C++ Library (STL), making it extremely tight and portable to various platforms.
+The LK (Language Kit) language is a simple but powerful scripting language that is designed to be small, fast, and easily embedded in other applications.  It allows users to extend the built-in functionality of programs, and provides a cross-platform standard library of function calls.  The core LK engine, including lexical analyzer, parser, and evaluator comprises less than 3500 lines of ISO-standard C++ code, and is only dependent on the Standard C++ Library (STL), making it extremely tight and portable to various platforms.  
 
-As of Spring 2011, the LK engine is used within the SolTrace optical ray trace model produced by the National Renewable Energy Laboratory (NREL).
+\textbf{Note:} LK can utilize standard 8-bit ASCII strings via the built-in \texttt{std::string} class, or can be configured to utilize an \texttt{std::string}-compliant string class from an external library.  In this way, Unicode text can be supported natively.  For example, direct integration and linkage with the wxWidgets C++ GUI library string class is provided as an option.
 \end{abstract} 
 
 \newpage
@@ -791,7 +791,7 @@ db{"ruth"} = null;
 
 \section{Functions}
 
-It is usually good programming practice to split a larger program up into smaller sections, often called procedures, functions, or subroutines.  A program may be easier to read and debug if it is not all thrown together, and you may have common blocks of code that appear several times in the program.
+It is usually good programming practice to split a larger program up into smaller sections, often called procedures, functions, or subroutines.  A program may be easier to read and debug if it is not all thrown together, and you may have common blocks of functionality that are reused several times in the program.
 
 A function is simply a named chunk of code that may be called from other parts of the script.  It usually performs a well-defined operation on a set of variables, and it may return a computed value to the caller.
 
@@ -927,10 +927,10 @@ function show_welcome( <args> )  {  <statements>  }
 \end{verbatim}
 is exactly equivalent to
 \begin{verbatim}
-const local show_welcome = define( <args> )  {  <statements>  };
+const show_welcome = define( <args> )  {  <statements>  };
 \end{verbatim}
 
-The meaning of the \texttt{local} keyword will be explained in the next section.  The alternate syntax described here can help clarify programs and is generally easier for people familiar with other languages, at least initially.  It automatically enforces \emph{const-ness}, so that the function isn't inadvertently replaced later in the code by an assignment statement.
+The alternate syntax described here can help clarify programs and is generally easier for people familiar with other languages, at least initially.  It automatically enforces \emph{const-ness}, so that the function isn't inadvertently replaced later in the code by an assignment statement.
 
 \subsection{Environments and Scope}
 
@@ -952,7 +952,7 @@ triple              // variable name
 neg = define( y ) { return 0-y; }; // another function
 \end{verbatim}
 
-In the example below, the \texttt{meta} function is unique that it returns another function.  The function it returns depends on the argument \texttt{mode}.
+In the example below, the \texttt{meta} function is unique that it returns another function.  Which function it returns depends on the argument \texttt{mode}.
 
 \begin{verbatim}
 meta = define( mode ) {     // a function that returns another function
@@ -980,8 +980,8 @@ When a function is called, a new environment is created to store variables \emph
 \begin{enumerate}
 \item The current environment is checked for the existence of the requested variable.
 \item If it exists, the query is over and the variable has been found.
-\item If the variable is not found, LK checks all of the \emph{parent environments} of the current environment in succession to see if the variable has ever previously held a value visible in the environment hierarchy.  If so, the variable has been found and the query is over.
-\item If the variable is not found at all in the environment hierarchy, and the variable is referenced on the left hand side of an assignment statement (i.e. in a \emph{mutable} context), a new variable entry is created in the current (topmost or nearest) environment.  If the query context is not mutable, an error is thrown indicating an invalid access to an undefined variable.
+\item If the variable is not found, and the variable is referenced in a read-only or non-mutable context, LK checks all of the \emph{parent environments} of the current environment to see if the variable has ever previously held a value visible in the environment hierarchy.  If so, the variable has been found and the query is over. Otherwise, an error is thrown indicating an invalid access to an undefined variable.
+\item If the variable is referenced in a mutable context (i.e. on the left hand side of an assignment statement), a new variable entry is created in the current (topmost or nearest) environment, even if a variable of the same name exists in a parent environment.  This prevents variables outside of the function from being inadvertently updated.  This behavior can be overridden using the \texttt{common} keyword, which explicitly allows a function to change a variable external to it.
 \end{enumerate}
 
 In the script below, the variable \texttt{y} is not defined in any environment when it is first referenced in the body of the \texttt{triple} function.  As a result, a new environment entry is created in the \texttt{triple} environment to hold its value, according to the lookup rules listed above.
@@ -992,31 +992,31 @@ triple( 4 );
 outln( y ); // this will fail because y is local to the triple function
 \end{verbatim}
 
-In script below, the behavior is different.  Since \texttt{y} has a value in the main environment (24), the query for variable in \texttt{y} in the call to \texttt{triple( 4 )} will look in the environment created for the call to \texttt{triple}, and, not finding \texttt{y}, will continue its search to the parent environment, in which \texttt{y} has been declared previously.  Since \texttt{y} is found, its value will be overwritten with the expression \texttt{3*x}, which in this context has value of 12.
+In script below, the behavior is the same.  The query for variable in \texttt{y} in the call to \texttt{triple( 4 )} will look in the environment created for the function call to \texttt{triple}, and, not finding \texttt{y}, will create a new entry named \texttt{y} because it is accessed in a mutable context.  Since \texttt{y} is now local to the function call, the instance in the caller's context value will not be overwritten with the expression \texttt{3*x}, which in this context has value of 12.
 
 \begin{verbatim}
 y = 24;
 // ... other code ...
 triple = define (x) { y=3*x; return y; };
 triple( 4 );
-outln( y ); // this will print 12
+outln( y ); // this will print 24
 \end{verbatim}
 
-\subsubsection{The \texttt{local} Specifier}
+\subsubsection{The \texttt{common} Specifier}
 
-In the example above with the \texttt{triple} function, the references to variable \texttt{y} in both the main environment and the execution environment of the function may cause unintended side effects.  Effectively, a function may cause unintended modifications to variables outside its context, and it may become very difficult to deduce what is happening if many variables used inside a function are also used in 'inherited' environments for different purposes.
+In the example above with the \texttt{triple} function, writing to variable \texttt{y} in the function call did not overwrite the external value previously defined in the caller's context.  This default behavior helps avoid situations in which externally defined variables are inadvertently modified by a function call, which can become very difficult to debug.
 
-The solution to this problem is the \texttt{local} keyword.  It changes step 3 of the variable lookup rules to skip searching the hierarchy of environments when querying the existence of a variable.  The \texttt{local} specifier is typed before the name of a variable, and tells the LK engine to only look in the current environment for the variable.  This is applicable to both mutable and non-mutable contexts.  The following code keeps \emph{local scope} for the \texttt{y} variable.
+However, in some programming situations, it may be desirable to use a function to change the variable defined in a parent environment.  For this purpose, the \texttt{common} keyword is provided.  It changes step 3 of the variable lookup rules to keep searching the hierarchy of environments when querying the existence of a variable, even when in a mutable or write context.  The \texttt{common} specifier is typed before the name of a variable, and tells the LK engine that it is OK to modify the variable if it already exists outside the function.  If it does not exist in any environment, the variable is created in the local context per the normal rules.
 
 \begin{verbatim}
 y = 24;
 // ... other code ...
-triple = define (x) { local y=3*x; return y; };
+triple = define (x) { common y=3*x; return y; };
 triple( 4 );
-outln( y ); // this will print 24
+outln( y ); // this will print 12
 \end{verbatim}
 
-More examples of the \texttt{local} keyword are listed below.  It is usually important to specify most variables assigned inside a function to be local.  
+More examples of the \texttt{common} keyword are listed below.  Note that in most situations the \texttt{common} specifier is not needed and may be indicative of a sub-optimal program structure, and may introduce undesired behaviors that are difficult to trace and correct.  In the example below, the counter variable \texttt{i} is declared \texttt{common} inside the \texttt{sum} function and so will have a different value after the \texttt{sum} function is called.
 
 
 \begin{verbatim}
@@ -1026,18 +1026,18 @@ for (i=0;i<5;i++) outln("hello, " + i);
 
 sum = define (x) 
 { 
-   local sum=0;
-   for (local i=0;i<#x;i++)
+   sum=0;
+   for (common i=0;i<#x;i++)
       sum = sum+x[i];
    return sum;
 };
 
 outln( sum( [ 1,2,3,4,5,6,7,8,9 ] )); // this will print 45
-outln( i ); // prints 5
+outln( i ); // prints 9
 outln( sum );  // prints "<function>"
 \end{verbatim}
 
-Arguments declared in the \texttt{define( )} operator are automatically created as local names in the function body.
+Arguments declared in the \texttt{define( )} operator are automatically created as local names in the function's environment.
 
 \subsection{Global Values}
 As we have seen, we can write useful functions using arguments and return values to pass data into and out of functions.  However, sometimes there are some many inputs to a function that it becomes very cumbersome to list them all as arguments.  Alternatively, you might have some variables that are used throughout your program, or are considered reference values or constants.  Because of the hierarchical environment query rules, variables declared in the \emph{main} body of the script can be treated as global values.
@@ -1221,7 +1221,7 @@ outln("cwd=" + cwd() );
 
 
 \section{Standard Library Reference}
-\subsection{Basic and I/O Functions}
+\subsection{Basic System Functions}
 {\large \texttt{\textbf{to\_int}}}\\
 \textsf{ (any):integer }\\
 Converts the argument to an integer value.

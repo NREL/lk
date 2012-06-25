@@ -584,7 +584,9 @@ bool lk::eval( node_t *root,
 	}
 	else if ( iden_t *n = dynamic_cast<iden_t*>( root ) )
 	{
-		vardata_t *x = env->lookup(n->name, n->local ? false : true );
+		vardata_t *x = env->lookup(n->name, (
+			 ((flags&ENV_MUTABLE) && n->common ) 
+			     || !(flags&ENV_MUTABLE) ) ? true : false );
 
 		if (x)
 		{

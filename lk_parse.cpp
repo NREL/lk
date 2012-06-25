@@ -183,7 +183,7 @@ lk::node_t *lk::parser::statement()
 	if (lex.text() == "function")
 	{
 		skip();
-		// syntactic sugar for 'local const my_function = define(...) {  };'
+		// syntactic sugar for 'const my_function = define(...) {  };'
 		// function my_function(...) {  }
 		if ( token() != lexer::IDENTIFIER )
 			error("function name missing");
@@ -893,19 +893,25 @@ lk::node_t *lk::parser::primary()
 		}
 		else
 		{
-			bool local = false;
+			bool common = false;
 			bool constval = false;
 			
 			int nmod = 0;
-			while( nmod++ < 2 && (lex.text() == "local" || lex.text() == "const" ))
+			while( nmod++ < 2 && (lex.text() == "common" 
+				|| lex.text() == "const" 
+				|| lex.text() == "local" ) )
 			{
-				if (lex.text() == "local") local = true;
+				if (lex.text() == "local")
+					error("variable scoping rules have changed in LK, and the 'local' specifier is no longer valid."
+						"please refer to the documentation for details and update your codes accordingly.");
+
+				if (lex.text() == "common") common = true;
 				else constval = true;
 				skip();
 			}
 
 
-			n = new lk::iden_t( line(), lex.text(), local, constval );
+			n = new lk::iden_t( line(), lex.text(), common, constval );
 			match(lk::lexer::IDENTIFIER);
 		}
 		return n;
