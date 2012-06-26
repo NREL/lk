@@ -236,7 +236,7 @@ bool lk::eval( node_t *root,
 
 					if (!(flags&ENV_MUTABLE) && arr.type() != vardata_t::VECTOR)
 					{
-						errors.push_back( "cannot index non array data in non mutable context" );
+						errors.push_back( make_error( n->left, "cannot index non array data in non mutable context"  ) );
 						return false;
 					}
 
