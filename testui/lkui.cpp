@@ -146,8 +146,8 @@ bool LKApp::OnInit()
 	SetTopWindow(app_frame);
 	
 	
-//extern void new_solver();
-//	new_solver();
+extern void new_solver();
+	new_solver();
 	return true;
 }
 

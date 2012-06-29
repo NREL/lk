@@ -9,6 +9,7 @@ lk::parser::parser( input_base &input, const lk_string &name )
 {
 	m_importer = 0;
 	m_haltFlag = false;
+	m_lastLine = lex.line();
 	m_tokType = lex.next();
 	m_name = name;
 }
@@ -84,6 +85,7 @@ bool lk::parser::match(int t)
 
 void lk::parser::skip()
 {	
+	m_lastLine = lex.line(); // update code line to last successfully accepted token
 	m_tokType = lex.next();
 	
 	if (m_tokType == lk::lexer::INVALID)
@@ -95,9 +97,9 @@ void lk::parser::error( const char *fmt, ... )
 	char buf[512];
 
 	if ( !m_name.empty() )
-		sprintf(buf, "[%s line %d]: ", (const char*)m_name.c_str(), lex.line() );
+		sprintf(buf, "[%s line %d]: ", (const char*)m_name.c_str(), m_lastLine );
 	else
-		sprintf(buf, "[line %d]: ", lex.line());
+		sprintf(buf, "[line %d]: ", m_lastLine);
 	
 	char *p = buf + strlen(buf);
 

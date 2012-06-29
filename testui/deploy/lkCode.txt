@@ -11,10 +11,13 @@ a = [ 3,
 	12,
 	1,
 	2 ];
-out("sum=", sum(a), "\n");
-out("mean=", mean(a), "\n");
-out("stddev=", stddev(a), "\n");
-
+	
+if (a == 4){
+ z = 3+24-1;
+	out("sum=", sum(a), "\n");
+	out("mean=", mean(a), "\n");
+	out("stddev=", stddev(a, "\n");
+}
 
 out("min=", min(1,5,-2,-2.001), "\n");
 out("max=", max(11,5,-2,-2.001), "\n");

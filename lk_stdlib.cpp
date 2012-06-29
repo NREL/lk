@@ -8,7 +8,7 @@
 #include <math.h>
 #include <float.h>
 
-#include "lk_bessel.h"
+#include "lk_math.h"
 
 
 #ifndef M_PI
@@ -1019,6 +1019,57 @@ static void _mbesk1( lk::invoke_t &cxt )
 	cxt.result().assign( ::besk1( cxt.arg(0).as_number() ));
 }
 
+static void _gammaln( lk::invoke_t &cxt )
+{
+	LK_DOC("gammaln", "Computes the logarithm of the Gamma function.", "(real):real");
+	cxt.result().assign( ::gammln( cxt.arg(0).as_number() ) );
+}
+
+void _pearson( lk::invoke_t &cxt )
+{	
+	LK_DOC("pearson", "Calculate the Pearson linear rank correlation coefficient of two arrays.", "(array:x, array:y):real");
+		
+	if ( cxt.arg_count() != 2
+		|| cxt.arg(0).type() != lk::vardata_t::VECTOR
+		|| cxt.arg(1).type() != lk::vardata_t::VECTOR
+		|| cxt.arg(0).length() < 2
+		|| cxt.arg(1).length() != cxt.arg(0).length() )
+	{
+		cxt.error( "pearson must be supplied with 2 arrays of the same length" );
+		return;
+	}
+	
+	int len = cxt.arg(0).length();
+
+	double *x = new double[len];
+	double *y = new double[len];
+
+	for (int i=0;i<len;i++)
+	{
+		x[i] = cxt.arg(0).index(i)->as_number();
+		y[i] = cxt.arg(1).index(i)->as_number();
+	}
+
+	cxt.result().assign( pearson( x, y, len ) );
+
+	delete [] x;
+	delete [] y;
+}
+
+
+void _erf( lk::invoke_t &cxt )
+{
+	LK_DOC("erf", "Calculates the value of the error function", "(real):real");
+	cxt.result().assign( erf( cxt.arg(0).as_number() ) );
+}
+
+
+void _erfc( lk::invoke_t &cxt )
+{
+	LK_DOC("erfc", "Calculates the value of the complementary error function", "(real):real");
+	cxt.result().assign( erf( cxt.arg(0).as_number() ) );
+}
+
 #ifdef __WX__
 #include <wx/wx.h>
 
@@ -1198,14 +1249,6 @@ lk::fcall_t* lk::stdlib_string()
 lk::fcall_t* lk::stdlib_math()
 {
 	static const lk::fcall_t vec[] = {
-		_mbesj0,
-		_mbesj1,
-		_mbesy0,
-		_mbesy1,
-		_mbesi0,
-		_mbesi1,
-		_mbesk0,
-		_mbesk1,
 		_mceil,
 		_mfloor,
 		_msqrt,
@@ -1238,6 +1281,18 @@ lk::fcall_t* lk::stdlib_math()
 		_max,
 		_mean,
 		_stddev,
+		_gammaln,
+		_pearson,
+		_mbesj0,
+		_mbesj1,
+		_mbesy0,
+		_mbesy1,
+		_mbesi0,
+		_mbesi1,
+		_mbesk0,
+		_mbesk1,
+		_erf,
+		_erfc,
 		0 };
 		
 	return (fcall_t*)vec;

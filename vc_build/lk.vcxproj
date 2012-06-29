@@ -15,15 +15,16 @@
     <ClCompile Include="..\lk_env.cpp" />
     <ClCompile Include="..\lk_eval.cpp" />
     <ClCompile Include="..\lk_lex.cpp" />
+    <ClCompile Include="..\lk_math.cpp" />
     <ClCompile Include="..\lk_parse.cpp" />
     <ClCompile Include="..\lk_stdlib.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lk_absyn.h" />
-    <ClInclude Include="..\lk_bessel.h" />
     <ClInclude Include="..\lk_env.h" />
     <ClInclude Include="..\lk_eval.h" />
     <ClInclude Include="..\lk_lex.h" />
+    <ClInclude Include="..\lk_math.h" />
     <ClInclude Include="..\lk_parse.h" />
     <ClInclude Include="..\lk_stdlib.h" />
   </ItemGroup>

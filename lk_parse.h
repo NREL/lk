@@ -60,7 +60,8 @@ namespace lk
 		void error( const char *fmt, ... );
 		
 		lexer lex;				
-		int m_tokType;		
+		int m_tokType;
+		int m_lastLine;
 		lk_string m_lexError;
 		bool m_haltFlag;
 		std::vector<lk_string> m_errorList;
