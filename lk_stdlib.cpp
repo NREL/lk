@@ -680,6 +680,132 @@ static void _real_array( lk::invoke_t &cxt )
 		cxt.result().vec_append( atof( (const char*)list[i].c_str() ) );
 }
 
+
+static void _ff_sum( lk::vardata_t &x, double mean, double *sum, double *sumsqr, int *nvalues )
+{
+	switch (x.type())
+	{
+	case lk::vardata_t::VECTOR:
+		{
+			for (size_t i=0;i<x.length();i++)
+				_ff_sum( *(x.index(i)), mean, sum, sumsqr, nvalues );
+		}
+		break;
+	case lk::vardata_t::NUMBER:
+		{
+			double val = x.as_number();
+			(*nvalues)++;
+			(*sum) += val;
+			(*sumsqr) += (val-mean)*(val-mean);
+		}
+		break;
+	}
+}
+
+static void _sum( lk::invoke_t &cxt )
+{
+	LK_DOC("sum", "Returns the numeric sum of all values passed to the function. Arguments can be arrays or numbers.", "(...):real");
+	
+	double sum = 0, sumsqr = 0;
+	int nvalues;
+	for (size_t i=0;i<cxt.arg_count();i++)
+		_ff_sum( cxt.arg(i), 0, &sum, &sumsqr, &nvalues );
+
+	cxt.result().assign( sum );
+}
+
+static void _mean( lk::invoke_t &cxt )
+{
+	LK_DOC("mean", "Returns the mean (average) value all values passed to the function. Arguments can be arrays or numbers.", "(...):real");
+	
+	double sum = 0, sumsqr = 0;
+	int nvalues;
+	for (size_t i=0;i<cxt.arg_count();i++)
+		_ff_sum( cxt.arg(i), 0, &sum, &sumsqr, &nvalues );
+
+	cxt.result().assign( sum / ((double)nvalues) );
+}
+
+static void _stddev( lk::invoke_t &cxt )
+{
+	LK_DOC("stddev", "Returns the sample standard deviation of all values passed to the function. Uses Bessel's correction (N-1). Arguments can be arrays or numbers.", "(...):real");
+	
+	// two pass implementation to avoid round off.
+	// could be improved according to: http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
+	double sum = 0, sumsqr = 0;
+	int nvalues;
+	for (size_t i=0;i<cxt.arg_count();i++)
+		_ff_sum( cxt.arg(i), 0, &sum, &sumsqr, &nvalues );
+
+	double mean = sum / ((double)nvalues);
+	nvalues = 0;
+	sum = sumsqr = 0;
+	for (size_t i=0;i<cxt.arg_count();i++)
+		_ff_sum( cxt.arg(i), mean, &sum, &sumsqr, &nvalues );
+
+	cxt.result().assign( sqrt(sumsqr/(nvalues-1)) );
+}
+
+static void _min( lk::invoke_t &cxt )
+{
+	LK_DOC2("min", "Returns the minimum numeric value.", 
+		"Returns the minimum of the numeric arguments.", "(...):real",
+		"Returns the minimum value in an array of numbers", "(array):real");
+	if (cxt.arg_count() >= 2)
+	{
+		double m = cxt.arg(0).as_number();
+		for (size_t i=1;i<cxt.arg_count();i++)
+			if (cxt.arg(i).as_number() < m)
+				m = cxt.arg(i).as_number();
+		cxt.result().assign( m );
+	}
+	else if (cxt.arg_count() == 1 
+		&& cxt.arg(0).type() == lk::vardata_t::VECTOR
+		&& cxt.arg(0).length() > 0)
+	{
+		lk::vardata_t &arr = cxt.arg(0);
+		double m = arr.index(0)->as_number();
+		for (size_t i=1;i<arr.length();i++)
+		{
+			double t = arr.index(i)->as_number();
+			if (t < m) m = t;
+		}
+		cxt.result().assign( m );
+	}
+	else
+		cxt.error("invalid arguments to the min() function");
+}
+
+static void _max( lk::invoke_t &cxt )
+{
+	LK_DOC2("max", "Returns the maximum numeric value.", 
+		"Returns the maximum of the passed numeric arguments.", "(...):real",
+		"Returns the maximum value in an array of numbers", "(array):real");
+	if (cxt.arg_count() >= 2)
+	{
+		double m = cxt.arg(0).as_number();
+		for (size_t i=1;i<cxt.arg_count();i++)
+			if (cxt.arg(i).as_number() > m)
+				m = cxt.arg(i).as_number();
+		cxt.result().assign( m );
+	}
+	else if (cxt.arg_count() == 1 
+		&& cxt.arg(0).type() == lk::vardata_t::VECTOR
+		&& cxt.arg(0).length() > 0)
+	{
+		lk::vardata_t &arr = cxt.arg(0);
+		double m = arr.index(0)->as_number();
+		for (size_t i=1;i<arr.length();i++)
+		{
+			double t = arr.index(i)->as_number();
+			if (t > m) m = t;
+		}
+		cxt.result().assign( m );
+	}
+	else
+		cxt.error("invalid arguments to the max() function");
+}
+
 static void _mceil( lk::invoke_t &cxt )
 {
 	LK_DOC("ceil", "Round to the smallest integral value not less than x.", "(real:x):real");
@@ -1107,6 +1233,11 @@ lk::fcall_t* lk::stdlib_math()
 		_mnan,
 		_misnan,
 		_mmod,
+		_sum,
+		_min,
+		_max,
+		_mean,
+		_stddev,
 		0 };
 		
 	return (fcall_t*)vec;
