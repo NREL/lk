@@ -8,6 +8,7 @@ HEADERS += \
 	lk_env.h \
 	lk_eval.h \
 	lk_lex.h \
+	lk_math.h \
 	lk_parse.h \
 	lk_stdlib.h
 
@@ -17,5 +18,6 @@ SOURCES += \
 	lk_env.cpp \
 	lk_eval.cpp \
 	lk_lex.cpp \
+	lk_math.cpp \
 	lk_parse.cpp \
 	lk_stdlib.cpp
