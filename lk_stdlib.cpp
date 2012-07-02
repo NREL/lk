@@ -702,7 +702,7 @@ static void _ff_sum( lk::vardata_t &x, double mean, double *sum, double *sumsqr,
 	}
 }
 
-static void _sum( lk::invoke_t &cxt )
+static void _msum( lk::invoke_t &cxt )
 {
 	LK_DOC("sum", "Returns the numeric sum of all values passed to the function. Arguments can be arrays or numbers.", "(...):real");
 	
@@ -714,19 +714,19 @@ static void _sum( lk::invoke_t &cxt )
 	cxt.result().assign( sum );
 }
 
-static void _mean( lk::invoke_t &cxt )
+static void _mmean( lk::invoke_t &cxt )
 {
 	LK_DOC("mean", "Returns the mean (average) value all values passed to the function. Arguments can be arrays or numbers.", "(...):real");
 	
 	double sum = 0, sumsqr = 0;
-	int nvalues;
+	int nvalues = 0;
 	for (size_t i=0;i<cxt.arg_count();i++)
 		_ff_sum( cxt.arg(i), 0, &sum, &sumsqr, &nvalues );
 
 	cxt.result().assign( sum / ((double)nvalues) );
 }
 
-static void _stddev( lk::invoke_t &cxt )
+static void _mstddev( lk::invoke_t &cxt )
 {
 	LK_DOC("stddev", "Returns the sample standard deviation of all values passed to the function. Uses Bessel's correction (N-1). Arguments can be arrays or numbers.", "(...):real");
 	
@@ -746,7 +746,7 @@ static void _stddev( lk::invoke_t &cxt )
 	cxt.result().assign( sqrt(sumsqr/(nvalues-1)) );
 }
 
-static void _min( lk::invoke_t &cxt )
+static void _mmin( lk::invoke_t &cxt )
 {
 	LK_DOC2("min", "Returns the minimum numeric value.", 
 		"Returns the minimum of the numeric arguments.", "(...):real",
@@ -776,7 +776,7 @@ static void _min( lk::invoke_t &cxt )
 		cxt.error("invalid arguments to the min() function");
 }
 
-static void _max( lk::invoke_t &cxt )
+static void _mmax( lk::invoke_t &cxt )
 {
 	LK_DOC2("max", "Returns the maximum numeric value.", 
 		"Returns the maximum of the passed numeric arguments.", "(...):real",
@@ -1276,11 +1276,11 @@ lk::fcall_t* lk::stdlib_math()
 		_mnan,
 		_misnan,
 		_mmod,
-		_sum,
-		_min,
-		_max,
-		_mean,
-		_stddev,
+		_msum,
+		_mmin,
+		_mmax,
+		_mmean,
+		_mstddev,
 		_gammaln,
 		_pearson,
 		_mbesj0,
