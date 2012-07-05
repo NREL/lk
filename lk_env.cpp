@@ -6,6 +6,18 @@
 #include "lk_env.h"
 #include "lk_eval.h"
 
+#if defined(__WINDOWS__)||defined(WIN32)||defined(_WIN32)||defined(__MINGW___)||defined(_MSC_VER)
+#include <Windows.h>
+void *dll_open(const char *name) { return (void*) ::LoadLibraryA( name ); }
+void dll_close( void *handle ) { ::FreeLibrary( (HMODULE)handle ); }
+void *dll_sym( void *handle, const char *name ) { return (void*) ::GetProcAddress( (HMODULE)handle, name ); }
+#else
+#include <dlfcn.h>
+void *dll_open(const char *name) { return dlopen( name, RTLD_NOW ); }
+void dll_close( void *handle ) { dlclose( handle ); }
+void *dll_sym( void *handle, const char *name ) { return dlsym( handle, name ); }
+#endif
+
 lk::vardata_t::vardata_t()
 {
 	m_type = 0;
@@ -556,6 +568,14 @@ lk::env_t::~env_t()
 {
 	clear_objs();
 	clear_vars();
+
+	// unload any extension dlls	
+	for ( std::vector<dynlib_t>::iterator it = m_dynlibList.begin();
+		it != m_dynlibList.end();
+		++it )
+		dll_close( (*it).handle );
+
+	m_dynlibList.clear();
 }
 
 void lk::env_t::clear_objs()
@@ -655,6 +675,34 @@ unsigned int lk::env_t::size()
 	return m_varHash.size();
 }
 
+bool lk::env_t::register_ext_func( lk_invokable f, void *user_data )
+{
+	lk::doc_t d;
+	if ( lk::doc_t::info_ext(f, d) && !d.func_name.empty())
+	{
+		fcallinfo_t x;
+		x.f = 0;
+		x.f_ext = f;
+		x.user_data = user_data;
+		m_funcHash[d.func_name] = x;
+		printf("registered external function '%s'\n", d.func_name.c_str());
+		return true;
+	}
+
+	return false;
+}
+
+void lk::env_t::unregister_ext_func( lk_invokable f )
+{
+	for ( lk::funchash_t::iterator it = m_funcHash.begin();
+		it != m_funcHash.end();
+		it++ )
+	{
+		if ( (*it).second.f_ext == f )
+			m_funcHash.erase( it );
+	}
+}
+
 
 bool lk::env_t::register_func( fcall_t f, void *user_data )
 {
@@ -663,6 +711,7 @@ bool lk::env_t::register_func( fcall_t f, void *user_data )
 	{
 		fcallinfo_t x;
 		x.f = f;
+		x.f_ext = 0;
 		x.user_data = user_data;
 		m_funcHash[d.func_name] = x;
 		return true;
@@ -688,21 +737,19 @@ bool lk::env_t::register_funcs( fcall_t list[], void *user_data )
 	return ok;
 }
 
-lk::fcall_t lk::env_t::lookup_func( const lk_string &name, void **user_data )
+lk::fcallinfo_t *lk::env_t::lookup_func( const lk_string &name )
 {
 	funchash_t::iterator it = m_funcHash.find( name );
 	if ( it != m_funcHash.end() )
 	{
-		if (user_data) *user_data = (*it).second.user_data;
-		return (*it).second.f;
+		return &(*it).second;
 	}
 	else if ( m_parent )
 	{
-		return m_parent->lookup_func( name, user_data );
+		return m_parent->lookup_func( name );
 	}
 	else
 	{
-		if (user_data) *user_data = 0;
 		return 0;
 	}
 }
@@ -821,6 +868,84 @@ void lk::env_t::call( const lk_string &name, std::vector< vardata_t > &args, var
 		throw error_t("function call fail: could not locate internal pointer to " + name);
 }
 
+bool lk::env_t::load_library( const lk_string &path )
+{
+	for ( std::vector<dynlib_t>::iterator it = m_dynlibList.begin();
+		it != m_dynlibList.end();
+		++it )
+		if ( (*it).path == path ) return true;
+
+	dynlib_t x;
+	x.path = path;
+	void *pdll = ::dll_open( path.c_str() );
+	if (!pdll)
+		return false;
+
+	int (*verfunc)() = ( int(*)() ) dll_sym( pdll, "lk_extension_api_version" );
+	if ( verfunc == 0 )
+	{
+		printf("could not locate symbol 'lk_extension_api_version'\n");
+		dll_close( pdll );
+		return false;
+	}
+
+	int ver = verfunc();
+	printf("load_library('%s'): ver=%d\n", path.c_str(), ver );
+	if (ver != LK_EXTENSION_API_VERSION)
+	{
+		printf("invalid extension version: %d (engine api: %d)\n", ver, LK_EXTENSION_API_VERSION);
+		dll_close( pdll );
+		return false;
+	}
+
+	lk_invokable *(*listfunc)() = (lk_invokable*(*)())dll_sym( pdll, "lk_function_list" );
+	if (listfunc == 0)
+	{
+		printf("could not locate symbol 'lk_function_list'\n");
+		dll_close( pdll );
+		return false;
+	}
+
+
+	x.handle = pdll;
+	x.functions = listfunc();
+			
+	int idx = 0;
+	while ( x.functions[idx] != 0 )
+	{
+		global()->register_ext_func( x.functions[idx], 0 );
+		idx ++;
+	}
+
+	printf("finished loading %d functions...\n", idx);
+	m_dynlibList.push_back( x );
+	return true;
+}
+
+bool lk::env_t::unload_library( const lk_string &path )
+{
+	for ( std::vector<dynlib_t>::iterator it = m_dynlibList.begin();
+		it != m_dynlibList.end();
+		++it )
+	{
+		if ( (*it).path == path )
+		{
+			lk_invokable *list = (*it).functions;
+			while (*list != 0)
+			{
+				global()->unregister_ext_func( *list );
+				list++;
+			}
+
+			dll_close( (*it).handle );
+
+			m_dynlibList.erase( it );
+			return true;
+		}
+	}
+
+	return false;
+}
 
 bool lk::doc_t::info( fcall_t f, doc_t &d )
 {
@@ -831,6 +956,22 @@ bool lk::doc_t::info( fcall_t f, doc_t &d )
 		cxt.m_docPtr = &d; // possible b/c friend class
 		d.m_ok = false;
 		(*f)( cxt ); // each function begins LK_DOC which calls invoke_t::document(..), should set m_ok to true
+		return d.m_ok;
+	}
+	else
+		return false;
+}
+
+
+bool lk::doc_t::info_ext( lk_invokable f, doc_t &d )
+{
+	if (f!=0)
+	{
+		lk::vardata_t dummy_var;
+		lk::invoke_t cxt("", 0, dummy_var, 0);
+		cxt.m_docPtr = &d; // possible b/c friend class
+		d.m_ok = false;
+		external_call( f, cxt ); // each function begins LK_DOC which calls invoke_t::document(..), should set m_ok to true
 		return d.m_ok;
 	}
 	else

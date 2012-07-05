@@ -10,7 +10,6 @@
 
 #include "lk_math.h"
 
-
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643
 #endif
@@ -453,6 +452,12 @@ static void _write_text_file( lk::invoke_t &cxt )
 	cxt.result().assign( 1.0 );
 }
 
+static void _load_extension( lk::invoke_t &cxt )
+{
+	LK_DOC("load_extension", "Loads an LK extension library.", "(string:path):boolean");
+	cxt.result().assign( cxt.env()->global()->load_library( cxt.arg(0).as_string() ) ? 1.0 : 0.0 );
+}
+
 static void _sprintf( lk::invoke_t &cxt )
 {
 	LK_DOC("sprintf", "Returns a formatted string using standard C printf conventions, but adding the %m and %, specifiers for monetary and comma separated real numbers.", "(string:format, ...):string");
@@ -707,7 +712,7 @@ static void _msum( lk::invoke_t &cxt )
 	LK_DOC("sum", "Returns the numeric sum of all values passed to the function. Arguments can be arrays or numbers.", "(...):real");
 	
 	double sum = 0, sumsqr = 0;
-	int nvalues;
+	int nvalues = 0;
 	for (size_t i=0;i<cxt.arg_count();i++)
 		_ff_sum( cxt.arg(i), 0, &sum, &sumsqr, &nvalues );
 
@@ -733,7 +738,7 @@ static void _mstddev( lk::invoke_t &cxt )
 	// two pass implementation to avoid round off.
 	// could be improved according to: http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
 	double sum = 0, sumsqr = 0;
-	int nvalues;
+	int nvalues = 0;
 	for (size_t i=0;i<cxt.arg_count();i++)
 		_ff_sum( cxt.arg(i), 0, &sum, &sumsqr, &nvalues );
 
@@ -1070,6 +1075,7 @@ void _erfc( lk::invoke_t &cxt )
 	cxt.result().assign( erf( cxt.arg(0).as_number() ) );
 }
 
+
 #ifdef __WX__
 #include <wx/wx.h>
 
@@ -1213,6 +1219,7 @@ lk::fcall_t* lk::stdlib_basic()
 		_write_line,
 		_read,
 		_write,
+		_load_extension,
 		0 };
 
 	return (fcall_t*)vec;

@@ -9,6 +9,8 @@
 #include "../lk_parse.cpp"
 #include "../lk_lex.cpp"
 #include "../lk_stdlib.cpp"
+#include "../lk_invoke.cpp"
+#include "../lk_math.cpp"
 
 void fcall_out( lk::invoke_t &cxt )
 {

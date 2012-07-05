@@ -7,6 +7,7 @@
 #include <exception>
 
 #include "lk_absyn.h"
+#include "lk_invoke.h"
 
 
 #define LK_DOC(  fn, desc, sig ) if (cxt.doc_mode()) { cxt.document( lk::doc_t(fn , "", desc, sig ) ); return; }
@@ -17,11 +18,11 @@
 
 namespace lk {
 
-	class LKEXPORT vardata_t;
+	class vardata_t;
 	typedef unordered_map< lk_string, vardata_t*, lk_string_hash, lk_string_equal > varhash_t;
 		
 	
-	class LKEXPORT error_t : public std::exception
+	class error_t : public std::exception
 	{
 	public:
 		error_t() : text("general data exception") {  }
@@ -39,7 +40,7 @@ namespace lk {
 		virtual const char *what() const throw (){ return text.c_str(); }
 	};
 
-	class LKEXPORT vardata_t
+	class vardata_t
 	{
 	private:
 		// m_type stores both data type and flag information
@@ -132,7 +133,7 @@ namespace lk {
 
 	};
 	
-	class LKEXPORT objref_t
+	class objref_t
 	{
 	public:
 		virtual ~objref_t() {  }
@@ -144,14 +145,15 @@ namespace lk {
 
 	typedef void (*fcall_t)( lk::invoke_t& );
 
-	struct LKEXPORT fcallinfo_t {
+	struct fcallinfo_t {
 		fcall_t f;
+		lk_invokable f_ext;
 		void *user_data;
 	};
 
 	typedef unordered_map< lk_string, fcallinfo_t, lk_string_hash, lk_string_equal > funchash_t;
 
-	class LKEXPORT doc_t
+	class doc_t
 	{
 	friend class invoke_t;
 	public:
@@ -193,12 +195,13 @@ namespace lk {
 		bool ok() { return m_ok; }
 
 		static bool info( fcall_t f, doc_t &d );
+		static bool info_ext( lk_invokable, doc_t &d );
 	private:
 		void copy_data( doc_t *p );
 		bool m_ok;
 	};
 
-	class LKEXPORT invoke_t
+	class invoke_t
 	{
 		friend class doc_t;
 	private:
@@ -235,8 +238,8 @@ namespace lk {
 		lk_string error() { return m_error; }
 		bool has_error() { return m_hasError; }
 	};
-	
-	class LKEXPORT env_t
+		
+	class env_t
 	{
 	private:
 		env_t *m_parent;
@@ -246,6 +249,18 @@ namespace lk {
 
 		funchash_t m_funcHash;
 		std::vector< objref_t* > m_objTable;
+
+		struct dynlib_t
+		{
+			lk_string path;
+			void *handle;
+			lk_invokable *functions;
+		};
+		std::vector< dynlib_t > m_dynlibList;
+
+		bool register_ext_func( lk_invokable f, void *user_data = 0 );
+		void unregister_ext_func( lk_invokable f );
+
 	public:
 		env_t();
 		env_t(env_t *p);
@@ -266,7 +281,11 @@ namespace lk {
 		bool register_func( fcall_t f, void *user_data = 0 );
 		bool register_funcs( std::vector<fcall_t> l, void *user_data = 0 );
 		bool register_funcs( fcall_t list[], void *user_data = 0 ); // null item terminated list
-		fcall_t lookup_func( const lk_string &name, void **user_data = 0 );
+
+		bool load_library( const lk_string &path );
+		bool unload_library( const lk_string &path );
+
+		fcallinfo_t *lookup_func( const lk_string &name );
 		std::vector<lk_string> list_funcs();
 
 		size_t insert_object( objref_t *o );
@@ -278,6 +297,9 @@ namespace lk {
 				   vardata_t &result ) throw( error_t );
 		
 	};
+	
+	// implemented in lk_invoke.cpp for external dll calls
+	void external_call( lk_invokable p, lk::invoke_t &cxt );
 
 }; // namespace lk
 

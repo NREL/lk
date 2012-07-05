@@ -7,14 +7,14 @@
 
 namespace lk
 {
-	class LKEXPORT importer
+	class importer
 	{
 	public:
 		virtual bool read_source( const lk_string &path, 
 			lk_string *expandedPath, lk_string *data ) = 0;
 	};
 
-	class LKEXPORT parser
+	class parser
 	{
 	public:
 		parser( input_base &input, const lk_string &name = "" );

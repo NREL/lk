@@ -16,7 +16,7 @@ Define _DEBUG if compile with debugging
 
 namespace lk {
 
-	class LKEXPORT input_base
+	class input_base
 	{
 	public:
 		virtual ~input_base() { }
@@ -25,7 +25,7 @@ namespace lk {
 		virtual char operator++(int) = 0;
 	};
 	
-	class LKEXPORT input_stream : public input_base
+	class input_stream : public input_base
 	{
 	private:
 		FILE *m_fp;
@@ -40,7 +40,7 @@ namespace lk {
 		virtual char peek();
 	};
 		
-	class LKEXPORT input_string : public input_base
+	class input_string : public input_base
 	{
 	private:
 		char *m_buf;
@@ -54,7 +54,7 @@ namespace lk {
 	};
 	
 			
-	class LKEXPORT lexer
+	class lexer
 	{
 	public:
 		static const char *tokstr(int t);

@@ -4,6 +4,7 @@
 #include <limits>
 
 #include "lk_eval.h"
+#include "lk_invoke.h"
 
 static lk_string make_error( lk::node_t *n, const char *fmt, ...)
 {
@@ -297,13 +298,13 @@ bool lk::eval( node_t *root,
 					{
 
 						// query function table for identifier
-						void *call_data = 0;
-						if ( lk::fcall_t f = env->lookup_func( iden->name, &call_data ) )
+						if ( lk::fcallinfo_t *fi = env->lookup_func( iden->name ) )
 						{
 							
-							lk::invoke_t cxt( iden->name, env, result, call_data );
+							lk::invoke_t cxt( iden->name, env, result, fi->user_data );
 							
 							list_t *argvals = dynamic_cast<list_t*>(n->right);
+							int nargidx = 0;
 							while (argvals)
 							{
 								vardata_t v;
@@ -311,17 +312,19 @@ bool lk::eval( node_t *root,
 
 								if (!eval( argvals->item, env, errors, v, flags, c, cb_func, cb_data ))
 								{
-									errors.push_back( make_error( argvals, "failed to evaluate function call argument\n" ));
+									errors.push_back( make_error( argvals, "failed to evaluate function call argument %d to '", nargidx) + iden->name + "()'\n" );
 									return false;
 								}
 
 								cxt.arg_list().push_back( v );
-
+								nargidx++;
 								argvals = argvals->next;
 							}
 							
 							try {
-								(*f)( cxt );
+								if ( fi->f ) (*(fi->f))( cxt );
+								else if ( fi->f_ext ) lk::external_call( fi->f_ext, cxt );
+								else cxt.error( "invalid internal reference to function callback " + iden->name );
 							}
 							catch( std::exception &e )
 							{
@@ -329,7 +332,7 @@ bool lk::eval( node_t *root,
 							}
 
 							if (cxt.has_error())
-								errors.push_back( "error in call to '" + iden->name + "': " + cxt.error() );
+								errors.push_back( make_error( iden, "error in call to '") + iden->name + "()': " + cxt.error() );
 							
 							return !cxt.has_error();
 						}

@@ -290,12 +290,12 @@ namespace lk {
 			{
 				
 				void *ud = 0;
-				lk::fcall_t fobj = env.lookup_func( f->name, &ud);
+				lk::fcallinfo_t *fobj = env.lookup_func( f->name);
 				if ( fobj == 0 )
 					throw evalexception("undefined function: " + f->name );
 
 				lk::vardata_t zz;
-				lk::invoke_t ivk( f->name, &env, zz, ud );
+				lk::invoke_t ivk( f->name, &env, zz, fobj->user_data );
 				std::vector< lk::node_t* > reduced_args;
 				std::vector< double > arg_vals;
 				bool all_reduced = true;
@@ -333,7 +333,7 @@ namespace lk {
 				else
 				{
 					try {
-						fobj( ivk );
+						fobj->f( ivk );
 					} catch( lk::error_t &err )
 					{
 						error( err.what() );
@@ -580,12 +580,12 @@ namespace lk {
 			else if ( funccall_t *f = dynamic_cast<funccall_t*>( n ))
 			{
 				void *ud = 0;
-				lk::fcall_t fobj = t.lookup_func( f->name, &ud );
+				lk::fcallinfo_t * fobj = t.lookup_func( f->name );
 				if ( fobj == 0 )
 					throw evalexception( "undefined function: " + f->name );
 
 				lk::vardata_t zz;
-				lk::invoke_t ivk( f->name, &t, zz, ud );
+				lk::invoke_t ivk( f->name, &t, zz, fobj->user_data );
 				for (size_t i=0;i<f->args.size();i++)
 				{
 					lk::vardata_t arg;
@@ -594,7 +594,7 @@ namespace lk {
 				}
 
 				try {
-					fobj( ivk );
+					fobj->f( ivk );
 				} catch( lk::error_t &e )
 				{
 					error( e.what() );

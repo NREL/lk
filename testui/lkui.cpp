@@ -146,8 +146,8 @@ bool LKApp::OnInit()
 	SetTopWindow(app_frame);
 	
 	
-extern void new_solver();
-	new_solver();
+//extern void new_solver();
+	//new_solver();
 	return true;
 }
 
@@ -422,26 +422,33 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 				unsigned int ctl_id = lk::CTL_NONE;
 				wxStopWatch sw;
 				std::vector<lk_string> errors;
-				if ( lk::eval( tree, &env, errors, result, 0, ctl_id, 0, 0 ) )
+				try 
 				{
-					long time = sw.Time();
-					applog("elapsed time: %ld msec\n", time);
-
-					lk_string key;
-					lk::vardata_t *value;
-					bool has_more = env.first( key, value );
-					while( has_more )
+					if ( lk::eval( tree, &env, errors, result, 0, ctl_id, 0, 0 ) )
 					{
-						applog("env{%s}=%s\n", key, value->as_string().c_str());
-						has_more = env.next( key, value );
-					}
+						long time = sw.Time();
+						applog("elapsed time: %ld msec\n", time);
 
+						lk_string key;
+						lk::vardata_t *value;
+						bool has_more = env.first( key, value );
+						while( has_more )
+						{
+							applog("env{%s}=%s\n", key, value->as_string().c_str());
+							has_more = env.next( key, value );
+						}
+
+					}
+					else
+					{
+						Post("eval fail\n");
+						for (size_t i=0;i<errors.size();i++)
+							Post( errors[i].c_str() );
+					}
 				}
-				else
+				catch (std::exception &e )
 				{
-					Post("eval fail\n");
-					for (size_t i=0;i<errors.size();i++)
-						Post( errors[i].c_str() );
+					applog("exception: %s\n", e.what() );
 				}
 			}
 			

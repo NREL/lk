@@ -1,4 +1,4 @@
-const local f = define(x) { outln(x); };
+const f = define(x) { outln(x); };
 out("enter number>> ");
 n = to_int(in());
 for (i=0;i<n;i=i+1)
