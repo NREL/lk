@@ -194,8 +194,9 @@ namespace lk {
 
 		bool ok() { return m_ok; }
 
+		static bool info( fcallinfo_t *f, doc_t &d );
 		static bool info( fcall_t f, doc_t &d );
-		static bool info_ext( lk_invokable, doc_t &d );
+		static bool info( lk_invokable f, doc_t &d );
 	private:
 		void copy_data( doc_t *p );
 		bool m_ok;

@@ -59,7 +59,7 @@ private:
 
 	CodeEdit *m_codeEdit;
 	wxTextCtrl *m_txtOutput;
-
+	
 	DECLARE_EVENT_TABLE()
 };
 #endif

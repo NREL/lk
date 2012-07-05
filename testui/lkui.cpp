@@ -47,6 +47,29 @@ LKFrame *app_frame = NULL;
 wxArrayString app_args;
 wxConfig *app_config = NULL;
 
+
+void fcall_output( lk::invoke_t &cxt )
+{
+	LK_DOC("out", "Output data to the console.", "(...):none");
+	for (size_t i=0;i<cxt.arg_count();i++)
+		app_frame->Post( (const char*)cxt.arg(i).as_string().c_str());
+}
+
+void fcall_outputln( lk::invoke_t &cxt )
+{
+	LK_DOC("outln", "Output data to the console with a newline.", "(...):none");
+	for (size_t i=0;i<cxt.arg_count();i++)
+		app_frame->Post( (const char*)cxt.arg(i).as_string().c_str());
+	
+	app_frame->Post( "\n" );
+}
+
+void fcall_input(  lk::invoke_t &cxt )
+{
+	LK_DOC("in", "Input text from the user.", "(none):string");
+	cxt.result().assign( std::string((const char*)wxGetTextFromUser("Standard Input:").c_str()) );	
+}
+
 void applog(const char *fmt, ...)
 {
 	static char buf[1024];
@@ -262,7 +285,41 @@ LKFrame::LKFrame()
 		wxPoint(0,0), wxSize(800,700), wxSP_LIVE_UPDATE|wxBORDER_NONE );
 
 	m_codeEdit = new CodeEdit( split_win, ID_EDITOR );
+	
+	lk::env_t env;
+	env.register_func( fcall_input );
+	env.register_func( fcall_output );
+	env.register_func( fcall_outputln );
+
+	env.register_funcs( lk::stdlib_basic() );
+	env.register_funcs( lk::stdlib_string() );
+	env.register_funcs( lk::stdlib_math() );
+	env.register_funcs( lk::stdlib_wxui() );
+
+
+	StringMap tips;
+	std::vector<lk_string> list = env.list_funcs();
+	wxString funclist;
+	for (size_t i=0;i<list.size();i++)
+	{
+		lk::doc_t d;
+		if (lk::doc_t::info(  env.lookup_func( list[i] ), d ))
+		{
+			wxString data = ::LimitColumnWidth( d.func_name + d.sig1 + "\n\n" + d.desc1, 90 );
+			if (d.has_2) data += ::LimitColumnWidth( "\n\n" + d.func_name + d.sig2 + "\n\n" + d.desc2, 90 );
+			if (d.has_3) data += ::LimitColumnWidth( "\n\n" + d.func_name + d.sig3 + "\n\n" + d.desc3, 90 );
+
+			tips[ d.func_name ] = data;			
+			funclist += d.func_name + " ";
+		}
+	}
+
+		
 	m_codeEdit->ApplyLKStyling();
+	m_codeEdit->EnableCallTips(true);
+	m_codeEdit->SetCallTipData('(',')', false, tips);
+	m_codeEdit->StyleSetForeground( wxSTC_C_WORD2, wxColour(0,128,192) );
+	m_codeEdit->SetKeyWords( 1, funclist );
 	
 	m_txtOutput = new wxTextCtrl(split_win, ID_OUTPUT, wxEmptyString, wxDefaultPosition, wxDefaultSize,
 		wxTE_READONLY | wxTE_MULTILINE | wxHSCROLL | wxTE_DONTWRAP);
@@ -362,19 +419,6 @@ void LKFrame::SaveCode()
 	else wxMessageBox("Could not write: " + tf);
 }
 
-void fcall_output( lk::invoke_t &cxt )
-{
-	LK_DOC("out", "Output data to the console.", "(...):none");
-	for (size_t i=0;i<cxt.arg_count();i++)
-		app_frame->Post( (const char*)cxt.arg(i).as_string().c_str());
-}
-
-void fcall_input(  lk::invoke_t &cxt )
-{
-	LK_DOC("in", "Input text from the user.", "(none):string");
-	cxt.result().assign( std::string((const char*)wxGetTextFromUser("Standard Input:").c_str()) );	
-}
-
 void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 {
 	switch(evt.GetId())
@@ -411,6 +455,7 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 				lk::env_t env;
 				env.register_func( fcall_input );
 				env.register_func( fcall_output );
+				env.register_func( fcall_outputln );
 
 				env.register_funcs( lk::stdlib_basic() );
 				env.register_funcs( lk::stdlib_string() );

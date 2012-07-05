@@ -678,7 +678,7 @@ unsigned int lk::env_t::size()
 bool lk::env_t::register_ext_func( lk_invokable f, void *user_data )
 {
 	lk::doc_t d;
-	if ( lk::doc_t::info_ext(f, d) && !d.func_name.empty())
+	if ( lk::doc_t::info(f, d) && !d.func_name.empty())
 	{
 		fcallinfo_t x;
 		x.f = 0;
@@ -947,6 +947,26 @@ bool lk::env_t::unload_library( const lk_string &path )
 	return false;
 }
 
+bool lk::doc_t::info( fcallinfo_t *f, doc_t &d )
+{
+	if (f!=0)
+	{
+		lk::vardata_t dummy_var;
+		lk::invoke_t cxt("", 0, dummy_var, 0);
+		cxt.m_docPtr = &d; // possible b/c friend class
+		d.m_ok = false;
+
+		 // each function begins LK_DOC which calls invoke_t::document(..), should set m_ok to true
+		if (f->f) (*(f->f))( cxt );
+		else external_call( f->f_ext, cxt );
+
+		return d.m_ok;
+	}
+	else
+		return false;
+}
+
+
 bool lk::doc_t::info( fcall_t f, doc_t &d )
 {
 	if (f!=0)
@@ -963,7 +983,7 @@ bool lk::doc_t::info( fcall_t f, doc_t &d )
 }
 
 
-bool lk::doc_t::info_ext( lk_invokable f, doc_t &d )
+bool lk::doc_t::info( lk_invokable f, doc_t &d )
 {
 	if (f!=0)
 	{
@@ -971,7 +991,7 @@ bool lk::doc_t::info_ext( lk_invokable f, doc_t &d )
 		lk::invoke_t cxt("", 0, dummy_var, 0);
 		cxt.m_docPtr = &d; // possible b/c friend class
 		d.m_ok = false;
-		external_call( f, cxt ); // each function begins LK_DOC which calls invoke_t::document(..), should set m_ok to true
+		lk::external_call( f, cxt ); // each function begins LK_DOC which calls invoke_t::document(..), should set m_ok to true
 		return d.m_ok;
 	}
 	else
