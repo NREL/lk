@@ -4,7 +4,12 @@ extok = 0;
 extok = load_extension( "c:/Users/adobos/Projects/lk/extern/externtest.dll" );
 out("extload=? " ,  extok, "\n");
 
-out("externtest: " + externtest("hello str 1", "12345") + "\n");
+//out("externtest: " + externtest("hello str 1", "12345") + "\n");
+
+
+for (T=-1;T<40;T++)
+	out('steam psat( T=' + T + ' )= ' + steam_psat(T) + '\n');
+
 exit;
 
 a = [ 3,
