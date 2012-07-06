@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "lk_env.h"
 #include "lk_invoke.h"
 

@@ -9,6 +9,7 @@ HEADERS += \
 	lk_eval.h \
 	lk_lex.h \
 	lk_math.h \
+	lk_invoke.h \
 	lk_parse.h \
 	lk_stdlib.h
 
@@ -19,5 +20,6 @@ SOURCES += \
 	lk_eval.cpp \
 	lk_lex.cpp \
 	lk_math.cpp \
+	lk_invoke.cpp \
 	lk_parse.cpp \
 	lk_stdlib.cpp
