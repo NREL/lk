@@ -23,7 +23,7 @@
 \maketitle
 \vspace{3in}
 \begin{abstract}
-The LK (Language Kit) language is a simple but powerful scripting language that is designed to be small, fast, and easily embedded in other applications.  It allows users to extend the built-in functionality of programs, and provides a cross-platform standard library of function calls.  The core LK engine, including lexical analyzer, parser, and evaluator comprises less than 3500 lines of ISO-standard C++ code, and is only dependent on the Standard C++ Library (STL), making it extremely tight and portable to various platforms.  
+The LK (Language Kit) language is a simple but powerful scripting language that is designed to be small, fast, and easily embedded in other applications.  It allows users to extend the built-in functionality of programs, and provides a cross-platform standard library of function calls.  The core LK engine, including lexical analyzer, parser, and evaluator comprises less than 4000 lines of ISO-standard C++ code, and is only dependent on the Standard C++ Library (STL), making it extremely tight and portable to various platforms.  LK also provides a C language API for writing extensions that can be dynamically loaded at runtime.
 
 \textbf{Note:} LK can utilize standard 8-bit ASCII strings via the built-in \texttt{std::string} class, or can be configured to utilize an \texttt{std::string}-compliant string class from an external library.  In this way, Unicode text can be supported natively.  For example, direct integration and linkage with the wxWidgets C++ GUI library string class is provided as an option.
 \end{abstract} 
@@ -55,7 +55,7 @@ To run Hello world, type it into a new text file with the .lk extension, and loa
 
 \subsection{Why yet another scripting language?}
 
-There are many scripting languages available that have all of LK's features, and many more.  However, LK is unique in its code footprint (less than 3500 lines of C++), portability, and simplicity of integration into other programs.  
+There are many scripting languages available that have all of LK's features, and many more.  However, LK is unique in its code footprint (less than 4000 lines of C++), portability, and simplicity of integration into other programs.  It is also very straightforward to write libraries of functions called extensions that can be dynamically loaded into the script engine at run-time.
 
 Some notable aspects of LK include:
 \begin{enumerate}
@@ -1220,273 +1220,162 @@ outln("cwd=" + cwd() );
 \end{verbatim}
 
 
+\section{Writing Extensions}
+
+LK provides an application programming interface (API) for writing libraries of functions that can be loaded at runtime into the scripting engine.  Dynamically loaded libraries can be used to provide very high performance computations, ability to create linkages to other software packages, and to integrate existing codes written in other languages.  The C language extension API is fully defined in the header file \texttt{lk\_invoke.h}, and does require the extension to be linked to any other LK library or otherwise.  As a result, programming, compiling, and linking a standalone LK extension is very straightforward.  
+
+\emph{Note:} Currently, the LK extension API does not support passing Unicode text back and forth between an extension and the core LK engine, even if the core engine is compiled utilizing a Unicode string class.
+
+\subsection{Basic Organization}
+
+The examples in this manual show how to construct an LK extension in C or C++.  First, the \texttt{lk\_invoke.h} header file must be included in the C source file.  This defines several functions and macros to assist writing functions that can be dynamically loaded by LK.  In the very simple example extension below, a single function is defined that returns a constant value, the speed of light.  
+
+\begin{verbatim}
+#include <lk_invoke.h>
+
+LK_FUNCTION( speed_of_light )
+{
+   LK_DOCUMENT( "speed_of_light", "Returns the speed of light in (m/s).", "(none):number" );
+
+   lk_return_number( 299792458 );
+}
+
+LK_BEGIN_EXTENSION()
+  speed_of_light
+LK_END_EXTENSION()
+\end{verbatim}
+
+To define a new function, use the \texttt{LK\_FUNCTION( name )} macro, called with the name of the function.  This macro expands to the C code \texttt{void name( struct \_\_lk\_invoke\_t *lk )}.
+
+The first line of any extension function must be the documentation specifier, defined by the macro \texttt{LK\_DOCUMENT( name, description, signature )}.  This macro takes three arguments: the name of the function by which LK will refer to it, a text description of what it does, and a \emph{signature} that shows the proper parameters and return value.  For functions that may take multiple forms (i.e. different behavior and signatures), the \texttt{LK\_DOCUMENT2(...)} and \texttt{LK\_DOCUMENT3(...)} macros exist.  These macros take multiple descriptions and signatures, and are fully explained in the \texttt{lk\_invoke.h} header file.
+
+To make the functions visible to the LK engine, they must be listed between the \texttt{LK\_BEGIN\_EXTENSION()} and \texttt{LK\_END\_EXTENSION()} macros.  Otherwise, the functions will not be properly exported from the dynamic library.  These macros may only appear once within the source code of an extension library.
+
+
+\subsection{Working with Variables}
+
+The extension API defines several macros for easily working with function arguments and return values.  A variable is referenced by the opaque pointer type \texttt{lk\_var\_t}, and is passed as an argument to the various functions to retrieve and set values.  The \texttt{sum} example below shows how to work with function arguments and return values explicitly, as well as how to signal an error if necessary.
+
+\begin{verbatim}
+LK_FUNCTION( sum )
+{
+   LK_DOCUMENT( "sum", "Sums up all the parameters passed.", "(...):number" );
+
+   double val = 0;
+   int i;
+   int count = lk_arg_count();
+   if (count < 1)
+   {
+      lk_error("sum() must be provided more than zero arguments");
+      return;
+   }
+
+   for (i=0;i<count;i++)
+   {
+      lk_var_t x = lk_arg( i );
+      val = val + lk_as_number( x );
+   }
+
+   lk_var_t ret = lk_result();
+   lk_set_number( ret, val );
+}
+\end{verbatim}
+
+The extension API also provides facilities for working with arrays and tables.  In the example below, the array passed in is converted to a table with named indices.
+
+\begin{verbatim}
+LK_FUNCTION( tabulate )
+{
+   LK_DOCUMENT( "tabulate", "Converts an array to a table.", "(array):table");
+	
+   lk_var_t arr, ret;
+   int len, i;
+   char key[64];
+	
+   if (lk_arg_count() != 1
+      || lk_type( lk_arg(0) ) != LK_ARRAY)
+   {
+      lk_error("tabulate() requires one array parameter");
+      return;
+   }
+	
+   ret = lk_result();
+   lk_make_table(ret);
+	
+   arr = lk_arg(0);
+   len = lk_length( arr );
+
+   for (i=0;i<len;i++)
+   {
+      sprintf(key, "item%d", i);
+		
+      lk_var_t item = lk_index(arr, i);
+      int ty = lk_type(item);
+      switch(ty)
+      {
+      case LK_NUMBER:
+         lk_table_set_number( ret, key, lk_as_number( item ) );
+         break;
+      case LK_STRING:
+         lk_table_set_string( ret, key, lk_as_string( item ) );
+         break;
+			
+      case LK_ARRAY:
+      case LK_TABLE:
+         lk_error("arrays and tables not currently copied. exercise for the user!");
+         return;
+      }
+   }		
+}
+\end{verbatim}
+
+Running the following LK script code after loading a compiled extension with the \texttt{tabulate()} function above shows that the array has been converted to a table with items \texttt{item0}, \texttt{item1}, and so on.
+
+\begin{verbatim}
+arr = [ 1, 5, 'h3llo', '213', 451.4, -1 ];
+x = tabulate(arr);
+outln(x);
+\end{verbatim}
+
+Output:
+\begin{verbatim}
+{ item2=h3llo item3=213 item0=1 item1=5 item4=451.4 item5=-1 }
+\end{verbatim}
+
+
+For additional variable manipulation macros, refer to the \texttt{lk\_invoke.h} header file.  Additional advanced facilities not documented in this manual are also available for implementing callback-type functions and object referencing.
+
+\subsection{Compiling and Loading}
+
+Using the MinGW compiler toolchain on Windows, it is very straightforward to create an LK extension library.  Simply issue the command below at the Windows command prompt (\texttt{cmd.exe} from Start/Run)
+
+\begin{verbatim}
+c:\> gcc -shared -o testextension.dll testextension.c
+\end{verbatim}
+
+To load this extension at runtime into a LK script, use the standard library function \texttt{load\_extension()}, per below.  If the extension loads successfully, any of the functions defined and exported in the extension can be invoked just like any other built-in or user-defined LK function.
+
+\begin{verbatim}
+ok = load_extension( "c:/testextension.dll" );
+if (!ok) {
+   // failed to load extension
+   exit;
+}
+c = speed_of_light();
+\end{verbatim}
+
+The dynamic extension library will be unloaded when the script finishes executing.
+
+
+
 \section{Standard Library Reference}
-\subsection{Basic System Functions}
-{\large \texttt{\textbf{to\_int}}}\\
-\textsf{ (any):integer }\\
-Converts the argument to an integer value.
 
-{\large \texttt{\textbf{to\_real}}}\\
-\textsf{ (any):real }\\
-Converts the argument to a real number (double precision).
+The standard library documented here outlines built-in functions that are likely to be available in any implementation of the LK scripting language.  The input/output functions referenced in this manual (\texttt{in(), out(), outln()}) are not part of the standard library because the LK host environment defines how these functions are manifested.  It is assumed, however, that most host environments will include these ``standard'' I/O functions as well.
 
-{\large \texttt{\textbf{to\_bool}}}\\
-\textsf{ (any):boolean }\\
-Converts the argument to a boolean value (1=true, 0=false).
+\input{lk_sys.tex}
 
-{\large \texttt{\textbf{to\_string}}}\\
-\textsf{ ([any]):string }\\
-Converts the argument[s] to a text string.
+\input{lk_str.tex}
 
-{\large \texttt{\textbf{alloc}}}\\
-\textsf{ (integer, \{integer\}):array }\\
-Allocates an array of one or two dimensions.
-
-{\large \texttt{\textbf{dir\_list}}}\\
-\textsf{ (string:path, string:extensions, [boolean:list dirs also]):array }\\
-List all the files in a directory. The extensions parameter is a comma separated list of extensions, or * to retrieve every item.
-
-{\large \texttt{\textbf{file\_exists}}}\\
-\textsf{ (string):boolean }\\
-Determines whether a file exists or not.
-
-{\large \texttt{\textbf{dir\_exists}}}\\
-\textsf{ (string):boolean }\\
-Determines whether the specified directory exists.
-
-{\large \texttt{\textbf{remove\_file}}}\\
-\textsf{ (string):boolean }\\
-Deletes the specified file from the filesystem.
-
-{\large \texttt{\textbf{mkdir}}}\\
-\textsf{ (string:path, \{boolean:make\_full=true\}):boolean }\\
-Creates the specified directory, optionally creating directories as need for the full path.
-
-{\large \texttt{\textbf{path\_only}}}\\
-\textsf{ (string):string }\\
-Returns the path portion of a complete file path.
-
-{\large \texttt{\textbf{file\_only}}}\\
-\textsf{ (string):string }\\
-Returns the file name portion of a complete file path, including extension.
-
-{\large \texttt{\textbf{ext\_only}}}\\
-\textsf{ (string):string }\\
-Returns the extension of a file name.
-
-{\large \texttt{\textbf{cwd}}}\\
-Two modes of operation: set or retrieve the current working directory.
-\textsf{ (void):string }\\
-Returns the current working directory.
-\textsf{ (string):boolean }\\
-Sets the current working directory.
-
-{\large \texttt{\textbf{system}}}\\
-\textsf{ (string):integer }\\
-Executes the system command specified, and returns the exit code.
-
-{\large \texttt{\textbf{write\_text\_file}}}\\
-\textsf{ (string:file, string:data):boolean }\\
-Writes data to a text file.
-
-{\large \texttt{\textbf{read\_text\_file}}}\\
-\textsf{ (string:file):string }\\
-Reads the entire contents of the specified text file and returns the result.
-
-{\large \texttt{\textbf{open}}}\\
-\textsf{ (string:file, string:rwa):integer }\\
-Opens a file for 'r'eading, 'w'riting, or 'a'ppending.
-
-{\large \texttt{\textbf{close}}}\\
-\textsf{ (integer:filenum):void }\\
-Closes an open file.
-
-{\large \texttt{\textbf{seek}}}\\
-\textsf{ (integer:filenum, integer:offset, integer:origin):integer }\\
-Seeks to a position in an open file.
-
-{\large \texttt{\textbf{tell}}}\\
-\textsf{ (integer:filenum):integer }\\
-Returns the current value of the file position indicator.
-
-{\large \texttt{\textbf{eof}}}\\
-\textsf{ (integer:filenum):boolean }\\
-Determines whether the end of a file has been reached.
-
-{\large \texttt{\textbf{flush}}}\\
-\textsf{ (integer:filenum):void }\\
-Flushes the file output stream to disk.
-
-{\large \texttt{\textbf{read\_line}}}\\
-\textsf{ (integer:filenum, @string:buffer):boolean }\\
-Reads one line of text from a file, returning whether there are more lines to read.
-
-{\large \texttt{\textbf{write\_line}}}\\
-\textsf{ (integer:filenum, string:dataline):boolean }\\
-Writes one line of text to a file.
-
-{\large \texttt{\textbf{read}}}\\
-\textsf{ (integer:filenum, @string:buffer, integer:bytes):boolean }\\
-Reads data from a file, returning false if there is no more data to read.
-
-{\large \texttt{\textbf{write}}}\\
-\textsf{ (integer:filenum, string:buffer, integer:bytes):boolean }\\
-Writes data to a file.
-
-\subsection{String Functions}
-{\large \texttt{\textbf{sprintf}}}\\
-\textsf{ (string:format, ...):string }\\
-Returns a formatted string using standard C printf conventions, but adding the \%m and \%, specifiers for monetary and comma separated real numbers.
-
-{\large \texttt{\textbf{strlen}}}\\
-\textsf{ (string):integer }\\
-Returns the length of a string.
-
-{\large \texttt{\textbf{strpos}}}\\
-\textsf{ (string, string):integer }\\
-Locates the first instance of a character or substring in a string.
-
-{\large \texttt{\textbf{first\_of}}}\\
-\textsf{ (string:s1, string:s2):integer }\\
-Searches the string s1 for any of the characters in s2, and returns the position of the first occurence
-
-{\large \texttt{\textbf{last\_of}}}\\
-\textsf{ (string:s1, string:s2):integer }\\
-Searches the string s1 for any of the characters in s2, and returns the position of the last occurence
-
-{\large \texttt{\textbf{left}}}\\
-\textsf{ (string, integer:n):string }\\
-Returns the leftmost n characters of a string.
-
-{\large \texttt{\textbf{right}}}\\
-\textsf{ (string, integer:n):string }\\
-Returns the rightmost n characters of a string.
-
-{\large \texttt{\textbf{mid}}}\\
-\textsf{ (string, integer:start, \{integer:length\}):string }\\
-Returns a subsection of a string.
-
-{\large \texttt{\textbf{ascii}}}\\
-\textsf{ (character):integer }\\
-Returns the ascii code of a character.
-
-{\large \texttt{\textbf{char}}}\\
-\textsf{ (integer):string }\\
-Returns a one character string from an ascii code.
-
-{\large \texttt{\textbf{ch}}}\\
-Two modes of operation: for retrieving and setting individual characters in a string.
-\textsf{ (string, integer, character):void }\\
-Sets the character at the specified index in a string.
-\textsf{ (string, integer):character }\\
-Gets the character at the specified index in a string.
-
-{\large \texttt{\textbf{isdigit}}}\\
-\textsf{ (character):boolean }\\
-Returns true if the argument is a numeric digit 0-9.
-
-{\large \texttt{\textbf{isalpha}}}\\
-\textsf{ (character):boolean }\\
-Returns true if the argument is an alphabetic character A-Z,a-z.
-
-{\large \texttt{\textbf{isalnum}}}\\
-\textsf{ (character):boolean }\\
-Returns true if the argument is an alphanumeric A-Z,a-z,0-9.
-
-{\large \texttt{\textbf{upper}}}\\
-\textsf{ (string):string }\\
-Returns an upper case version of the supplied string.
-
-{\large \texttt{\textbf{lower}}}\\
-\textsf{ (string):string }\\
-Returns a lower case version of the supplied string.
-
-{\large \texttt{\textbf{replace}}}\\
-\textsf{ (string, string:s1, string:s2):void }\\
-Replaces all instances of s1 with s2 in the supplied string.
-
-{\large \texttt{\textbf{split}}}\\
-\textsf{ (string:s, string:delims, \{boolean:ret\_empty=false\}, \{boolean:ret\_delim=false\}):array }\\
-Splits a string into parts at the specified delimiter characters.
-
-{\large \texttt{\textbf{join}}}\\
-\textsf{ (array, string:delim):string }\\
-Joins an array of strings into a single one using the given delimiter.
-
-{\large \texttt{\textbf{real\_array}}}\\
-\textsf{ (string):array }\\
-Splits a whitespace delimited string into an array of real numbers.
-
-\subsection{Math Functions}
-{\large \texttt{\textbf{ceil}}}\\
-\textsf{ (real:x):real }\\
-Round to the smallest integral value not less than x.
-
-{\large \texttt{\textbf{floor}}}\\
-\textsf{ (real:x):real }\\
-Round to the largest integral value not greater than x.
-
-{\large \texttt{\textbf{sqrt}}}\\
-\textsf{ (real:x):real }\\
-Returns the square root of a number.
-
-{\large \texttt{\textbf{pow}}}\\
-\textsf{ (real:x, real:y):real }\\
-Returns a number x raised to the power y.
-
-{\large \texttt{\textbf{exp}}}\\
-\textsf{ (real:x):real }\\
-Returns the base-e exponential of x.
-
-{\large \texttt{\textbf{log}}}\\
-\textsf{ (real:x):real }\\
-Returns the base-e logarithm of x.
-
-{\large \texttt{\textbf{log10}}}\\
-\textsf{ (real:x):real }\\
-Returns the base-10 logarithm of x.
-
-{\large \texttt{\textbf{pi}}}\\
-\textsf{ (void):real }\\
-Returns the value of PI.
-
-{\large \texttt{\textbf{sin}}}\\
-\textsf{ (real:x):real }\\
-Computes the sine of x (radians)
-
-{\large \texttt{\textbf{cos}}}\\
-\textsf{ (real:x):real }\\
-Computes the cosine of x (radians)
-
-{\large \texttt{\textbf{tan}}}\\
-\textsf{ (real:x):real }\\
-Computes the tangent of x (radians)
-
-{\large \texttt{\textbf{asin}}}\\
-\textsf{ (real:x):real }\\
-Computes the arc sine of x, result is in radians, -pi/2 to pi/2.
-
-{\large \texttt{\textbf{acos}}}\\
-\textsf{ (real:x):real }\\
-Computes the arc cosine of x, result is in radians, 0 to pi.
-
-{\large \texttt{\textbf{atan}}}\\
-\textsf{ (real:x):real }\\
-Computes the arc tangent of x, result is in radians, -pi/2 to pi/2.
-
-{\large \texttt{\textbf{atan2}}}\\
-\textsf{ (real:x, real:y):real }\\
-Computes the arc tangent using both x and y to determine the quadrant of the result.
-
-{\large \texttt{\textbf{nan}}}\\
-\textsf{ (void):real }\\
-Returns the non-a-number (NAN) value.
-
-{\large \texttt{\textbf{mod}}}\\
-\textsf{ (integer:x, integer:y):integer }\\
-Returns the remainder after integer division of x by y.
-
-
-
+\input{lk_math.tex}
 
 \end{document}

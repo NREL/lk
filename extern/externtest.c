@@ -36,6 +36,73 @@ LK_FUNCTION( externtest )
 }
 
 
+LK_FUNCTION( sumify )
+{
+   LK_DOCUMENT( "sumify", "Sums up all the parameters passed.", "(...):number" );
+
+   double val = 0;
+   int i;
+   int count = lk_arg_count();
+   if (count < 1)
+   {
+      lk_error("sum() must be provided more than zero arguments");
+      return;
+   }
+
+   for (i=0;i<count;i++)
+   {
+      lk_var_t x = lk_arg( i );
+      val = val + lk_as_number( x );
+   }
+
+   lk_var_t ret = lk_result();
+   lk_set_number( ret, val );
+}
+
+LK_FUNCTION( tabulate )
+{
+	LK_DOCUMENT( "tabulate", "Converts an array to a table.", "(array):table");
+	
+	lk_var_t arr, ret;
+	int len, i;
+	char key[64];
+	
+	if (lk_arg_count() != 1
+		|| lk_type( lk_arg(0) ) != LK_ARRAY)
+	{
+		lk_error("tabulate() requires one array parameter");
+		return;
+	}
+	
+	ret = lk_result();
+	lk_make_table(ret);
+	
+	arr = lk_arg(0);
+	len = lk_length( arr );
+	
+	for (i=0;i<len;i++)
+	{
+		sprintf(key, "item%d", i);
+		
+		lk_var_t item = lk_index(arr, i);
+		int ty = lk_type(item);
+		switch(ty)
+		{
+		case LK_NUMBER:
+			lk_table_set_number( ret, key, lk_as_number( item ) );
+			break;
+		case LK_STRING:
+			lk_table_set_string( ret, key, lk_as_string( item ) );
+			break;
+			
+		case LK_ARRAY:
+		case LK_TABLE:
+			lk_error("arrays and tables not currently copied. exercise for the user!");
+			return;
+		}
+	}		
+}
+
 void steam_psat( struct __lk_invoke_t *lk )
 {
 	LK_DOCUMENT("steam_psat", "Returns the saturation pressure (kPa) of steam at a given temperature in deg C", "(number:Tc):number");
@@ -73,5 +140,7 @@ void steam_psat( struct __lk_invoke_t *lk )
 
 LK_BEGIN_EXTENSION()
 	externtest,
+	sumify,
+	tabulate,
 	steam_psat
 LK_END_EXTENSION()

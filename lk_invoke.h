@@ -120,7 +120,7 @@ typedef void (*lk_invokable)( struct __lk_invoke_t * );
 #define lk_append_number( var, val ) lk->append_number(lk, var, val)
 #define lk_append_string( var, str ) lk->append_string(lk, var, str)
 #define lk_append_null( var ) lk->append_null(lk, var)
-#define lk_make_table( var ) lk->make_tab(lk)
+#define lk_make_table( var ) lk->make_tab(lk, var)
 #define lk_table_set_number( var, key, val ) lk->tab_set_number( lk, var, key, val )
 #define lk_table_set_string( var, key, str ) lk->tab_set_string( lk, var, key, str )
 #define lk_table_set_null( var, key ) lk->tab_set_null(lk, var, key)

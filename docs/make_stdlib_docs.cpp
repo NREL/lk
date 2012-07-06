@@ -4,14 +4,16 @@
 #include "../lk_parse.cpp"
 #include "../lk_lex.cpp"
 #include "../lk_stdlib.cpp"
+#include "../lk_math.cpp"
+#include "../lk_invoke.cpp"
 
 int main(int argc, char *argv[])
 {
 	lk_string html;
 	
-	printf("generating lk_basic.tex...\n");
-	lk::tex_doc( "lk_basic.tex", "Basic and I/O Functions", lk::stdlib_basic() );
-	html += lk::html_doc( "Basic and I/O Functions", lk::stdlib_basic() );
+	printf("generating lk_sys.tex...\n");
+	lk::tex_doc( "lk_sys.tex", "Standard System Functions", lk::stdlib_basic() );
+	html += lk::html_doc( "Standard System Functions", lk::stdlib_basic() );
 	
 	printf("generating lk_string.tex...\n");
 	lk::tex_doc( "lk_str.tex", "String Functions", lk::stdlib_string() );

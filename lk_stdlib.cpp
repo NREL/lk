@@ -2328,6 +2328,7 @@ bool lk::tex_doc( const lk_string &file,
 		lk::doc_t d;
 		if ( lk::doc_t::info(f, d))
 		{
+			/*
 
 			fprintf(fp, "{\\large \\texttt{\\textbf{%s}}}\\\\\n",
 					(const char*)_latexify_text(d.func_name).c_str() );
@@ -2354,9 +2355,36 @@ bool lk::tex_doc( const lk_string &file,
 						(const char*)_latexify_text(d.sig3).c_str(),
 						(const char*)_latexify_text(d.desc3).c_str() );
 			}
+			*/
+			
 
+			fprintf(fp, "\\texttt{{\\large\\textbf{%s}}}\\textsf{%s}\\\\\n %s\n",
+					(const char*)_latexify_text(d.func_name).c_str(),
+					(const char*)_latexify_text(d.sig1).c_str(),
+					(const char*)_latexify_text(d.desc1).c_str() );
+			
+			if (d.has_2)
+			{
+				fprintf(fp, "\n\\texttt{{\\large\\textbf{%s}}}\\textsf{%s}\\\\\n %s\n",
+					(const char*)_latexify_text(d.func_name).c_str(),
+					(const char*)_latexify_text(d.sig2).c_str(),
+					(const char*)_latexify_text(d.desc2).c_str() );
+			}
 
-			fprintf(fp, "\n");
+			if (d.has_3)
+			{
+				fprintf(fp, "\n\\texttt{{\\large\\textbf{%s}}}\\textsf{%s}\\\\\n %s\n",
+					(const char*)_latexify_text(d.func_name).c_str(),
+					(const char*)_latexify_text(d.sig3).c_str(),
+					(const char*)_latexify_text(d.desc3).c_str() );
+			}
+			
+			if (!d.notes.empty())
+			{
+				fprintf(fp, "\n\\emph{Notes:} %s\n", (const char*)_latexify_text(d.notes).c_str());
+			}
+
+			if (lib[i] != 0) fprintf(fp, "\n\\hrulefill\n\n");
 		}
 	}
 
