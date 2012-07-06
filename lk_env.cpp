@@ -685,7 +685,6 @@ bool lk::env_t::register_ext_func( lk_invokable f, void *user_data )
 		x.f_ext = f;
 		x.user_data = user_data;
 		m_funcHash[d.func_name] = x;
-		printf("registered external function '%s'\n", d.func_name.c_str());
 		return true;
 	}
 
@@ -884,26 +883,22 @@ bool lk::env_t::load_library( const lk_string &path )
 	int (*verfunc)() = ( int(*)() ) dll_sym( pdll, "lk_extension_api_version" );
 	if ( verfunc == 0 )
 	{
-		printf("could not locate symbol 'lk_extension_api_version'\n");
 		dll_close( pdll );
-		return false;
+		throw error_t("could not locate symbol 'lk_extension_api_version'\n");
 	}
 
 	int ver = verfunc();
-	printf("load_library('%s'): ver=%d\n", path.c_str(), ver );
 	if (ver != LK_EXTENSION_API_VERSION)
 	{
-		printf("invalid extension version: %d (engine api: %d)\n", ver, LK_EXTENSION_API_VERSION);
 		dll_close( pdll );
-		return false;
+		throw error_t("invalid extension version: %d (engine api: %d)\n", ver, LK_EXTENSION_API_VERSION);
 	}
 
 	lk_invokable *(*listfunc)() = (lk_invokable*(*)())dll_sym( pdll, "lk_function_list" );
 	if (listfunc == 0)
 	{
-		printf("could not locate symbol 'lk_function_list'\n");
 		dll_close( pdll );
-		return false;
+		throw error_t("could not locate symbol 'lk_function_list'\n");
 	}
 
 
@@ -917,7 +912,6 @@ bool lk::env_t::load_library( const lk_string &path )
 		idx ++;
 	}
 
-	printf("finished loading %d functions...\n", idx);
 	m_dynlibList.push_back( x );
 	return true;
 }

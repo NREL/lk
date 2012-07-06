@@ -39,9 +39,24 @@ void _CC_document( struct __lk_invoke_t *_lk, const char *fn, const char *desc, 
 	((lk::invoke_t*)_lk->__pinvoke)->document( lk::doc_t( fn, "", desc, sig ) );
 }
 
+void _CC_document2( struct __lk_invoke_t *_lk, const char *fn, const char *notes, 
+	const char *desc1, const char *sig1, 
+	const char *desc2, const char *sig2 )
+{
+	((lk::invoke_t*)_lk->__pinvoke)->document( lk::doc_t( fn, notes, desc1, sig1, desc2, sig2 ) );
+}
+
+void _CC_document3( struct __lk_invoke_t *_lk, const char *fn, const char *notes, 
+	const char *desc1, const char *sig1, 
+	const char *desc2, const char *sig2, 
+	const char *desc3, const char *sig3 )
+{
+	((lk::invoke_t*)_lk->__pinvoke)->document( lk::doc_t( fn, notes, desc1, sig1, desc2, sig2, desc3, sig3 ) );
+}
+
 void _CC_error( struct __lk_invoke_t *_lk, const char *errmsg )
 {
-	strncpy(_lk->__errbuf, errmsg, 255);
+	strncpy((char*)_lk->__errbuf, errmsg, 255);
 }
 
 int _CC_arg_count( struct __lk_invoke_t *_lk )
@@ -333,18 +348,23 @@ namespace lk {
 		std::string local_str;
 		std::vector< lk::vardata_t > extcall_argvec;
 		lk::vardata_t extcall_result;
+
+		char errbuf[256];
+		errbuf[0] = 0;
 		
 		struct __lk_invoke_t ext_call;
 
 		ext_call.__pinvoke = &cxt;
 		ext_call.__hiter = &hash_iter;
-		ext_call.__errbuf[0] = 0;
+		ext_call.__errbuf = errbuf;
 		ext_call.__sbuf = &local_str;
 		ext_call.__callargvec = &extcall_argvec;
 		ext_call.__callresult = &extcall_result;
 
 		ext_call.doc_mode = _CC_doc_mode;
 		ext_call.document = _CC_document;
+		ext_call.document2 = _CC_document2;
+		ext_call.document3 = _CC_document3;
 		ext_call.error = _CC_error;
 		ext_call.arg_count = _CC_arg_count;
 		ext_call.arg = _CC_arg;
@@ -385,7 +405,7 @@ namespace lk {
 		p( &ext_call );
 
 		// throw an error exception if necessary
-		if ( ext_call.__errbuf[0] != 0 )
-			cxt.error( lk_string( ext_call.__errbuf ) + "\n" );
+		if ( errbuf[0] != 0 )
+			cxt.error( lk_string( errbuf ) + "\n" );
 	}
 };

@@ -6,57 +6,33 @@
 #include "../lk_invoke.h"
 
 // DLL functions look like
-void externtest(  struct __lk_invoke_t *lk )
+LK_FUNCTION( externtest )
 {
 	LK_DOCUMENT("externtest", "Tests basic external calling of dynamically loaded dll functions.", "(string, string):number" );
 	
-	int args = lk->arg_count( lk );
-	if (args < 2)
+	if (lk_arg_count() < 2)
 	{
-		lk->error( lk, "too few arguments passed to externtest. two strings required!" );
+		lk_error( "too few arguments passed to externtest. two strings required!" );
 		return;
 	}
 	
-	lk_var_t a0 = lk->arg(lk, 0);
-	
-	if (a0 == 0)
-	{
-		lk->error(lk, "a0 null");
-		return;
-	}
-	
-	lk_var_t a1 = lk->arg(lk, 1);
-	if (a1 == 0)
-	{
-		lk->error(lk, "a1 null");
-		return;
-	}
-	
-	char *s1 = (char*)lk->as_string(lk, a0);
+	const char *s1 = lk_as_string( lk_arg( 0 ) );
 	if (s1 == 0)
 	{
-		lk->error(lk, "s1 null");
+		lk_error( "s1 null" );
 		return;
 	}
 	int len1 = strlen(s1);
 	
-	char *s2 = (char*)lk->as_string(lk, a1);
+	const char *s2 = lk_as_string( lk_arg(1) );
 	if (s2 == 0)
 	{
-		lk->error(lk, "s2 null");
+		lk_error( "s2 null" );
 		return;
 	}
 	int len2 = strlen( s2 );
-	
-	
-	lk_var_t ret = lk->result(lk);
-	if (ret == 0)
-	{
-		lk->error(lk, "ret null");
-		return;
-	}
-	
-	lk->set_number( lk, ret, len1 + len2 );
+		
+	lk_return_number( len1 + len2 );
 }
 
 
@@ -64,13 +40,13 @@ void steam_psat( struct __lk_invoke_t *lk )
 {
 	LK_DOCUMENT("steam_psat", "Returns the saturation pressure (kPa) of steam at a given temperature in deg C", "(number:Tc):number");
 	
-	if ( lk->arg_count(lk) < 1 )
+	if ( lk_arg_count() < 1 )
 	{
-		lk->error(lk, "insufficient arguments provided");
+		lk_error( "insufficient arguments provided");
 		return;
 	}
 	
-	double T = lk->as_number(lk, lk->arg(lk, 0)) + 273.15;
+	double T = lk_as_number( lk_arg(0) ) + 273.15;
 	
 	double Tc = 647.096;
 	double Pc = 22.064;
@@ -91,7 +67,7 @@ void steam_psat( struct __lk_invoke_t *lk )
 		+ a5*tau*tau*tau*tau 
 		+ a6*tau*tau*tau*tau*tau*tau*tau*tauh) );
 		
-	lk->set_number( lk, lk->result( lk ), P*1000 );
+	lk_return_number( P*1000 );
 }
 
 
