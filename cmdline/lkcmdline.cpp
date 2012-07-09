@@ -46,6 +46,11 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	
+	bool parse_only = false;
+	
+	if ( argc > 2 
+		&& strcmp( argv[2], "--parse" ) == 0 ) parse_only = true;
+	
 	FILE *fp_in = fopen( argv[1], "r" );
 	if (!fp_in)
 	{
@@ -63,7 +68,7 @@ int main(int argc, char *argv[])
 	{
 		printf("parsing did not reach end of input\n");
 	}
-	else
+	else if ( !parse_only )
 	{	
 		lk::env_t env;
 		env.register_func( fcall_in );
