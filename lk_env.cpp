@@ -540,6 +540,26 @@ void lk::vardata_t::hash_item( const lk_string &key, const vardata_t &v ) throw(
 	}
 }
 
+lk::vardata_t &lk::vardata_t::hash_item( const lk_string &key ) throw(error_t)
+{
+	assert_modify();
+	
+	varhash_t *h = hash();
+	varhash_t::iterator it = h->find(key);
+	if (it != h->end())
+	{
+		(*it).second->nullify();
+		return *(*it).second;
+	}
+	else
+	{
+		vardata_t *t = new vardata_t;
+		(*h)[key] = t;
+		return *t;
+	}
+}
+
+
 lk::vardata_t *lk::vardata_t::index(size_t idx) const throw(error_t)
 {
 	if (type() != VECTOR) throw error_t("access violation to non-array data");

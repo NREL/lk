@@ -130,6 +130,7 @@ namespace lk {
 		void hash_item( const lk_string &key, double d ) throw(error_t);
 		void hash_item( const lk_string &key, const lk_string &s ) throw(error_t);
 		void hash_item( const lk_string &key, const vardata_t &v ) throw(error_t);
+		vardata_t &hash_item( const lk_string &key ) throw(error_t);
 
 	};
 	
