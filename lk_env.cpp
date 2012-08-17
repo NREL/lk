@@ -8,14 +8,14 @@
 
 #if defined(__WINDOWS__)||defined(WIN32)||defined(_WIN32)||defined(__MINGW___)||defined(_MSC_VER)
 #include <Windows.h>
-void *dll_open(const char *name) { return (void*) ::LoadLibraryA( name ); }
-void dll_close( void *handle ) { ::FreeLibrary( (HMODULE)handle ); }
-void *dll_sym( void *handle, const char *name ) { return (void*) ::GetProcAddress( (HMODULE)handle, name ); }
+static void *dll_open(const char *name) { return (void*) ::LoadLibraryA( name ); }
+static void dll_close( void *handle ) { ::FreeLibrary( (HMODULE)handle ); }
+static void *dll_sym( void *handle, const char *name ) { return (void*) ::GetProcAddress( (HMODULE)handle, name ); }
 #else
 #include <dlfcn.h>
-void *dll_open(const char *name) { return dlopen( name, RTLD_NOW ); }
-void dll_close( void *handle ) { dlclose( handle ); }
-void *dll_sym( void *handle, const char *name ) { return dlsym( handle, name ); }
+static void *dll_open(const char *name) { return dlopen( name, RTLD_NOW ); }
+static void dll_close( void *handle ) { dlclose( handle ); }
+static void *dll_sym( void *handle, const char *name ) { return dlsym( handle, name ); }
 #endif
 
 lk::vardata_t::vardata_t()
