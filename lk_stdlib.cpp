@@ -361,6 +361,13 @@ static void _file_exists( lk::invoke_t &cxt )
 	cxt.result().assign( lk::file_exists( (const char*)cxt.arg(0).as_string().c_str() ) ? 1.0 : 0.0 );
 }
 
+static void _rename_file( lk::invoke_t &cxt )
+{
+	LK_DOC("rename_file", "Renames an existing file.", "(string:old name, string:new name):boolean");
+	cxt.result().assign( lk::rename_file( (const char*)cxt.arg(0).as_string().c_str(),
+		(const char*)cxt.arg(1).as_string().c_str()  ));
+}
+
 static void _dir_exists( lk::invoke_t &cxt )
 {
 	LK_DOC("dir_exists", "Determines whether the specified directory exists.", "(string):boolean");
@@ -1200,6 +1207,7 @@ lk::fcall_t* lk::stdlib_basic()
 		_dir_list,
 		_file_exists,
 		_dir_exists,
+		_rename_file,
 		_remove_file,
 		_mkdir,
 		_path_only,
@@ -1459,6 +1467,11 @@ bool lk::file_exists( const char *file )
 	struct stat st;
 	return stat(file, &st) == 0 && S_ISREG(st.st_mode);
 #endif
+}
+
+bool lk::rename_file( const char *f0, const char *f1 )
+{
+	return ::rename( f0, f1 ) == 0;
 }
 
 bool lk::dir_exists( const char *path )
