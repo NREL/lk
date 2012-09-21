@@ -7,6 +7,7 @@
 #include <wx/config.h>
 
 #include <math.h>
+#include <cmath>
 
 #include <sstream>
 
@@ -23,9 +24,9 @@
 #include "../lk_stdlib.h"
 
 #include "jacobian.h"
-#include "newton.h"
 #include "search.h"
 #include "lu.h"
+#include "newton.h"
 
 enum { ID_SOLVE = 8145, ID_DEMO, ID_CMDLINE };
 
@@ -53,6 +54,7 @@ namespace lk {
 		lk_string m_err;
 	public:
 		evalexception( lk_string s ) : m_err(s) {  }
+		virtual ~evalexception() throw() {  /* nothing to do */ }
 		virtual const char *what() { return (const char*)m_err.c_str(); }
 	};
 
@@ -166,12 +168,6 @@ namespace lk {
 				t += m_errorList[i] + "\n";
 			return t;
 		}
-#ifdef _MSC_VER
-#define myisnan _isnan
-#else
-#define myisnan isnan
-#endif
-
 		lk::node_t *reduce_eqn( lk::node_t *root, lk::env_t &env, double &result, int nreduc ) throw( evalexception )
 		{
 			if ( lk::expr_t *e = dynamic_cast<lk::expr_t*>( root ) )
@@ -460,7 +456,8 @@ namespace lk {
 			// set all initial conditions NaN variables to 1
 			for ( int i=0;i<n;i++ )
 			{
-				if ( myisnan( get(env, m_varList[i]) ) )
+				volatile double x = get(env, m_varList[i]);
+				if ( x != x )
 					set(env, m_varList[i], 1 );
 			}
 
@@ -520,7 +517,7 @@ namespace lk {
 				oss << key  << " = " << v->as_number() << std::endl;
 				next = env.next( key, v );
 			}
-			return lk_string( oss.str() );
+			return lk_string( oss.str().c_str() );
 		}
 
 
@@ -827,7 +824,7 @@ public:
 	LKSolve( )
 		: wxFrame( NULL, wxID_ANY, "FREES", wxDefaultPosition, wxSize(730,600) )
 	{
-		SetIcon( wxICON( appicon ) );
+		//SetIcon( wxICON( appicon ) );
 
 		wxBoxSizer *tools = new wxBoxSizer( wxHORIZONTAL );
 		tools->Add( new wxButton(this, ID_SOLVE, "Solve" ) );
@@ -1055,3 +1052,13 @@ void new_solver()
 	LKSolve *l = new LKSolve;
 	l->Show();
 }
+#ifdef __WXMAC__
+#include "../lk_absyn.cpp"
+#include "../lk_env.cpp"
+#include "../lk_eval.cpp"
+#include "../lk_lex.cpp"
+#include "../lk_parse.cpp"
+#include "../lk_stdlib.cpp"
+#include "../lk_math.cpp"
+#include "../lk_invoke.cpp"
+#endif

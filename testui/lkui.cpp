@@ -67,7 +67,7 @@ void fcall_outputln( lk::invoke_t &cxt )
 void fcall_input(  lk::invoke_t &cxt )
 {
 	LK_DOC("in", "Input text from the user.", "(none):string");
-	cxt.result().assign( std::string((const char*)wxGetTextFromUser("Standard Input:").c_str()) );	
+	cxt.result().assign( lk_string((const char*)wxGetTextFromUser("Standard Input:").c_str()) );	
 }
 
 void applog(const char *fmt, ...)
@@ -169,8 +169,8 @@ bool LKApp::OnInit()
 	SetTopWindow(app_frame);
 	
 	
-//extern void new_solver();
-	//new_solver();
+extern void new_solver();
+	new_solver();
 	return true;
 }
 
@@ -479,7 +479,7 @@ void LKFrame::OnDocumentCommand(wxCommandEvent &evt)
 						bool has_more = env.first( key, value );
 						while( has_more )
 						{
-							applog("env{%s}=%s\n", key, value->as_string().c_str());
+							applog("env{%s}=%s\n", key.c_str(), value->as_string().c_str());
 							has_more = env.next( key, value );
 						}
 
