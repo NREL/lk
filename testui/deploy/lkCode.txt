@@ -1,50 +1,62 @@
-function steam_psat2(Targ)
-{
-	T = Targ + 273.15;
-	
-	Tc = 647.096;
-	Pc = 22.064;
-	
-	a1 = -7.85954783;
-	a2 = 1.84408259;
-	a3 = -11.7866497;
-	a4 = 22.6807411;
-	a5 = -15.9618719;
-	a6 = 1.80122502;
-	tau = 1 - T/Tc;
-	tauh = sqrt(tau);
-	
-	P = Pc * exp( Tc/T*(a1*tau 
-		+ a2*tau*tauh 
-		+ a3*tau*tau*tau 
-		+ a4*tau*tau*tau*tauh 
-		+ a5*tau*tau*tau*tau 
-		+ a6*tau*tau*tau*tau*tau*tau*tau*tauh) );
-
-	return 1000*P;
+function steam_psat2(Targ)
+{
+	T = Targ + 273.15;
+	
+	Tc = 647.096;
+	Pc = 22.064;
+	
+	a1 = -7.85954783;
+	a2 = 1.84408259;
+	a3 = -11.7866497;
+	a4 = 22.6807411;
+	a5 = -15.9618719;
+	a6 = 1.80122502;
+	tau = 1 - T/Tc;
+	tauh = sqrt(tau);
+	
+	P = Pc * exp( Tc/T*(a1*tau 
+		+ a2*tau*tauh 
+		+ a3*tau*tau*tau 
+		+ a4*tau*tau*tau*tauh 
+		+ a5*tau*tau*tau*tau 
+		+ a6*tau*tau*tau*tau*tau*tau*tau*tauh) );
+
+	return 1000*P;
 }
 
 extok = 0;
-extok = load_extension( "c:/Users/adobos/Projects/lk/extern/externtest.dll" );
-outln("extload=? " + extok);
+load_extension( "c:/Users/adobos/Projects/lk/extern/externtest.dll" );
+load_extension( "c:/Users/adobos/Projects/tcs/waterprop/waterprop32.dll" );
+
+ext = extensions();
+libs = @ext;
+for ( i=0;i<#libs;i++)
+{
+	outln( libs[i] );
+	funcs = @ext{libs[i]};
+	for ( j=0;j<#funcs;j++)
+		outln( '\t' + funcs[j] + '  -->  ' + ext{libs[i]}{funcs[j]}.signature );
+}
+exit;
+
 outln("externtest: " + externtest("hello str 1", "12345"));
-
-start_timer();
+
+start_timer();
 ptotal1=0;
 for (T=-100;T<320;T++)
-	ptotal1 = ptotal1+ steam_psat(T);
-time1 = elapsed_time();
+	ptotal1 = ptotal1+ steam_psat(T);
+time1 = elapsed_time();
 outln("elapsed Ccall: " + time1 );
-
-
-start_timer();
-ptotal2=0;
-for (T=-100;T<320;T++)
-	ptotal2 = ptotal2+ steam_psat2(T);
-time2 = elapsed_time();
-outln("elapsed LK: " + time2 );
-
-outln(time2/time1, " times faster using C extension");
+
+
+start_timer();
+ptotal2=0;
+for (T=-100;T<320;T++)
+	ptotal2 = ptotal2+ steam_psat2(T);
+time2 = elapsed_time();
+outln("elapsed LK: " + time2 );
+
+outln(time2/time1, " times faster using C extension");
 
 exit;
 

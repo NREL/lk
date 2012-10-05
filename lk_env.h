@@ -243,6 +243,14 @@ namespace lk {
 		
 	class env_t
 	{
+	public:		
+		struct dynlib_t
+		{
+			lk_string path;
+			void *handle;
+			lk_invokable *functions;
+		};
+
 	private:
 		env_t *m_parent;
 
@@ -251,19 +259,14 @@ namespace lk {
 
 		funchash_t m_funcHash;
 		std::vector< objref_t* > m_objTable;
-
-		struct dynlib_t
-		{
-			lk_string path;
-			void *handle;
-			lk_invokable *functions;
-		};
+		
 		std::vector< dynlib_t > m_dynlibList;
 
 		bool register_ext_func( lk_invokable f, void *user_data = 0 );
 		void unregister_ext_func( lk_invokable f );
 
 	public:
+
 		env_t();
 		env_t(env_t *p);
 		~env_t();
@@ -286,6 +289,7 @@ namespace lk {
 
 		bool load_library( const lk_string &path );
 		bool unload_library( const lk_string &path );
+		std::vector< dynlib_t* > libraries();
 
 		fcallinfo_t *lookup_func( const lk_string &name );
 		std::vector<lk_string> list_funcs();

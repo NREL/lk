@@ -936,6 +936,16 @@ bool lk::env_t::load_library( const lk_string &path )
 	return true;
 }
 
+std::vector<lk::env_t::dynlib_t*> lk::env_t::libraries()
+{
+	std::vector<lk::env_t::dynlib_t*> list;
+	for ( std::vector<dynlib_t>::iterator it = m_dynlibList.begin();
+		it != m_dynlibList.end();
+		++it )
+		list.push_back( &(*it) );
+	return list;
+}
+
 bool lk::env_t::unload_library( const lk_string &path )
 {
 	for ( std::vector<dynlib_t>::iterator it = m_dynlibList.begin();

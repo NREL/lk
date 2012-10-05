@@ -465,6 +465,63 @@ static void _load_extension( lk::invoke_t &cxt )
 	cxt.result().assign( cxt.env()->global()->load_library( cxt.arg(0).as_string() ) ? 1.0 : 0.0 );
 }
 
+static void _extensions( lk::invoke_t &cxt )
+{
+	LK_DOC("extensions", "Returns information about currently loaded extensions", "(none):table");
+	cxt.result().empty_hash();
+	std::vector< lk::env_t::dynlib_t* > libs = cxt.env()->libraries();
+	for ( std::vector< lk::env_t::dynlib_t* >::const_iterator it = libs.begin();
+		it != libs.end();
+		++it )
+	{
+		lk::vardata_t &item = cxt.result().hash_item( (*it)->path );
+		item.empty_hash();
+
+		lk_invokable *funcs = (*it)->functions;
+		size_t idx = 0;
+		while ( funcs[idx] != 0 )
+		{
+			lk::doc_t d;
+			if ( lk::doc_t::info(funcs[idx], d) && !d.func_name.empty())
+			{
+				lk::vardata_t &record = item.hash_item( d.func_name );
+				record.empty_hash();
+				record.hash_item( "description", d.desc1 );
+				record.hash_item( "signature", d.sig1 );
+				if ( d.has_2 )
+				{
+					record.hash_item( "description2", d.desc2 );
+					record.hash_item( "signature2", d.sig2 );
+				}
+				if ( d.has_3 )
+				{
+					record.hash_item( "description3", d.desc3 );
+					record.hash_item( "signature3", d.sig3 );
+				}
+			}
+			idx++;
+		}
+	}
+}
+
+static void _ostype( lk::invoke_t &cxt )
+{
+	LK_DOC("ostype", "Returns identifying information about the operating system type. ('osx', 'win32', 'linux', etc).", "(none):string");
+
+	lk_string os;
+#if defined(_MSC_VER) || defined(WIN32) || defined(__MINGW32__)
+	os = "win32";
+#elif defined(__APPLE__)||defined(__APPLE_CC__)
+	os = "osx";
+#elif defined(__linux__)||defined(__linux)
+	os = "linux";
+#else
+	os = "unknown";
+#endif
+
+	cxt.result().assign(os);
+}
+
 static void _sprintf( lk::invoke_t &cxt )
 {
 	LK_DOC("sprintf", "Returns a formatted string using standard C printf conventions, but adding the %m and %, specifiers for monetary and comma separated real numbers.", "(string:format, ...):string");
@@ -1228,6 +1285,8 @@ lk::fcall_t* lk::stdlib_basic()
 		_read,
 		_write,
 		_load_extension,
+		_extensions,
+		_ostype,
 		0 };
 
 	return (fcall_t*)vec;

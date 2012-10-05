@@ -177,11 +177,21 @@ bool lk::eval( node_t *root,
 				return ok;
 			case expr_t::LOGIOR:
 				ok = ok && eval(n->left, env, errors, l, flags, ctl_id, cb_func, cb_data);
+				if ( ((int)l.deref().num()) != 0 ) // short circuit evaluation
+				{
+					result.assign( 1.0 );
+					return ok;
+				}
 				ok = ok && eval(n->right, env, errors, r, flags, ctl_id, cb_func, cb_data);
 				result.assign( (((int)l.deref().num()) || ((int)r.deref().num() )) ? 1 : 0 );
 				return ok;
 			case expr_t::LOGIAND:
 				ok = ok && eval(n->left, env, errors, l, flags, ctl_id, cb_func, cb_data);
+				if ( ((int)l.deref().num()) == 0 ) // short circuit evaluation
+				{
+					result.assign( 0.0 );
+					return ok;
+				}
 				ok = ok && eval(n->right, env, errors, r, flags, ctl_id, cb_func, cb_data);
 				result.assign( (((int)l.deref().num()) && ((int)r.deref().num() )) ? 1 : 0 );
 				return ok;
