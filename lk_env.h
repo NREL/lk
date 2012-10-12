@@ -101,7 +101,7 @@ namespace lk {
 			return *this;
 		}
 
-		vardata_t &deref() throw (error_t);
+		vardata_t &deref() const throw (error_t);
 		
 		void assign( double d ) throw( error_t );
 		void assign( const char *s ) throw( error_t );

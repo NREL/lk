@@ -72,7 +72,7 @@ bool lk::vardata_t::as_boolean() const
 		if (slower == "false" || slower == "f") return false;
 	}
 
-	if (type() == REFERENCE) return ref()->as_boolean();
+	if (type() == REFERENCE) return deref().as_boolean();
 
 	if (type() == NULLVAL) return false;
 
@@ -94,7 +94,7 @@ lk_string lk::vardata_t::as_string() const
 	switch ( type() )
 	{
 	case NULLVAL: return "<null>";
-	case REFERENCE: return ref()->as_string();
+	case REFERENCE: return deref().as_string();
 	case NUMBER:
 		{
 			char buf[512];
@@ -140,7 +140,7 @@ lk_string lk::vardata_t::as_string() const
 	case FUNCTION:
 		return "<function>";
 	default:
-		return "<invalid?>";
+		return "<unknown>";
 	}
 }
 
@@ -151,6 +151,7 @@ double lk::vardata_t::as_number() const
 	case NULLVAL: return 0;
 	case NUMBER: return m_u.v;
 	case STRING: return atof( (const char*) str().c_str() );
+	case REFERENCE: return deref().as_number();
 	default:
 		return std::numeric_limits<double>::quiet_NaN();
 	}
@@ -259,7 +260,7 @@ const char *lk::vardata_t::typestr() const
 	case VECTOR: return "array";
 	case HASH: return "table";
 	case FUNCTION: return "function";
-	default: return "invalid?";
+	default: return "unknown";
 	}
 }
 
@@ -291,9 +292,9 @@ void lk::vardata_t::nullify()
 	set_type( NULLVAL );
 }
 
-lk::vardata_t &lk::vardata_t::deref() throw (error_t)
+lk::vardata_t &lk::vardata_t::deref() const throw (error_t)
 {
-	vardata_t *p = this;
+	vardata_t *p = const_cast<vardata_t*>(this);
 	while (p->type() == REFERENCE)
 		p = p->ref();
 
