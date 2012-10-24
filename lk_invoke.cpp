@@ -85,11 +85,7 @@ const char *_CC_as_string( struct __lk_invoke_t *_lk, lk_var_t vv )
 	if (vv != 0)
 	{
 		std::string *sbuf = ((std::string*)_lk->__sbuf);
-#if defined(LK_UNICODE)&&defined(LK_USE_WXWIDGETS)
-		sbuf->assign( ((lk::vardata_t*)vv)->as_string().ToUTF8() );
-#else
-		sbuf->assign( ((lk::vardata_t*)vv)->as_string() );
-#endif
+		sbuf->assign( lk::to_utf8( ((lk::vardata_t*)vv)->as_string() ));
 		return sbuf->c_str();
 	}
 	else return 0;
@@ -147,12 +143,7 @@ const char * _CC_tab_first_key( struct __lk_invoke_t *_lk, lk_var_t vv )
 
 		if ( *it != ((lk::vardata_t*)vv)->hash()->end() )
 		{
-			
-#if defined(LK_UNICODE)&&defined(LK_USE_WXWIDGETS)
-			(*((std::string*)_lk->__sbuf)) = (*(*it)).first.ToUTF8();
-#else
-			(*((std::string*)_lk->__sbuf)) = (*(*it)).first;
-#endif
+			(*((std::string*)_lk->__sbuf)) = lk::to_utf8( (*(*it)).first );
 			return ((std::string*)_lk->__sbuf)->c_str();
 		}
 	}
@@ -168,11 +159,7 @@ const char * _CC_tab_next_key( struct __lk_invoke_t *_lk, lk_var_t vv )
 		it++;
 		if ( it != ((lk::vardata_t*)vv)->hash()->end() )
 		{
-#if defined(LK_UNICODE)&&defined(LK_USE_WXWIDGETS)
-			(*((std::string*)_lk->__sbuf)) = (*it).first.ToUTF8();
-#else
-			(*((std::string*)_lk->__sbuf)) = (*it).first;
-#endif
+			(*((std::string*)_lk->__sbuf)) = lk::to_utf8( (*it).first );
 			return ((std::string*)_lk->__sbuf)->c_str();
 		}
 	}
@@ -201,14 +188,7 @@ void _CC_set_null( struct __lk_invoke_t *_lk, lk_var_t vv)
 
 void _CC_set_string( struct __lk_invoke_t *_lk, lk_var_t vv, const char *str )
 {
-	if (vv != 0)
-	{
-#if defined(LK_UNICODE)&&defined(LK_USE_WXWIDGETS)
-		((lk::vardata_t*)vv)->assign( lk_string::FromUTF8( str ) );
-#else
-		((lk::vardata_t*)vv)->assign( lk_string(str) );
-#endif
-	}
+	if (vv != 0) ((lk::vardata_t*)vv)->assign( lk::from_utf8( str ) );
 }
 
 void _CC_set_number( struct __lk_invoke_t *_lk, lk_var_t vv, double val )
@@ -259,11 +239,7 @@ lk_var_t _CC_append_string( struct __lk_invoke_t *_lk, lk_var_t vv, const char *
 	if (vv != 0)
 	{
 		lk::vardata_t &v = *((lk::vardata_t*)vv);
-#if defined(LK_UNICODE)&&defined(LK_USE_WXWIDGETS)
-		v.vec_append( lk_string::FromUTF8( str ) );
-#else
-		v.vec_append( str );
-#endif
+		v.vec_append( lk::from_utf8( str ) );
 		return (lk_var_t) v.index( v.length()-1 );
 	}
 	else return 0;
@@ -289,14 +265,9 @@ lk_var_t _CC_tab_set_number( struct __lk_invoke_t *_lk, lk_var_t vv, const char 
 {
 	if (vv != 0)
 	{
-#if defined(LK_UNICODE)&&defined(LK_USE_WXWIDGETS)
-		lk_string ukey = lk_string::FromUTF8( key );
+		lk_string ukey = lk::from_utf8( key );
 		((lk::vardata_t*)vv)->hash_item( ukey, val );
 		return (lk_var_t) ((lk::vardata_t*)vv)->lookup( ukey );
-#else
-		((lk::vardata_t*)vv)->hash_item( key, val );
-		return (lk_var_t) ((lk::vardata_t*)vv)->lookup( key );
-#endif
 	}
 	else return 0;
 }
@@ -305,14 +276,9 @@ lk_var_t _CC_tab_set_string( struct __lk_invoke_t *_lk, lk_var_t vv, const char 
 {
 	if (vv != 0) 
 	{
-#if defined(LK_UNICODE)&&defined(LK_USE_WXWIDGETS)
-		lk_string ukey = lk_string::FromUTF8( key );
-		((lk::vardata_t*)vv)->hash_item( ukey, lk_string::FromUTF8( str ) );
+		lk_string ukey = lk::from_utf8( key );
+		((lk::vardata_t*)vv)->hash_item( ukey, lk::from_utf8( str ) );
 		return (lk_var_t) ((lk::vardata_t*)vv)->lookup( ukey );
-#else
-		((lk::vardata_t*)vv)->hash_item( key, str );
-		return (lk_var_t) ((lk::vardata_t*)vv)->lookup( key );
-#endif
 	}
 	else return 0;
 }
@@ -321,14 +287,9 @@ lk_var_t _CC_tab_set_null( struct __lk_invoke_t *_lk, lk_var_t vv, const char *k
 {
 	if (vv != 0) 
 	{
-#if defined(LK_UNICODE)&&defined(LK_USE_WXWIDGETS)
-		lk_string ukey = lk_string::FromUTF8( key );
+		lk_string ukey = lk::from_utf8( key );
 		((lk::vardata_t*)vv)->hash_item( ukey, lk::vardata_t() );
 		return (lk_var_t) ((lk::vardata_t*)vv)->lookup( ukey );
-#else
-		((lk::vardata_t*)vv)->hash_item( key, lk::vardata_t() );
-		return (lk_var_t) ((lk::vardata_t*)vv)->lookup( key );
-#endif
 	}
 	else return 0;
 }

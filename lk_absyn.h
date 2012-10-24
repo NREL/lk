@@ -49,7 +49,10 @@ namespace lk
 	lk_char upper_char( lk_char c );
 	bool convert_integer( const lk_string &str, int *x );
 	bool convert_double( const lk_string &str, double *x );
-
+	std::string to_utf8( const lk_string &str );
+	lk_string from_utf8( const std::string &str );
+	lk_string from_utf8( const char *str );
+	lk_string to_string( lk_char c );
 
 	extern int _node_alloc;
 	

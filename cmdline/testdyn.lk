@@ -6,6 +6,7 @@ outln("extload=? " ,  extok);
 result = externtest("hello str 1", "12345");
 outln("externtest: " + result + "\n");
 
+outln( extensions());
 
 for (T=20;T<60;T=T+10)
 	outln("psat(" + T + ")=" + steam_psat(T));

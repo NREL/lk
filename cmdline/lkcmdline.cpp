@@ -40,24 +40,22 @@ void fcall_in(  lk::invoke_t &cxt )
 
 int main(int argc, char *argv[])
 {
-	if (argc < 2)
-	{
-		printf("lk: no arguments provided\n");
-		return -1;
-	}
-	
+	FILE *fp_in = stdin;	
 	bool parse_only = false;
 	
 	if ( argc > 2 
 		&& strcmp( argv[2], "--parse" ) == 0 ) parse_only = true;
-	
-	FILE *fp_in = fopen( argv[1], "r" );
-	if (!fp_in)
+		
+	if ( argc > 1 )
 	{
-		printf("lk: could not read %s\n", argv[1]);
-		return -1;
+		fp_in = fopen( argv[1], "r" );
+		if (!fp_in)
+		{
+			printf("lk: could not read %s\n", argv[1]);
+			return -1;
+		}
 	}
-
+	
 	lk::input_stream p( fp_in );
 	lk::parser parse( p );
 
@@ -96,6 +94,8 @@ int main(int argc, char *argv[])
 
 	delete tree;
 
-	fclose(fp_in);
+	if ( fp_in != stdin )
+		fclose(fp_in);
+	
 	return code;
 }

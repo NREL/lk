@@ -11,6 +11,26 @@
 
 #if defined(LK_USE_WXWIDGETS)
 
+lk_string lk::to_string( lk_char c )
+{
+	return lk_string(c);
+}
+
+std::string lk::to_utf8( const lk_string &str )
+{
+	return std::string( (const char*)str.ToUTF8() );
+}
+
+lk_string lk::from_utf8( const std::string &str )
+{
+	return lk_string::FromUTF8( str.c_str() );
+}
+
+lk_string lk::from_utf8( const char *str )
+{
+	return lk_string::FromUTF8( str );
+}
+
 lk_char lk::lower_char( lk_char c )
 {
 	return wxTolower(c);
@@ -39,6 +59,27 @@ bool lk::convert_double(const lk_string &str, double *x)
 }
 
 #else
+
+lk_string lk::to_string( lk_char c )
+{
+	char buf[2] = { c, 0 };
+	return std::string(buf);
+}
+
+std::string lk::to_utf8( const lk_string &str )
+{
+	return str;
+}
+
+lk_string lk::from_utf8( const std::string &str )
+{
+	return str;
+}
+
+lk_string lk::from_utf8( const char *str )
+{
+	return std::string( str );
+}
 
 lk_char lk::lower_char( lk_char c )
 {

@@ -1451,7 +1451,7 @@ std::vector< lk_string > lk::split( const lk_string &str, const lk_string &delim
 		list.push_back( token );
 
 		if ( ret_delim && cur_delim != 0 && m_pos < str.length() )
-			list.push_back( lk_string( cur_delim ) );
+			list.push_back( to_string( cur_delim ) );
 	}
 
 	return list;
