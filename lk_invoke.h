@@ -18,7 +18,7 @@ struct __lk_invoke_t
 	void *__pinvoke; // internal calling context reference
 	void *__hiter; // internal key interator context
 	void *__errbuf; // error message buffer
-	void *__sbuf; // internal string buffer
+	void *__sbuf; // internal string storage buffer (utf8)
 	void *__callargvec; // internal call argument vector 
 	void *__callresult; // internal call result
 
@@ -37,7 +37,7 @@ struct __lk_invoke_t
 	lk_var_t (*arg)( struct __lk_invoke_t*, int );
 
 	int (*type)( struct __lk_invoke_t*, lk_var_t );
-	const char *(*as_string)( struct __lk_invoke_t*, lk_var_t );
+	const char *(*as_string)( struct __lk_invoke_t*, lk_var_t ); // returns utf8
 	double (*as_number)( struct __lk_invoke_t*, lk_var_t );
 	int (*as_integer)( struct __lk_invoke_t*, lk_var_t );
 	int (*as_boolean)( struct __lk_invoke_t*, lk_var_t );
@@ -54,7 +54,7 @@ struct __lk_invoke_t
 	
 	// variable modifications
 	void (*set_null)  ( struct __lk_invoke_t*, lk_var_t );
-	void (*set_string)( struct __lk_invoke_t*, lk_var_t, const char * );
+	void (*set_string)( struct __lk_invoke_t*, lk_var_t, const char * ); // values are utf8
 	void (*set_number)( struct __lk_invoke_t*, lk_var_t, double );
 
 	void (*set_number_vec)( struct __lk_invoke_t*, lk_var_t, double *, int );

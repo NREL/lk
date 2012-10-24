@@ -233,10 +233,10 @@ static void _read( lk::invoke_t &cxt )
 
 	if (f && f->ok() && nchars >= 0)
 	{
-		lk_char *buf = new lk_char[nchars+1];
+		char *buf = new char[nchars+1];
 
 		int i=0;
-		lk_char c;
+		char c;
 		while (i<nchars && (c=fgetc( *f )) != EOF)
 			buf[i++] = c;
 
@@ -663,7 +663,7 @@ static void _ch( lk::invoke_t &cxt )
 	{
 		if (pos < s.length())
 		{
-			lk_char b[2];
+			char b[2];
 			b[0] = s[pos];
 			b[1] = 0;
 			cxt.result().assign( lk_string( b ) );
@@ -1140,7 +1140,7 @@ void _erfc( lk::invoke_t &cxt )
 }
 
 
-#ifdef __WX__
+#ifdef LK_USE_WXWIDGETS
 #include <wx/wx.h>
 
 static void _wx_msgbox( lk::invoke_t &cxt )
@@ -1424,7 +1424,7 @@ std::vector< lk_string > lk::split( const lk_string &str, const lk_string &delim
 {
 	std::vector< lk_string > list;
 
-	lk_char cur_delim[2] = {0,0};
+	lk_char cur_delim;
 	lk_string::size_type m_pos = 0;
 	lk_string token;
 
@@ -1433,13 +1433,13 @@ std::vector< lk_string > lk::split( const lk_string &str, const lk_string &delim
 		lk_string::size_type pos = str.find_first_of(delim, m_pos);
 		if (pos == lk_string::npos)
 		{
-			cur_delim[0] = 0;
+			cur_delim = 0;
 			token.assign(str, m_pos, lk_string::npos);
 			m_pos = str.length();
 		}
 		else
 		{
-			cur_delim[0] = str[pos];
+			cur_delim = str[pos];
 			lk_string::size_type len = pos - m_pos;
 			token.assign(str, m_pos, len);
 			m_pos = pos + 1;
@@ -1450,7 +1450,7 @@ std::vector< lk_string > lk::split( const lk_string &str, const lk_string &delim
 
 		list.push_back( token );
 
-		if ( ret_delim && cur_delim[0] != 0 && m_pos < str.length() )
+		if ( ret_delim && cur_delim != 0 && m_pos < str.length() )
 			list.push_back( lk_string( cur_delim ) );
 	}
 
@@ -1483,7 +1483,7 @@ size_t lk::replace( lk_string &s, const lk_string &old_text, const lk_string &ne
 			break;
 
 		// replace this occurrence of the old string with the new one
-#ifdef __WX__
+#ifdef LK_USE_WXWIDGETS
 		s.replace(pos, uiOldLen, new_text, uiNewLen);
 #else
 		s.replace(pos, uiOldLen, new_text.c_str(), uiNewLen);
@@ -1746,7 +1746,7 @@ int lk::sync_piped_process::spawn(const lk_string &command, const lk_string &wor
 	// Child.exe). Make sure Child.exe is in the same directory as
 	// redirect.c launch redirect from a command line to prevent location
 	// confusion.
-	if (result == 0 && !CreateProcessA(NULL,(char*)command.c_str(),NULL,NULL,TRUE,
+	if (result == 0 && !CreateProcessA(NULL,(char*)(const char*)command.c_str(),NULL,NULL,TRUE,
 					 //CREATE_NEW_CONSOLE|CREATE_NO_WINDOW|NORMAL_PRIORITY_CLASS
 					 //CREATE_NEW_CONSOLE
 					 CREATE_NO_WINDOW,

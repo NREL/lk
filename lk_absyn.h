@@ -13,11 +13,16 @@ using std::tr1::unordered_map;
 #endif
 
 
-#if defined(__WX__)
+#if defined(LK_USE_WXWIDGETS)
 #include <wx/string.h>
 #include <wx/hashmap.h>
 
+#if wxCHECK_VERSION(2,9,0)
+typedef wxUniChar lk_char;
+#define LK_UNICODE 1
+#else
 typedef wxChar lk_char;
+#endif
 typedef wxString lk_string;
 
 typedef wxStringHash lk_string_hash;

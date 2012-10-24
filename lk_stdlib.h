@@ -8,7 +8,7 @@ namespace lk {
 	/* these stdlib_xxxx() functions
 		return an array of fcall_t references.
 		the end of the list is denoted by a null fcall_t */
-#ifdef __WX__
+#ifdef LK_USE_WXWIDGETS
 	fcall_t* stdlib_wxui();
 #endif
 

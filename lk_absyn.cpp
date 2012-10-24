@@ -9,7 +9,7 @@
 #include "lk_lex.h"
 
 
-#if defined(__WX__)
+#if defined(LK_USE_WXWIDGETS)
 
 lk_char lk::lower_char( lk_char c )
 {

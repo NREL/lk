@@ -118,11 +118,13 @@ void lk::lexer::whitespace( )
 	}
 }
 
-void lk::lexer::comments()
+bool lk::lexer::comments()
 {
+	bool handled_comment = false;
 	// handle block comments 
 	while ( *p == '/' && p.peek() == '*' )
 	{
+		handled_comment = true;
 		p++;
 		p++;
 		
@@ -144,6 +146,7 @@ void lk::lexer::comments()
 	// handle single line comments
 	while ( *p == '/' && p.peek() == '/' )
 	{
+		handled_comment = true;
 		p++;
 		p++;
 		
@@ -153,6 +156,8 @@ void lk::lexer::comments()
 
 		whitespace();	
 	}
+
+	return handled_comment;
 }
 
 int lk::lexer::next()
@@ -162,9 +167,15 @@ int lk::lexer::next()
 	
 	if (!*p) return END;
 	
-	whitespace();
-	comments();
-	whitespace();
+	bool found_comments = false;
+	do
+	{
+		whitespace();
+		found_comments = comments();
+		whitespace();
+	}
+	while ( found_comments );
+
 	
 	if (!*p) return END;
 
@@ -315,6 +326,27 @@ int lk::lexer::next()
 				case 'r':  m_buf += '\r'; p++; break;
 				case 't':  m_buf += '\t'; p++; break;
 				case '\\': m_buf += '\\'; p++; break;
+				case 'u':
+#ifdef LK_UNICODE
+					{
+						p++; // skip the u
+						std::string buf;
+						// read four digits
+						for ( size_t k=0; *p && k<4;k++ )
+						{
+							buf += *p;
+							p++;
+						}
+						// convert unicode char constant to string
+						unsigned int uch = 0;
+						sscanf( buf.c_str(), "%x", &uch );
+						if ( uch != 0 ) m_buf += lk_char(uch);
+					}
+					break;
+#else
+					m_error = lk_string("unicode character constant encountered while parsing with an ansi string build of LK.");
+					return INVALID;
+#endif
 				default:
 					cerr = *p;
 					p++; // skip escape sequence

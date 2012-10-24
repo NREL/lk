@@ -118,7 +118,7 @@ namespace lk {
 
 	private:
 		void whitespace();
-		void comments();
+		bool comments();
 
 		lk_string m_error;
 		int m_line;
