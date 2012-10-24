@@ -329,18 +329,21 @@ int lk::lexer::next()
 				case 'u':
 #ifdef LK_UNICODE
 					{
-						p++; // skip the u
+						p++; // skip the slash
+						p++; // skip the 'u'
 						std::string buf;
 						// read four digits
 						for ( size_t k=0; *p && k<4;k++ )
 						{
 							buf += *p;
-							p++;
+							if ( k < 3 ) p++; // leave the last one on the end string
 						}
 						// convert unicode char constant to string
 						unsigned int uch = 0;
 						sscanf( buf.c_str(), "%x", &uch );
-						if ( uch != 0 ) m_buf += lk_char(uch);
+						//m_buf += lk_string::Format("{u:%x,'%s' {", uch, buf.c_str()) + lk_char(uch) + lk_string("}}");
+						if ( uch != 0 )
+							m_buf += lk_char(uch);
 					}
 					break;
 #else
