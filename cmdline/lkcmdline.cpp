@@ -16,7 +16,7 @@ void fcall_out( lk::invoke_t &cxt )
 {
 	LK_DOC("out", "Output data to the console.", "(...):none");
 	for (size_t i=0;i<cxt.arg_count();i++)
-		std::cout << cxt.arg(i).as_string();
+		std::cout << lk::to_utf8(cxt.arg(i).as_string());
 		
 	std::cout << std::flush;
 }
@@ -25,7 +25,7 @@ void fcall_outln( lk::invoke_t &cxt )
 {
 	LK_DOC("outln", "Output data to the console followed by a newline.", "(...):none");
 	for (size_t i=0;i<cxt.arg_count();i++)
-		std::cout << cxt.arg(i).as_string();
+		std::cout << lk::to_utf8(cxt.arg(i).as_string());
 	
 	std::cout << std::endl << std::flush;
 }
@@ -35,7 +35,7 @@ void fcall_in(  lk::invoke_t &cxt )
 	LK_DOC("in", "Input text from the user.", "(none):string");
 	char buf[NBUF];
 	fgets( buf, NBUF-1, stdin );
-	cxt.result().assign( std::string( buf ) );	
+	cxt.result().assign( lk::from_utf8( buf ) );	
 }
 
 int main(int argc, char *argv[])
@@ -85,12 +85,12 @@ int main(int argc, char *argv[])
 			code = -1;
 			printf("eval failed\n");
 			for (size_t i=0;i<errors.size();i++)
-				printf( ">> %s\n", errors[i].c_str() );
+				printf( ">> %s\n", (const char*)errors[i].c_str() );
 		}
 	}
 	
 	for (int i=0; i<parse.error_count(); i++ )
-		printf( ">> %s\n",  parse.error(i).c_str() );
+		printf( ">> %s\n",  (const char*)parse.error(i).c_str() );
 
 	delete tree;
 
