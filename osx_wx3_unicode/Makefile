@@ -1,10 +1,10 @@
 VPATH = ..
 CC = gcc
 CXX = g++
-CFLAGS = -arch i386 -fPIC -Wall -O2 -DLK_USE_WXWIDGETS `wx-config-dsa --cflags`
+CFLAGS = -fPIC -Wall -O2 -DLK_USE_WXWIDGETS `wx-config-3 --cflags`
 CXXFLAGS = $(CFLAGS)
 
-LIBNAME = lkosxwx28
+LIBNAME = lkosxwx3
 TARGET = ../$(LIBNAME).a
 
 OBJECTS = \
