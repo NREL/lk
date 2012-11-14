@@ -165,8 +165,8 @@ bool LKApp::OnInit()
 
     wxFileSystem::AddHandler(new wxZipFSHandler);
 
-	app_frame = new LKFrame;
-	SetTopWindow(app_frame);
+	//app_frame = new LKFrame;
+	//SetTopWindow(app_frame);
 	
 	
 extern void new_solver();

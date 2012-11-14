@@ -848,7 +848,7 @@ public:
 		m_output->SetFont( wxFont(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Consolas") );
 		m_output->SetForegroundColour( "FOREST GREEN" );
 
-		m_cmdLine = new wxTextCtrl( this, ID_CMDLINE, "" );
+		m_cmdLine = new wxTextCtrl( this, ID_CMDLINE, "" , wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 		m_cmdLine->SetFont( wxFont(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Consolas") );
 		m_cmdLine->SetForegroundColour( *wxBLUE );
 
