@@ -35,10 +35,13 @@ bool lk::parser::token(int t)
 	return (m_tokType==t);
 }
 
-lk_string lk::parser::error(int idx)
+lk_string lk::parser::error( int idx, int *line )
 {
 	if (idx >= 0 && idx < (int)m_errorList.size())
-		return m_errorList[idx];
+	{
+		if ( line != 0 ) *line = m_errorList[idx].line;
+		return m_errorList[idx].text;
+	}
 	return lk_string("");
 }
 
@@ -95,11 +98,11 @@ void lk::parser::skip()
 void lk::parser::error( const char *fmt, ... )
 {
 	char buf[512];
-
+	
 	if ( !m_name.empty() )
-		sprintf(buf, "[%s line %d]: ", (const char*)m_name.c_str(), m_lastLine );
+		sprintf(buf, "[%s] %d: ", (const char*)m_name.c_str(), m_lastLine );
 	else
-		sprintf(buf, "[line %d]: ", m_lastLine);
+		sprintf(buf, "%d: ", m_lastLine);
 	
 	char *p = buf + strlen(buf);
 
@@ -112,7 +115,11 @@ void lk::parser::error( const char *fmt, ... )
 		vsnprintf( p, 480, fmt, list );
 	#endif
 	
-	m_errorList.push_back(lk_string(buf));
+	errinfo e;
+	e.text = buf;
+	e.line = m_lastLine;
+	m_errorList.push_back( e );
+
 	va_end( list );
 }
 

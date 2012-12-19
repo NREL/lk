@@ -44,8 +44,8 @@ namespace lk
 		
 		int line() { return lex.line(); }
 		int error_count() { return m_errorList.size(); }
-		lk_string error(int idx);
-		
+		lk_string error(int idx, int *line = 0);
+
 		int token();
 		bool token(int t);
 		
@@ -64,7 +64,8 @@ namespace lk
 		int m_lastLine;
 		lk_string m_lexError;
 		bool m_haltFlag;
-		std::vector<lk_string> m_errorList;
+		struct errinfo { int line; lk_string text; };
+		std::vector<errinfo> m_errorList;
 		importer *m_importer;
 		std::vector< lk_string > m_importNameList;
 		lk_string m_name;
