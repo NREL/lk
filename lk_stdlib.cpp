@@ -627,14 +627,33 @@ static void _ostype( lk::invoke_t &cxt )
 
 	lk_string os;
 #if defined(_MSC_VER) || defined(WIN32) || defined(__MINGW32__)
+	
+#ifdef _WIN64
+	os = "win64";
+#else
 	os = "win32";
+#endif
+
 #elif defined(__APPLE__)||defined(__APPLE_CC__)
-	os = "osx";
+
+#ifdef __LP64__
+	os = "osx64";
+#else
+	os = "osx32";
+#endif
+
 #elif defined(__linux__)||defined(__linux)
-	os = "linux";
+
+#ifdef __LP64__
+	os = "linux64";
+#else
+	os = "linux32";
+#endif
+
 #else
 	os = "unknown";
 #endif
+
 
 	cxt.result().assign(os);
 }

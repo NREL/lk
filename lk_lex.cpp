@@ -152,8 +152,6 @@ bool lk::lexer::comments()
 		
 		while ( *p && *p != '\n' ) p++;
 		
-		m_line++;
-
 		whitespace();	
 	}
 
