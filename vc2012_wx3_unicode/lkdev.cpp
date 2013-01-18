@@ -3,6 +3,7 @@
 #include <wx/html/htmlwin.h>
 #include <wx/tokenzr.h>
 #include <wx/stc/stc.h>
+#include <wx/splitter.h>
 
 #include <lk_absyn.h>
 #include <lk_env.h>
@@ -120,7 +121,7 @@ lk::fcall_t* my_funcs()
 	return (lk::fcall_t*)vec;
 }
 
-enum { ID_CODEEDITOR = wxID_HIGHEST+1, ID_RUN, ID_OUTPUT_WINDOW };
+enum { ID_CODEEDITOR = wxID_HIGHEST+1, ID_RUN, ID_COMPILE, ID_PARSETIMER, ID_OUTPUT_WINDOW };
 
 static int __ndoc = 0;
 
@@ -132,16 +133,20 @@ class EditorWindow : public wxFrame
 private:
 	static int __s_numEditorWindows;
 	lk::env_t *m_env;
+	wxTextCtrl *m_asmOutput;
 	wxStyledTextCtrl *m_editor;
 	wxStaticText *m_statusLabel;
 	wxString m_fileName;
 	wxButton *m_stopButton;
 	wxGauge *m_progressBar;
 	wxTextCtrl *m_txtProgress;
+	wxTextCtrl *m_compileErrors;
 	bool m_stopScriptFlag;
+	wxTimer m_timer;
 public:
 	EditorWindow()
-		: wxFrame( 0, wxID_ANY, wxString::Format("untitled %d",++__ndoc), wxDefaultPosition, wxSize(700,700) )
+		: wxFrame( 0, wxID_ANY, wxString::Format("untitled %d",++__ndoc), wxDefaultPosition, wxSize(700,700) ),
+		m_timer( this, ID_PARSETIMER )
 	{
 		__s_numEditorWindows++;
 		m_stopScriptFlag = false;
@@ -160,6 +165,7 @@ public:
 		wxBoxSizer *sztools = new wxBoxSizer( wxHORIZONTAL );
 		sztools->Add( m_stopButton = new wxButton( this, wxID_STOP, "Stop" ), 0, wxALL|wxEXPAND, 2 );
 		sztools->Add( new wxButton( this, ID_RUN, "Run" ), 0, wxALL|wxEXPAND, 2  );
+		sztools->Add( new wxButton( this, ID_COMPILE, "Compile" ), 0, wxALL|wxEXPAND, 2 );
 		sztools->Add( m_progressBar, 0, wxALL|wxEXPAND, 2  );
 		sztools->Add( m_txtProgress, 0, wxALL|wxEXPAND, 2  );
 		sztools->Add( m_statusLabel = new wxStaticText(this,wxID_ANY,wxEmptyString), 0, wxALL|wxALIGN_CENTER_VERTICAL, 2 );
@@ -196,6 +202,7 @@ public:
 
 		wxMenu *act_menu = new wxMenu;
 		act_menu->Append( ID_RUN, "Run\tF5" );
+		act_menu->Append( ID_COMPILE, "Compile\tF7" );
 		act_menu->AppendSeparator();
 		act_menu->Append( ID_OUTPUT_WINDOW, "Show output window\tF6" );
 		
@@ -237,7 +244,16 @@ public:
 		}
 		*/
 		
-		m_editor = new wxStyledTextCtrl(this, ID_CODEEDITOR );
+		wxSplitterWindow *splitter = new wxSplitterWindow( this, wxID_ANY );
+
+		m_asmOutput = new wxTextCtrl( splitter, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP );
+		m_asmOutput->SetFont( wxFont( 11, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Consolas" ) );
+		m_asmOutput->SetForegroundColour( *wxBLUE );
+
+		m_editor = new wxStyledTextCtrl(splitter, ID_CODEEDITOR );
+
+		m_compileErrors = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY );
+		
 		/*
 		m_editor->ApplyLKStyling();
 		m_editor->EnableCallTips(true);
@@ -249,8 +265,11 @@ public:
 		wxBoxSizer *szmain = new wxBoxSizer( wxVERTICAL );
 		szmain->Add( sztools, 0, wxALL|wxEXPAND, 0 );
 		szmain->Add( new wxStaticLine( this ), 0, wxALL|wxEXPAND, 0 );
-		szmain->Add( m_editor, 1, wxALL|wxEXPAND, 0 );
+		szmain->Add( splitter, 6, wxALL|wxEXPAND, 0 );
+		szmain->Add( m_compileErrors, 1, wxALL|wxEXPAND, 0 );
 		SetSizer( szmain );
+
+		splitter->SplitVertically( m_asmOutput, m_editor, 150 );
 		
 		m_editor->SetFocus();
 	}
@@ -351,6 +370,9 @@ public:
 		case ID_RUN:
 			Exec();
 			break;
+		case ID_COMPILE:
+			Compile();
+			break;
 		case ID_OUTPUT_WINDOW:
 			ShowOutputWindow();
 			break;
@@ -446,7 +468,31 @@ public:
 		else return false;
 	}
 	
+	void Compile()
+	{
+		wxString script = m_editor->GetText();
+		m_compileErrors->Clear();
+		lk::input_string p( script );
+		lk::parser parse( p );
 	
+		lk::node_t *tree = parse.script();
+		if ( parse.error_count() != 0 
+			|| parse.token() != lk::lexer::END)
+		{
+			m_compileErrors->AppendText("parsing did not reach end of input\n");
+			int i=0;
+			while ( i < parse.error_count() )
+				m_compileErrors->AppendText( parse.error(i++) + "\n" );
+		}
+		else
+			m_compileErrors->AppendText( "no syntax errors" );
+
+		m_asmOutput->SetValue( parse.assembly() );
+
+		if (tree) delete tree;
+	}
+
+
 	void Exec()
 	{
 		if (__g_scriptRunning)
@@ -581,6 +627,22 @@ public:
 		}
 	}
 
+	void OnParseTimer( wxTimerEvent & )
+	{
+		Compile();
+	}
+
+	void OnEditorModified( wxStyledTextEvent &evt )
+	{
+		if ( evt.GetModificationType() & wxSTC_MOD_INSERTTEXT 
+			|| evt.GetModificationType() & wxSTC_MOD_DELETETEXT )
+		{
+			m_timer.Stop();
+			m_timer.Start( 500, true );
+			evt.Skip();
+		}
+	}
+
 
 
 	DECLARE_EVENT_TABLE()
@@ -607,11 +669,16 @@ BEGIN_EVENT_TABLE( EditorWindow, wxFrame )
 
 	
 	EVT_MENU( ID_RUN, EditorWindow::OnCommand )
+	EVT_MENU( ID_COMPILE, EditorWindow::OnCommand )
 	EVT_MENU( ID_OUTPUT_WINDOW, EditorWindow::OnCommand )
 
 	EVT_BUTTON( wxID_STOP, EditorWindow::OnCommand )
 	EVT_BUTTON( ID_RUN, EditorWindow::OnCommand )
+	EVT_BUTTON( ID_COMPILE, EditorWindow::OnCommand )
 	EVT_BUTTON( wxID_HELP, EditorWindow::OnCommand )
+
+	EVT_STC_MODIFIED( ID_CODEEDITOR, EditorWindow::OnEditorModified )
+	EVT_TIMER( ID_PARSETIMER, EditorWindow::OnParseTimer )
 
 	EVT_CLOSE( EditorWindow::CloseEventHandler )
 END_EVENT_TABLE()
