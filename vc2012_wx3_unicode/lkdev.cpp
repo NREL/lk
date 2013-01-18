@@ -11,6 +11,7 @@
 #include <lk_lex.h>
 #include <lk_parse.h>
 #include <lk_stdlib.h>
+#include <lk_pcgen.h>
 
 class OutputWindow;
 static OutputWindow *__g_outputWindow = 0;
@@ -269,7 +270,7 @@ public:
 		szmain->Add( m_compileErrors, 1, wxALL|wxEXPAND, 0 );
 		SetSizer( szmain );
 
-		splitter->SplitVertically( m_asmOutput, m_editor, 150 );
+		splitter->SplitVertically( m_asmOutput, m_editor, 250 );
 		
 		m_editor->SetFocus();
 	}
@@ -473,23 +474,21 @@ public:
 		wxString script = m_editor->GetText();
 		m_compileErrors->Clear();
 		lk::input_string p( script );
-		lk::parser parse( p );
+		lk::codegen pcgen( p );
 	
-		lk::node_t *tree = parse.script();
-		if ( parse.error_count() != 0 
-			|| parse.token() != lk::lexer::END)
+		if ( !pcgen.script() 
+			|| pcgen.error_count() != 0 
+			|| pcgen.token() != lk::lexer::END)
 		{
 			m_compileErrors->AppendText("parsing did not reach end of input\n");
 			int i=0;
-			while ( i < parse.error_count() )
-				m_compileErrors->AppendText( parse.error(i++) + "\n" );
+			while ( i < pcgen.error_count() )
+				m_compileErrors->AppendText( pcgen.error(i++) + "\n" );
 		}
 		else
 			m_compileErrors->AppendText( "no syntax errors" );
 
-		m_asmOutput->SetValue( parse.assembly() );
-
-		if (tree) delete tree;
+		m_asmOutput->SetValue( pcgen.assembly() );
 	}
 
 

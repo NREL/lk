@@ -161,7 +161,9 @@
     <ClCompile Include="..\lk_lex.cpp" />
     <ClCompile Include="..\lk_math.cpp" />
     <ClCompile Include="..\lk_parse.cpp" />
+    <ClCompile Include="..\lk_pcgen.cpp" />
     <ClCompile Include="..\lk_stdlib.cpp" />
+    <ClCompile Include="..\lk_vm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lk_absyn.h" />
@@ -171,7 +173,9 @@
     <ClInclude Include="..\lk_lex.h" />
     <ClInclude Include="..\lk_math.h" />
     <ClInclude Include="..\lk_parse.h" />
+    <ClInclude Include="..\lk_pcgen.h" />
     <ClInclude Include="..\lk_stdlib.h" />
+    <ClInclude Include="..\lk_vm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
