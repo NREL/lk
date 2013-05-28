@@ -1,6 +1,6 @@
 
 
-extok = load_extension( "c:/Users/adobos/Projects/lk/extern/externtest.dll" );
+extok = load_extension( "/Users/adobos/Projects/trunk/lk/extern/externtest.dylib" );
 
 outln("extload=? " ,  extok);
 result = externtest("hello str 1", "12345");
