@@ -1,7 +1,7 @@
 VPATH = ..
 CC = gcc
 CXX = g++
-CFLAGS = -arch i386 -fPIC -Wall -O2 -D__WX__ -D__WXMAC__ `wx-config-dsa --cflags`
+CFLAGS = -arch i386 -fPIC -Wall -O2 -D__WX__ -D__WXMAC__ -DLK_USE_WXWIDGETS `wx-config-dsa --cflags`
 CXXFLAGS = $(CFLAGS)
 LDFLAGS = `wx-config-dsa --libs` -lm -lstdc++ -arch i386
 
