@@ -1,0 +1,7 @@
+
+const pi = 3.1415926;
+const me = {"first" = "Aron", "last" = "Dobos"};
+
+function triple(x) {
+	return 3*x;
+}

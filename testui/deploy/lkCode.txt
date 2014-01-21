@@ -1,0 +1,154 @@
+function steam_psat2(Targ)
+{
+	T = Targ + 273.15;
+	
+	Tc = 647.096;
+	Pc = 22.064;
+	
+	a1 = -7.85954783;
+	a2 = 1.84408259;
+	a3 = -11.7866497;
+	a4 = 22.6807411;
+	a5 = -15.9618719;
+	a6 = 1.80122502;
+	tau = 1 - T/Tc;
+	tauh = sqrt(tau);
+	
+	P = Pc * exp( Tc/T*(a1*tau 
+		+ a2*tau*tauh 
+		+ a3*tau*tau*tau 
+		+ a4*tau*tau*tau*tauh 
+		+ a5*tau*tau*tau*tau 
+		+ a6*tau*tau*tau*tau*tau*tau*tau*tauh) );
+
+	return 1000*P;
+}
+
+extok = 0;
+load_extension( "c:/Users/adobos/Projects/lk/extern/externtest.dll" );
+load_extension( "c:/Users/adobos/Projects/tcs/waterprop/waterprop32.dll" );
+
+ext = extensions();
+libs = @ext;
+for ( i=0;i<#libs;i++)
+{
+	outln( libs[i] );
+	funcs = @ext{libs[i]};
+	for ( j=0;j<#funcs;j++)
+		outln( '\t' + funcs[j] + '  -->  ' + ext{libs[i]}{funcs[j]}.signature );
+}
+exit;
+
+outln("externtest: " + externtest("hello str 1", "12345"));
+
+start_timer();
+ptotal1=0;
+for (T=-100;T<320;T++)
+	ptotal1 = ptotal1+ steam_psat(T);
+time1 = elapsed_time();
+outln("elapsed Ccall: " + time1 );
+
+
+start_timer();
+ptotal2=0;
+for (T=-100;T<320;T++)
+	ptotal2 = ptotal2+ steam_psat2(T);
+time2 = elapsed_time();
+outln("elapsed LK: " + time2 );
+
+outln(time2/time1, " times faster using C extension");
+
+exit;
+
+a = [ 3,
+	2,
+	5,
+	[1,-5,66,2],
+	-15,
+	1,
+	6,
+	-1,
+	21,
+	-15,
+	12,
+	1,
+	2 ];
+
+if (a == 4){
+ z = 3+24-1;
+	out("sum=", sum(a), "\n");
+	out("mean=", mean(a), "\n");
+	out("stddev=", stddev(a), "\n");
+}
+
+out("min=", min(1,5,-2,-2.001), "\n");
+out("max=", max(11,5,-2,-2.001), "\n");
+out("min=", min([ 1,5,-2,-2.001]), "\n");
+out("max=", max( [ 1,5,-2,-2.001],[ 1,5,-2,-2.001] ), "\n");
+exit;
+/*
+import "import1.txt";
+import "import2.txt";
+
+
+enum { STARTING, RUNNING, STOPPED, EFF=+20, EFF1, EFF2,  ERROR1 = 100, ERROR2 };
+
+dir = replace(homedir(), "\\", "/");
+parts = split(dir, "/");
+
+zz = triple(3);
+
+exit;
+const pi = 3.1415926;
+//pi = 3.11;       // will cause an error
+
+value = 43;
+//const value = 51;     // will cause an error (value already exists)
+
+
+const names = [ "Linus", "David", "Aron" ];
+names[2] = "Ari";    // allowed
+//names = null;
+//names = "Patrick";    // will cause an error
+exit;
+
+
+const pi = 3.1415726;
+//out(x + "\n");
+pi2 = 2*pi;
+
+const sz = {"ab"=1, "bc"=2, "cd"=5 };
+sq = 41;
+
+trip = define(x) { return x*x*x; };
+
+function sqr(x) { return x*x; }
+
+
+msgbox("hello, world!");
+
+y = sqr(34);
+
+//sqr = define(){ a = 25;};
+
+const make_square = define({	
+local sq.side = 2;	
+sq.scale_factor = 1.877;	
+return sq;
+};
+
+const unity = [ 1, 5, 3, 6];
+
+
+x = pi;
+
+s1 = make_square();
+s1.side = 24;
+s1.scale_factor = 2304;
+
+const s[0] = [3,5,1];
+
+s[0] = 1;
+
+x = 4;
+*.
