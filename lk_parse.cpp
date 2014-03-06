@@ -225,7 +225,10 @@ lk::node_t *lk::parser::statement()
 	else if (lex.text() == "return")
 	{
 		skip();
-		stmt = new expr_t( line(), expr_t::RETURN, ternary(), 0 );
+		lk::node_t *rval = 0;
+		if ( token() != lk::lexer::SEP_SEMI )
+			rval = ternary();
+		stmt = new expr_t( line(), expr_t::RETURN, rval, 0 );
 	}
 	else if (lex.text() == "exit")
 	{

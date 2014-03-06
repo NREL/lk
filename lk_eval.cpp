@@ -631,8 +631,11 @@ bool lk::eval::interpret( node_t *root,
 				return ok;
 			}
 			case expr_t::RETURN:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				result.copy( l.deref() );
+				if ( n->left != 0 ) // handle empty return statements.
+				{
+					ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+					result.copy( l.deref() );
+				}
 				ctl_id = CTL_RETURN;
 				return ok;
 			case expr_t::EXIT:
