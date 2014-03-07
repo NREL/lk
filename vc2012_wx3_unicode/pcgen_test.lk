@@ -1,7 +1,0 @@
-a = 3*b+c*( (a<b)?3.7:1.3);
-str1 = "hello, world";
-dd = true;
-af = false;
-b = dd && aa || a;
-const ab = nu[3*i+c][4];
-c++;
