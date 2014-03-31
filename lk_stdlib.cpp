@@ -497,8 +497,8 @@ static void _file_exists( lk::invoke_t &cxt )
 static void _rename_file( lk::invoke_t &cxt )
 {
 	LK_DOC("rename_file", "Renames an existing file.", "(string:old name, string:new name):boolean");
-	cxt.result().assign( lk::rename_file( (const char*)cxt.arg(0).as_string().c_str(),
-		(const char*)cxt.arg(1).as_string().c_str()  ));
+	cxt.result().assign( lk::rename_file(cxt.arg(0).as_string(),
+		cxt.arg(1).as_string()  ));
 }
 
 static void _dir_exists( lk::invoke_t &cxt )
@@ -1567,9 +1567,13 @@ bool lk::file_exists( const char *file )
 #endif
 }
 
-bool lk::rename_file( const char *f0, const char *f1 )
+bool lk::rename_file( const lk_string &f0, const lk_string &f1 )
 {
-	return ::rename( f0, f1 ) == 0;
+#ifdef LK_USE_WXWIDGETS
+	return wxRenameFile( f0, f1 );
+#else
+	return ::rename( (const char*)f0.c_str(), (const char*)f1.c_str() ) == 0;
+#endif
 }
 
 bool lk::dir_exists( const char *path )

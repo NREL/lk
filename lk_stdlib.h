@@ -39,7 +39,7 @@ namespace lk {
 	lk_string read_file( const lk_string &file );
 	bool read_line( FILE *fp, lk_string &text, int prealloc = 256 );
 
-	bool rename_file( const char *file_old, const char *file_new );
+	bool rename_file( const lk_string &f0, const lk_string &f1 );
 	bool file_exists( const char *file);
 	bool dir_exists( const char *path );
 	bool remove_file( const char *path );
