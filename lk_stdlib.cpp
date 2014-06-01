@@ -19,17 +19,29 @@
 
 #ifdef LK_USE_WXWIDGETS
 #include <wx/wx.h>
+#include <wx/toplevel.h>
+
+static wxWindow *GetCurrentTopLevelWindow()
+{
+	wxWindowList &wl = ::wxTopLevelWindows;
+	for( wxWindowList::iterator it = wl.begin(); it != wl.end(); ++it )
+		if ( wxTopLevelWindow *tlw = dynamic_cast<wxTopLevelWindow*>( *it ) )
+			if ( tlw->IsActive() )
+				return tlw;
+
+	return 0;
+}
 
 static void _wx_msgbox( lk::invoke_t &cxt )
 {
 	LK_DOC("msgbox", "Shows a message dialog box.", "(string:message):none");
-	wxMessageBox( cxt.arg(0).as_string(), "Notice" );
+	wxMessageBox( cxt.arg(0).as_string(), "Notice", wxOK|wxCENTRE, GetCurrentTopLevelWindow() );
 }
 
 static void _wx_yesno( lk::invoke_t &cxt )
 {
 	LK_DOC("yesno", "Shows a message box with yes and no buttons.  The function returns true when yes is clicked, false otherwise.", "(string:message):boolean");
-	cxt.result().assign( wxYES==wxMessageBox( cxt.arg(0).as_string(), "Query", wxYES_NO ) ? 1.0 : 0.0 );
+	cxt.result().assign( wxYES==wxMessageBox( cxt.arg(0).as_string(), "Query", wxYES_NO, GetCurrentTopLevelWindow() ) ? 1.0 : 0.0 );
 }
 
 static void _wx_choose_file( lk::invoke_t &cxt )
@@ -56,7 +68,7 @@ static void _wx_choose_file( lk::invoke_t &cxt )
 		multiple = cxt.arg(4).as_boolean();
 
 	wxString file;
-	wxFileDialog fdlg( 0, caption,
+	wxFileDialog fdlg( GetCurrentTopLevelWindow(), caption,
 		path, wxEmptyString, filter, savedlg? wxFD_SAVE|wxFD_OVERWRITE_PROMPT : wxFD_OPEN );
 
 	if (fdlg.ShowModal())
