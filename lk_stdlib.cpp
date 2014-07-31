@@ -38,6 +38,21 @@ static void _wx_msgbox( lk::invoke_t &cxt )
 	wxMessageBox( cxt.arg(0).as_string(), "Notice", wxOK|wxCENTRE, GetCurrentTopLevelWindow() );
 }
 
+
+static void _wx_in(  lk::invoke_t &cxt )
+{
+	LK_DOC("in", "Input text from the user using a popup dialog box.", "([string:message], [string:default value], [string:caption]):string");
+	wxString message("Standard input:"), capt( wxGetTextFromUserPromptStr ), defval;
+	if ( cxt.arg_count() > 0 )
+		message = cxt.arg(0).as_string();
+	if ( cxt.arg_count() > 1 )
+		defval = cxt.arg(1).as_string();
+	if ( cxt.arg_count() > 2 )
+		capt = cxt.arg(2).as_string();
+
+	cxt.result().assign( wxGetTextFromUser(message, capt, defval, GetCurrentTopLevelWindow() ) );	
+}
+
 static void _wx_yesno( lk::invoke_t &cxt )
 {
 	LK_DOC("yesno", "Shows a message box with yes and no buttons.  The function returns true when yes is clicked, false otherwise.", "(string:message):boolean");
@@ -144,6 +159,7 @@ lk::fcall_t* lk::stdlib_wxui()
 {
 	static const lk::fcall_t vec[] = {
 		_wx_msgbox,
+		_wx_in,
 		_wx_yesno,
 		_wx_choose_file,
 		_wx_date_time,
