@@ -53,6 +53,32 @@ static void _wx_in(  lk::invoke_t &cxt )
 	cxt.result().assign( wxGetTextFromUser(message, capt, defval, GetCurrentTopLevelWindow() ) );	
 }
 
+static void _wx_choose_from_list( lk::invoke_t &cxt )
+{
+	LK_DOC("choose_from_list", "Show a dialog for the user to select one item from a list", "(array:options, [string:message], [string:caption], [integer:initial selection]):string" );
+	
+	wxArrayString list;
+	for( size_t i=0;i<cxt.arg(0).length();i++ )
+		list.Add( cxt.arg(0).index(i)->as_string() );
+
+	wxString msg("Make a selection:");
+	if (cxt.arg_count() > 1 ) msg = cxt.arg(1).as_string();
+
+	wxString capt("Query");
+	if (cxt.arg_count() > 2 ) capt = cxt.arg(2).as_string();
+
+	int isel = -1;
+	if ( cxt.arg_count() > 3 ) isel = cxt.arg(3).as_integer();
+
+	wxString result;
+	if ( isel >= 0  && isel < list.size() )
+		result = wxGetSingleChoice( msg, capt, list, isel, GetCurrentTopLevelWindow() );
+	else
+		result = wxGetSingleChoice( msg, capt, list, GetCurrentTopLevelWindow() );
+
+	cxt.result().assign( result );
+}
+
 static void _wx_yesno( lk::invoke_t &cxt )
 {
 	LK_DOC("yesno", "Shows a message box with yes and no buttons.  The function returns true when yes is clicked, false otherwise.", "(string:message):boolean");
@@ -99,6 +125,17 @@ static void _wx_choose_file( lk::invoke_t &cxt )
 		else
 			cxt.result().assign( fdlg.GetPath() );
 	}
+}
+
+static void _wx_choose_dir( lk::invoke_t &cxt )
+{
+	LK_DOC( "choose_dir", "Show a directory chooser dialog to select a folder.", "([string:initial folder], [string:caption]):string" );
+	wxString caption("Choose a folder");
+	wxString initial;
+	if ( cxt.arg_count() > 0 ) initial = cxt.arg(0).as_string();
+	if ( cxt.arg_count() > 1 ) caption = cxt.arg(1).as_string();
+
+	cxt.result().assign( wxDirSelector( caption, initial, wxDD_NEW_DIR_BUTTON|wxDD_DEFAULT_STYLE, wxDefaultPosition, GetCurrentTopLevelWindow() ) );
 }
 
 static void _wx_date_time( lk::invoke_t &cxt )
@@ -162,6 +199,8 @@ lk::fcall_t* lk::stdlib_wxui()
 		_wx_in,
 		_wx_yesno,
 		_wx_choose_file,
+		_wx_choose_dir,
+		_wx_choose_from_list,
 		_wx_date_time,
 		_wx_start_timer,
 		_wx_elapsed_time,
@@ -875,6 +914,33 @@ static void _lower( lk::invoke_t &cxt )
 	cxt.result().assign(ret);
 }
 
+static void _strcmp( lk::invoke_t &cxt )
+{
+	LK_DOC("strcmp", "Case sensitive string comparison.  Returns 0 if strings are identical, negative number if s1 comes before s2, and positive number if s2 comes before s1.", "(string:s1, string:s2):integer" );
+#ifdef LK_USE_WXWIDGETS
+	int result = cxt.arg(0).as_string().Cmp( cxt.arg(1).as_string() );
+#else
+	int result = strcmp( cxt.arg(0).as_string().c_str(), cxt.arg(1).as_string().c_str() );
+#endif
+	cxt.result().assign( (double)result );
+}
+
+static void _stricmp( lk::invoke_t &cxt )
+{
+	LK_DOC("stricmp", "Case insensitive string comparison.  Returns 0 if strings are identical, negative number if s1 comes before s2, and positive number if s2 comes before s1.", "(string:s1, string:s2):integer" );
+#ifdef LK_USE_WXWIDGETS
+	int result = cxt.arg(0).as_string().CmpNoCase( cxt.arg(1).as_string() );
+#else
+#ifdef _MSC_VER
+	int result = stricmp( cxt.arg(0).as_string().c_str(), cxt.arg(1).as_string().c_str() );
+#else
+	int result = strcasecmp( cxt.arg(0).as_string().c_str(), cxt.arg(1).as_string().c_str() );
+#endif
+#endif
+	cxt.result().assign( (double)result );
+}
+
+
 static void _replace( lk::invoke_t &cxt )
 {
 	LK_DOC("replace", "Replaces all instances of s1 with s2 in the supplied string.", "(string, string:s1, string:s2):string");
@@ -1365,6 +1431,8 @@ lk::fcall_t* lk::stdlib_string()
 		_sprintf,
 		_strlen,
 		_strpos,
+		_strcmp,
+		_stricmp,
 		_first_of,
 		_last_of,
 		_left,
