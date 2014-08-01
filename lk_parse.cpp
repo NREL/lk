@@ -716,9 +716,19 @@ lk::node_t *lk::parser::unary()
 		{
 			skip();
 			match( lk::lexer::SEP_LPAREN );
-			node_t *expr = ternary();
+			node_t *id = 0;
+			if ( token() == lk::lexer::IDENTIFIER )
+			{
+				id = new iden_t( line(), lex.text(), false, false, false );
+				skip();
+			}
+			else
+			{
+				error( "expected identifier in typeof(...) expression" );
+				return 0;
+			}
 			match( lk::lexer::SEP_RPAREN );
-			return new lk::expr_t( line(), expr_t::TYPEOF, expr, 0 );
+			return new lk::expr_t( line(), expr_t::TYPEOF, id, 0 );
 		}
 	default:
 		return postfix();

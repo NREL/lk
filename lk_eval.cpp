@@ -560,9 +560,18 @@ bool lk::eval::interpret( node_t *root,
 				}
 				break;
 			case expr_t::TYPEOF:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				result.assign(l.deref().typestr());
-				return ok;
+				if ( lk::iden_t *iden = dynamic_cast<lk::iden_t*>( n->left ) )
+				{
+					if( lk::vardata_t *vv = cur_env->lookup( iden->name, true) ) result.assign( vv->typestr() );
+					else result.assign( "unknown" );
+					return true;
+				}
+				else
+				{
+					m_errors.push_back( make_error(n, "argument to typeof(...) must be an identifier" ) );
+					return false;
+				}
+				break;
 			case expr_t::INITVEC:
 				{
 					result.empty_vector();
