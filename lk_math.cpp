@@ -2,6 +2,8 @@
 #include <math.h>
 #include "lk_math.h"
 
+namespace lk {
+
 double besj0(double x)
 {
 	double ax,z;
@@ -398,3 +400,5 @@ double erfc(double x)
 {
 	return x < 0.0 ? 1.0+gammp(0.5,x*x) : gammq(0.5,x*x);
 }
+
+} // namespace lk

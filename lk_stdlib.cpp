@@ -71,7 +71,7 @@ static void _wx_choose_from_list( lk::invoke_t &cxt )
 	if ( cxt.arg_count() > 3 ) isel = cxt.arg(3).as_integer();
 
 	wxString result;
-	if ( isel >= 0  && isel < list.size() )
+	if ( isel >= 0  && isel < (int)list.size() )
 		result = wxGetSingleChoice( msg, capt, list, isel, GetCurrentTopLevelWindow() );
 	else
 		result = wxGetSingleChoice( msg, capt, list, GetCurrentTopLevelWindow() );
@@ -250,7 +250,7 @@ static inline bool lk_isnan( double d )
 
 #ifdef _MSC_VER
 /* taken from wxMSW-2.9.1/include/wx/defs.h - appropriate for Win32/Win64 */
-#define va_copy(d, s) ((d)=(s))
+//#define va_copy(d, s) ((d)=(s))
 #define snprintf _snprintf
 #define strcasecmp _stricmp
 #define strdup _strdup
@@ -1289,55 +1289,55 @@ static void _mmod( lk::invoke_t &cxt )
 static void _mbesj0( lk::invoke_t &cxt )
 {
 	LK_DOC("besj0", "Computes the value of the Bessel function of the first kind, order 0, J0(x)", "(real:x):real");
-	cxt.result().assign( ::besj0( cxt.arg(0).as_number() ));
+	cxt.result().assign( lk::besj0( cxt.arg(0).as_number() ));
 }
 
 static void _mbesj1( lk::invoke_t &cxt )
 {
 	LK_DOC("besj1", "Computes the value of the Bessel function of the first kind, order 1, J1(x)", "(real:x):real");
-	cxt.result().assign( ::besj1( cxt.arg(0).as_number() ));
+	cxt.result().assign( lk::besj1( cxt.arg(0).as_number() ));
 }
 
 static void _mbesy0( lk::invoke_t &cxt )
 {
 	LK_DOC("besy0", "Computes the value of the Bessel function of the second kind, order 0, Y0(x)", "(real:x):real");
-	cxt.result().assign( ::besy0( cxt.arg(0).as_number() ));
+	cxt.result().assign( lk::besy0( cxt.arg(0).as_number() ));
 }
 
 static void _mbesy1( lk::invoke_t &cxt )
 {
 	LK_DOC("besy1", "Computes the value of the Bessel function of the second kind, order 1, Y1(x)", "(real:x):real");
-	cxt.result().assign( ::besy1( cxt.arg(0).as_number() ));
+	cxt.result().assign( lk::besy1( cxt.arg(0).as_number() ));
 }
 
 static void _mbesi0( lk::invoke_t &cxt )
 {
 	LK_DOC("besi0", "Computes the value of the modified Bessel function of the first kind, order 0, I0(x)", "(real:x):real");
-	cxt.result().assign( ::besi0( cxt.arg(0).as_number() ));
+	cxt.result().assign( lk::besi0( cxt.arg(0).as_number() ));
 }
 
 static void _mbesi1( lk::invoke_t &cxt )
 {
 	LK_DOC("besi1", "Computes the value of the modified Bessel function of the first kind, order 1, I1(x)", "(real:x):real");
-	cxt.result().assign( ::besi1( cxt.arg(0).as_number() ));
+	cxt.result().assign( lk::besi1( cxt.arg(0).as_number() ));
 }
 
 static void _mbesk0( lk::invoke_t &cxt )
 {
 	LK_DOC("besk0", "Computes the value of the modified Bessel function of the second kind, order 0, K0(x)", "(real:x):real");
-	cxt.result().assign( ::besk0( cxt.arg(0).as_number() ));
+	cxt.result().assign( lk::besk0( cxt.arg(0).as_number() ));
 }
 
 static void _mbesk1( lk::invoke_t &cxt )
 {
 	LK_DOC("besk1", "Computes the value of the modified Bessel function of the second kind, order 1, K1(x)", "(real:x):real");
-	cxt.result().assign( ::besk1( cxt.arg(0).as_number() ));
+	cxt.result().assign( lk::besk1( cxt.arg(0).as_number() ));
 }
 
 static void _gammaln( lk::invoke_t &cxt )
 {
 	LK_DOC("gammaln", "Computes the logarithm of the Gamma function.", "(real):real");
-	cxt.result().assign( ::gammln( cxt.arg(0).as_number() ) );
+	cxt.result().assign( lk::gammln( cxt.arg(0).as_number() ) );
 }
 
 void _pearson( lk::invoke_t &cxt )
@@ -1365,7 +1365,7 @@ void _pearson( lk::invoke_t &cxt )
 		y[i] = cxt.arg(1).index(i)->as_number();
 	}
 
-	cxt.result().assign( pearson( x, y, len ) );
+	cxt.result().assign( lk::pearson( x, y, len ) );
 
 	delete [] x;
 	delete [] y;
@@ -1375,14 +1375,14 @@ void _pearson( lk::invoke_t &cxt )
 void _erf( lk::invoke_t &cxt )
 {
 	LK_DOC("erf", "Calculates the value of the error function", "(real):real");
-	cxt.result().assign( erf( cxt.arg(0).as_number() ) );
+	cxt.result().assign( lk::erf( cxt.arg(0).as_number() ) );
 }
 
 
 void _erfc( lk::invoke_t &cxt )
 {
 	LK_DOC("erfc", "Calculates the value of the complementary error function", "(real):real");
-	cxt.result().assign( erf( cxt.arg(0).as_number() ) );
+	cxt.result().assign( lk::erfc( cxt.arg(0).as_number() ) );
 }
 
 
@@ -1552,7 +1552,7 @@ std::vector< lk_string > lk::dir_list( const lk_string &path, const lk_string &e
 
 #ifdef _MSC_VER
 /* taken from wxMSW-2.9.1/include/wx/defs.h - appropriate for Win32/Win64 */
-#define va_copy(d, s) ((d)=(s))
+//#define va_copy(d, s) ((d)=(s))
 #endif
 
 std::vector< lk_string > lk::split( const lk_string &str, const lk_string &delim, bool ret_empty, bool ret_delim )
@@ -1708,7 +1708,7 @@ bool lk::remove_file( const char *path )
 }
 
 #ifdef _WIN32
-#define make_dir(x) ::mkdir(x)
+#define make_dir(x) ::_mkdir(x)
 #else
 #define make_dir(x) ::mkdir(x, 0777)
 #endif
