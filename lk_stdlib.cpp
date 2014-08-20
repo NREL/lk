@@ -20,6 +20,7 @@
 #ifdef LK_USE_WXWIDGETS
 #include <wx/wx.h>
 #include <wx/toplevel.h>
+#include <wx/html/htmlwin.h>
 
 static wxWindow *GetCurrentTopLevelWindow()
 {
@@ -77,6 +78,37 @@ static void _wx_choose_from_list( lk::invoke_t &cxt )
 		result = wxGetSingleChoice( msg, capt, list, GetCurrentTopLevelWindow() );
 
 	cxt.result().assign( result );
+}
+
+static void _wx_html_dialog( lk::invoke_t &cxt )
+{
+	LK_DOC("html_dialog", "Show a dialog with an HTML viewer.", "(string:html source, [string:title], [array:window size [w,h] or geometry [x,y,w,h]]):none");
+	wxString title("HTML Viewer");
+	if( cxt.arg_count() > 1 )
+		title = cxt.arg(1).as_string();
+
+	wxPoint pos( wxDefaultPosition );
+	wxSize size( 600, 500 );
+	if( cxt.arg_count() > 2 && cxt.arg(2).deref().type() == lk::vardata_t::VECTOR )
+	{
+		if ( cxt.arg(2).length() == 2 )
+		{
+			size.x = (int)cxt.arg(2).index(0)->as_number();
+			size.y = (int)cxt.arg(2).index(1)->as_number();
+		}
+		else if ( cxt.arg(2).length() == 4 )
+		{
+			pos.x = (int)cxt.arg(2).index(0)->as_number();
+			pos.y = (int)cxt.arg(2).index(1)->as_number();
+			size.x = (int)cxt.arg(2).index(2)->as_number();
+			size.y = (int)cxt.arg(2).index(3)->as_number();
+		}
+	}
+
+	wxFrame *frm = new wxFrame( GetCurrentTopLevelWindow(), wxID_ANY, title, pos, size, wxCAPTION | wxCLOSE_BOX | wxCLIP_CHILDREN | wxRESIZE_BORDER | wxFRAME_TOOL_WINDOW );
+	wxHtmlWindow *html = new wxHtmlWindow( frm, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_DEFAULT_STYLE|wxBORDER_NONE );
+	html->SetPage( cxt.arg(0).as_string() );
+	frm->Show();
 }
 
 static void _wx_yesno( lk::invoke_t &cxt )
@@ -202,6 +234,7 @@ lk::fcall_t* lk::stdlib_wxui()
 		_wx_choose_dir,
 		_wx_choose_from_list,
 		_wx_date_time,
+		_wx_html_dialog,
 		_wx_start_timer,
 		_wx_elapsed_time,
 		_wx_millisleep,
