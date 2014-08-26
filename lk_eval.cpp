@@ -115,8 +115,8 @@ bool lk::eval::interpret( node_t *root,
 			switch(ctl_id)
 			{
 			case CTL_BREAK:
-			case CTL_RETURN:
 				ctl_id = CTL_NONE;
+			case CTL_RETURN:
 			case CTL_EXIT:
 				return true;
 
@@ -640,7 +640,7 @@ bool lk::eval::interpret( node_t *root,
 				return ok;
 			}
 			case expr_t::RETURN:
-				if ( n->left != 0 ) // handle empty return statements.
+				if ( n->left != 0 )
 				{
 					ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
 					result.copy( l.deref() );
