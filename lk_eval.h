@@ -41,6 +41,10 @@ namespace lk {
 			vardata_t &result,
 			unsigned int flags, /* normally 0 */
 			unsigned int &ctl_id);
+
+		bool do_op_eq( void (*oper)(lk::vardata_t &, lk::vardata_t &), 
+			lk::expr_t *n, lk::env_t *cur_env, unsigned int &flags, unsigned int &ctl_id,
+			lk::vardata_t &result, lk::vardata_t &l, lk::vardata_t &r );
 	};
 
 	

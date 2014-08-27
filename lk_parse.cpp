@@ -524,7 +524,32 @@ lk::node_t *lk::parser::assignment()
 		skip();		
 		n = new expr_t(line(), expr_t::ASSIGN, n, assignment() );
 	}
-	
+	else if ( token(lk::lexer::OP_PLUSEQ) )
+	{
+		skip();
+		n = new expr_t(line(), expr_t::PLUSEQ, n, ternary() );
+	}
+	else if ( token(lk::lexer::OP_MINUSEQ) )
+	{
+		skip();
+		n = new expr_t(line(), expr_t::MINUSEQ, n, ternary() );
+	}
+	else if ( token(lk::lexer::OP_MULTEQ) )
+	{
+		skip();
+		n = new expr_t(line(), expr_t::MULTEQ, n, ternary() );
+	}
+	else if ( token(lk::lexer::OP_DIVEQ) )
+	{
+		skip();
+		n = new expr_t(line(), expr_t::DIVEQ, n, ternary() );
+	}
+	else if ( token(lk::lexer::OP_MINUSAT) )
+	{
+		skip();
+		n = new expr_t(line(), expr_t::MINUSAT, n, ternary() );
+	}
+
 	return n;
 }
 
@@ -836,6 +861,11 @@ lk::node_t *lk::parser::postfix()
 		{
 			left = new expr_t( line(), expr_t::DECR, left, 0 );
 			skip();
+		}
+		else if ( token( lk::lexer::OP_QMARKAT ) )
+		{
+			skip();
+			left = new expr_t( line(), expr_t::WHEREAT, left, ternary() );
 		}
 		else
 			break;

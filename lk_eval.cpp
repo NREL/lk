@@ -62,6 +62,39 @@ bool lk::eval::special_get( const lk_string &name, vardata_t &val )
 	throw error_t( "no defined mechanism to get special variable '" + name + "'" );
 }
 
+static void do_plus_eq( lk::vardata_t &l, lk::vardata_t &r )
+{
+	if( l.deref().type() == lk::vardata_t::STRING )
+		l.deref().assign( l.deref().as_string() + r.deref().as_string() );
+	else if ( l.deref().type() == lk::vardata_t::VECTOR )
+	{
+		if ( r.deref().type() == lk::vardata_t::VECTOR )
+		{
+			for( size_t i=0;i<r.deref().length();i++ )
+				l.deref().vec()->push_back( *r.deref().index(i) );
+		}
+		else
+			// append to the vector
+			l.deref().vec()->push_back( r.deref() );
+	}
+	else
+		l.deref().assign( l.deref().num() + r.deref().as_number() );
+}
+
+static void do_minus_eq( lk::vardata_t &l, lk::vardata_t &r )
+{
+	l.deref().assign( l.deref().num() - r.deref().num() );
+}
+
+static void do_mult_eq( lk::vardata_t &l, lk::vardata_t &r )
+{
+	l.deref().assign( l.deref().num() * r.deref().num() );
+}
+
+static void do_div_eq( lk::vardata_t &l, lk::vardata_t &r )
+{
+	l.deref().assign( l.deref().num() / r.deref().num() );
+}
 
 bool lk::eval::interpret( node_t *root, 
 		env_t *cur_env, 
@@ -180,6 +213,46 @@ bool lk::eval::interpret( node_t *root,
 				else
 					result.assign( l.deref().num() / r.deref().num() );
 				return ok;
+				
+			case expr_t::PLUSEQ:
+				do_op_eq( do_plus_eq, n, cur_env, flags, ctl_id, result, l, r );
+				return ok;
+			case expr_t::MINUSEQ:
+				do_op_eq( do_minus_eq, n, cur_env, flags, ctl_id, result, l, r );
+				return ok;
+			case expr_t::MULTEQ:
+				do_op_eq( do_mult_eq, n, cur_env, flags, ctl_id, result, l, r );
+				return ok;
+			case expr_t::DIVEQ:
+				do_op_eq( do_div_eq, n, cur_env, flags, ctl_id, result, l, r );
+				return ok;
+
+			case expr_t::MINUSAT:
+				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+
+				if ( l.deref().type() == vardata_t::HASH )
+				{
+					lk::varhash_t *hh = l.deref().hash();
+					lk::varhash_t::iterator it = hh->find( r.deref().as_string() );
+					if ( it != hh->end() )
+						hh->erase( it );
+				}
+				else if( l.deref().type() == vardata_t::VECTOR )
+				{
+					std::vector<lk::vardata_t> *vv = l.deref().vec();
+					size_t idx = r.deref().as_unsigned();
+					if ( idx < vv->size() )
+						vv->erase( vv->begin() + idx );
+				}
+				else
+				{
+					m_errors.push_back( make_error( n, "-@ operator requires a hash or vector left hand side" ) );
+					return false;
+				}
+
+				return true;
+
 			case expr_t::INCR:
 				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
 				newval = l.deref().num() + 1;
@@ -272,6 +345,40 @@ bool lk::eval::interpret( node_t *root,
 			case expr_t::NEG:
 				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
 				result.assign( 0 - l.deref().num() );
+				return ok;
+			case expr_t::WHEREAT:
+				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				if ( l.deref().type() == vardata_t::HASH )
+				{
+					lk::varhash_t *hh = l.deref().hash();
+					result.assign( hh->find( r.deref().as_string() ) != hh->end() ? 1.0 : 0.0 );
+				}
+				else if ( l.deref().type() == vardata_t::VECTOR )
+				{
+					std::vector<lk::vardata_t> *vv = l.deref().vec();
+					for( size_t i=0;i<vv->size();i++ )
+					{
+						if ( (*vv)[i].equals( r.deref() ) )
+						{
+							result.assign( (double)i );
+							return ok;
+						}
+					}
+
+					result.assign( -1.0 );
+					return ok;
+				}
+				else if ( l.deref().type() == vardata_t::STRING )
+				{
+					lk_string::size_type pos = l.deref().str().find( r.deref().as_string() );
+					result.assign( pos!=lk_string::npos ? (int)pos : -1.0 );
+				}
+				else 
+				{
+					m_errors.push_back( make_error(n, "left hand side to find operator ?@ must be a hash, vector, or string") );
+					return false;
+				}
 				return ok;
 			case expr_t::INDEX:
 				{
@@ -726,4 +833,32 @@ bool lk::eval::interpret( node_t *root,
 	}
 
 	return false;
+}
+
+
+bool lk::eval::do_op_eq( void (*oper)(lk::vardata_t &, lk::vardata_t &), 
+	lk::expr_t *n, lk::env_t *cur_env, unsigned int &flags, unsigned int &ctl_id,
+	lk::vardata_t &result, lk::vardata_t &l, lk::vardata_t &r )
+{
+	// evaluate expression before lhs value
+	bool ok = interpret(n->right, cur_env, r, flags, ctl_id);
+
+	// if on the LHS of the assignment we have a special variable i.e. ${xy}, use a 
+	// hack to assign the value to the storage location
+	if ( lk::iden_t *iden = dynamic_cast<lk::iden_t*>(n->left) )
+	{
+		if ( iden->special )
+		{
+			lk::vardata_t value;
+			special_get( iden->name, value );
+			do_plus_eq( value, r.deref() );
+			return ok && special_set( iden->name, value ); // don't bother to copy rhs to result either.
+		}
+	}
+
+	// otherwise evaluate the LHS in a mutable context, as normal.
+	ok = ok && interpret(n->left, cur_env, l, flags|ENV_MUTABLE, ctl_id);
+	do_plus_eq( l.deref(), r.deref() );
+	result.copy( l.deref() );
+	return ok;
 }

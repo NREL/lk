@@ -85,6 +85,7 @@ namespace lk {
 			OP_EXP,
 			OP_DOT,
 			OP_QMARK,
+			OP_QMARKAT,
 			OP_POUND,
 			OP_TILDE,
 			OP_PERCENT,
@@ -103,7 +104,12 @@ namespace lk {
 			OP_EQ,
 			OP_NE,
 			OP_LE,
-			OP_GE
+			OP_GE,
+			OP_PLUSEQ,
+			OP_MINUSEQ,
+			OP_MULTEQ,
+			OP_DIVEQ,
+			OP_MINUSAT
 
 		};
 

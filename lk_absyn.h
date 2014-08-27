@@ -136,7 +136,13 @@ namespace lk
 			TYPEOF,
 			INITVEC,
 			INITHASH,
-			SWITCH
+			SWITCH,
+			PLUSEQ,
+			MINUSEQ,
+			MULTEQ,
+			DIVEQ,
+			MINUSAT,
+			WHEREAT
 		};
 		int oper;
 		node_t *left, *right;

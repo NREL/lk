@@ -203,13 +203,14 @@ int lk::lexer::next()
 	case '[': p++; return SEP_LBRACK;
 	case ']': p++; return SEP_RBRACK;
 
-	case '+': p++;	if( (int) *p == '+' ) { p++; return OP_PP; } else return OP_PLUS;
-	case '-': p++;	if( (int) *p == '-' ) { p++; return OP_MM; } else if ( (int) *p == '>' ) { p++; return OP_REF; } else return OP_MINUS;
-	case '*': p++;  if( (int) *p == '*' ) { p++; return OP_EXP; } else return OP_MULT;
-	case '/': p++; return OP_DIV;
+	case '+': p++;	if ( (int) *p == '=' ) { p++; return OP_PLUSEQ;  } else if( (int) *p == '+' ) { p++; return OP_PP; } else return OP_PLUS;
+	case '-': p++;	if ( (int) *p == '=' ) { p++; return OP_MINUSEQ; } else if( (int) *p == '@' ) { p++; return OP_MINUSAT; } else if( (int) *p == '-' ) { p++; return OP_MM; } else if ( (int) *p == '>' ) { p++; return OP_REF; } else return OP_MINUS;
+	case '*': p++;  if ( (int) *p == '=' ) { p++; return OP_MULTEQ;  } else if( (int) *p == '*' ) { p++; return OP_EXP; } else return OP_MULT;
+	case '/': p++;  if ( (int) *p == '=' ) { p++; return OP_DIVEQ;   } else return OP_DIV;
+
 	case '^': p++; return OP_EXP;
 	case '.': p++; return OP_DOT;
-	case '?': p++; return OP_QMARK;
+	case '?': p++;  if ( (int) *p == '@' ) { p++; return OP_QMARKAT; } return OP_QMARK;
 	case '#': p++; return OP_POUND;
 	case '~': p++; return OP_TILDE;
 	case '@': p++; return OP_AT;
@@ -471,6 +472,10 @@ const char *lk::lexer::tokstr(int t)
 	case OP_NE: return "!=";
 	case OP_LE: return "<=";
 	case OP_GE: return ">=";
+	case OP_PLUSEQ: return "+=";
+	case OP_MINUSEQ: return "-=";
+	case OP_MULTEQ: return "*=";
+	case OP_DIVEQ: return "/=";
 	default:
 		return "<invalid>";
 	}
