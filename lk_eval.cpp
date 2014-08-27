@@ -851,14 +851,14 @@ bool lk::eval::do_op_eq( void (*oper)(lk::vardata_t &, lk::vardata_t &),
 		{
 			lk::vardata_t value;
 			special_get( iden->name, value );
-			do_plus_eq( value, r.deref() );
+			(*oper)( value, r.deref() );
 			return ok && special_set( iden->name, value ); // don't bother to copy rhs to result either.
 		}
 	}
 
 	// otherwise evaluate the LHS in a mutable context, as normal.
 	ok = ok && interpret(n->left, cur_env, l, flags|ENV_MUTABLE, ctl_id);
-	do_plus_eq( l.deref(), r.deref() );
+	(*oper)( l.deref(), r.deref() );
 	result.copy( l.deref() );
 	return ok;
 }

@@ -167,14 +167,14 @@ cash_amount = total_cost * ( 1 - debt_fraction/100.0 );
 
 \subsection{Simple Input and Output}
 
-You can use the built-in \texttt{out} and \texttt{outln} functions to write textual data to the console window. The difference is that \texttt{outln} automatically appends a newline character to the output. To output multiple text strings or variables, use the \texttt{+} operator, or separate them with a comma.
+You can use the built-in \texttt{out} and \texttt{outln} functions to write textual data to the console window. The difference is that \texttt{outln} automatically appends a newline character to the output. To output multiple text strings or variables, use the \texttt{+} operator, or separate them with a comma.  Note that text strings may be enclosed by either single or double quotes - both have the exact same meaning.
 
 \begin{verbatim}
 array_power = 4.3k;
 array_eff = 0.11;
-outln("Array power is " + array_power + " Watts.");
+outln("Array power is " + array_power + ' Watts.');
 outln("It is " + (array_eff*100) + " percent efficient.");
-outln("It is ", array_eff*100, " percent efficient."); // same as above
+outln('It is ', array_eff*100, ' percent efficient.'); // same as above
 \end{verbatim}
 
 The console output generated is:
@@ -194,7 +194,7 @@ The \texttt{notice} function works like \texttt{out}, except that it displays a 
 
 \subsection{Data Types and Conversion}
 
-LK supports two basic types of data: numbers and text.  Numbers can be integers or real numbers.  Text strings are stored as a sequence of individual characters, and there is no specific limit on the length of a string.  LK does not try to automatically convert between data types, and will issue an error if you try to multiply a number by a string, even if the string contains the textual representation of a valid number.   To convert between data types, LK has several functions in the standard library for this purpose.
+LK supports two basic types of data: numbers and text.  Numbers can be integers or real numbers.  Text strings are stored as a sequence of individual characters, and there is no specific limit on the length of a string.  LK does not try to automatically convert between data types in most cases, and will issue an error if you try to multiply a number by a string, even if the string contains the textual representation of a valid number.   To convert between data types, LK has several functions in the standard library for this purpose.
 
 Boolean (true/false) data is also stored as a number - there is no separate boolean data type.  All non-zero numbers are interpreted as true, while zero is false.  This convention follows the C programming language.
 
@@ -241,6 +241,21 @@ outln( typeof(a) ); // will display "number"
 outln( typeof(c2) ); // will display "string"
 \end{verbatim}
 
+To change the value of an existing variable by a certain amount, you can use the combined arithmetic and assignment operators \texttt{+=}, \texttt{-=}, \texttt{*=}, \texttt{/=}.  The \texttt{+=} is unique in that it can add a numeric value, concatenate strings, and append values to an array (discussed later).  The other ones only work on numbers.  Examples:
+
+\begin{verbatim}
+a  = 1;
+a += 2;    // same as writing a=a+2
+a *= 2.5;  // same as writing a=a*2.5
+a -= 1;    // same as writing a=a-1
+a /= 3;    // after this line, a = 2.16667
+
+s = 'abc';
+s += 'def';
+s += 'ghi';
+outln(s); // prints abcdefghi
+\end{verbatim}
+
 \subsection{Special Characters}
 
 Text data can contain special characters to denote tabs, line endings, and other useful elements that are not part of the normal alphabet.  These are inserted into quoted text strings with \emph{escape sequences}, which begin with the \texttt{\bslash} character.
@@ -282,7 +297,6 @@ pi = 3.11;       // will cause an error
 value = 43;
 const value = 51;     // will cause an error (value already exists)
 
-
 const names = [ "Linus", "David", "Aron" ];
 names[2] = "Ari";    // allowed because it changes the contents of array 'names'
                      // but not the data type or size of 'names'
@@ -290,10 +304,10 @@ names[2] = "Ari";    // allowed because it changes the contents of array 'names'
 names[3] = "Nora";   // not allowed because it changes the size of the 'names' array
 names = "Patrick";    // will cause an error
 
-
 const sqr = define(x) { return x*x; };  // function sqr can't being changed
 
 \end{verbatim}
+
 
 Sometimes it is desirable to specify many constants, perhaps to define various states in a program.  For this purpose, an \texttt{enum}, or \emph{enumerate} statement exists. The state of a motor could be indicated with the constants below, instead of with numbers, which makes a program much more readable.
 \begin{verbatim}
@@ -474,6 +488,22 @@ if ( value > average ) outln("Above average");
   else outln("Not above average");
 \end{verbatim}
 
+\subsubsection{Inline Switch Statement}
+
+Sometimes you need to select between multiple values based on a number.  A quick way to do this in LK is to use an inline switch statement.  A value out of a list of expressions is returned based on the numeric value of the test expression.  Examples:
+
+\begin{verbatim}
+choice = 2;
+value = ? choice [ 'aron', 'peter', 'rodger' ]; // returns rodger
+
+a = 2.4;
+b = 5.6;
+operator = 1;
+value = ? operator [ a+b, a-b, a*b, a/b ]; // returns -3.2
+\end{verbatim}
+
+Note that the inline switch statement is simply shorthand for writing a full \texttt{if-then-else} statement.  Using the inline switch can make your code more compact when used appropriately.
+
 \subsection{Looping}
 
 A loop is a way of repeating the same commands over and over.  You may need to process each line of a file in the same way, or sort a list of names.  To achieve such tasks, LK provides two types of loop constructs, the \texttt{while} and \texttt{for} loops.  
@@ -640,6 +670,30 @@ for (i=0; i < #numbers; i++)
 
 The important feature of this code is that it will work regardless of how many elements are in the array \texttt{numbers}.
 
+To append a value to the end of an array, you can simply index a location past the end of the array.  However, sometimes you don't have the index of the last element handy.  In this case, you can just use the \texttt{+=} operator to append an item.  Example:
+
+\begin{verbatim}
+alphabet = [ 'a' ];
+alphabet += 'b';
+alphabet += 'c';
+for( i=0;i<3;i++ )
+    alphabet += 'd'; // append three d's
+    
+outln( alphabet ); // prints a,b,c,d,d,d
+\end{verbatim}
+
+To search for an item in an array, you can use the ``where at'' operator \texttt{?@}.  This returns the index of the item if it is found.  If the item doesn't exist in the array, a value of -1 is returned.
+
+To remove an item from an array, use the \texttt{-@} operator along with the index of the item you want to remove.  Examples:
+
+\begin{verbatim}
+names = [ 'aron', 'patrick', 'rodger', 'peter', 'hillary' ];
+pos1 = names ?@ 'peter'; // returns 3
+
+names -@ 1; // remove the item at index 1
+pos2 = names ?@ 'patrick'; // return -1
+\end{verbatim}
+
 \subsection{Multidimensional Arrays}
 
 As previously noted, LK is not strict with the types of elements stored in an array.  Therefore, a single array element can even be another array.  This allows you to define matrices with both row and column indexes, and also three (or greater) dimensional arrays.
@@ -731,11 +785,13 @@ outln( wordlen ); // prints { dog=3 frog=2 cat=5 antelope=4 }
 
 Note the order of the printout of the key-value pairs in the example above.  Unlike an array whose elements are stored sequentially in memory, tables store data in an unordered set.  As a result, once a key=value pair is added to a table, there is no specification of order of the pair relative to the other key=value pairs already in the table.
 
-\subsection{Table Processing}
+\subsection{Processing Tables}
 
 It is often necessary to know how many key=value pairs are in a table, and to know what all the keys are.  In many situations, you may have to perform an operation on every key=value pair in a table, but you do not know in advance what the keys are or how many there are.  LK provides two operators \# and @ for this purpose.
 
-To remove a key=value pair from a table, simply assign the special \texttt{null} value to a key.
+To determine if a specific key has a value in a table, you can use the ``where at'' operator \texttt{?@}.  This returns a true or false value depending on whether the table has that key in it.
+
+To remove a key=value pair from a table, use the \texttt{-@} operator.  Examples:
 
 \begin{verbatim}
 
@@ -745,12 +801,15 @@ outln("number of key,value pairs =" + #wordlen);
 keys = @wordlen;
 outln(keys);
 
-wordlen{"frog"} = null; // erase the frog entry
+wordlen -@ "frog"; // remove the frog entry
 
 keys = @wordlen;
 outln(keys);
 for (i=0;i<#keys;i++)
    outln("key '" + keys[i] + "'=" + wordlen{keys[i]});
+   
+has_frog = wordlen ?@ "frog"; // false
+has_dog = wordlen ?@ "dog"; // true
 
 \end{verbatim}
 

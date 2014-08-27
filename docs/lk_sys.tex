@@ -1,0 +1,158 @@
+\subsection{Standard System Functions}
+\texttt{{\large\textbf{to\_int}}}\textsf{(any):integer}\\
+ Converts the argument to an integer value.
+
+\hrulefill
+
+\texttt{{\large\textbf{to\_real}}}\textsf{(any):real}\\
+ Converts the argument to a real number (double precision).
+
+\hrulefill
+
+\texttt{{\large\textbf{to\_bool}}}\textsf{(any):boolean}\\
+ Converts the argument to a boolean value (1=true, 0=false).
+
+\hrulefill
+
+\texttt{{\large\textbf{to\_string}}}\textsf{([any]):string}\\
+ Converts the argument[s] to a text string.
+
+\hrulefill
+
+\texttt{{\large\textbf{alloc}}}\textsf{(integer, \{integer\}):array}\\
+ Allocates an array of one or two dimensions.
+
+\hrulefill
+
+\texttt{{\large\textbf{dir\_list}}}\textsf{(string:path, string:extensions, [boolean:list dirs also]):array}\\
+ List all the files in a directory. The extensions parameter is a comma separated list of extensions, or * to retrieve every item.
+
+\hrulefill
+
+\texttt{{\large\textbf{file\_exists}}}\textsf{(string):boolean}\\
+ Determines whether a file exists or not.
+
+\hrulefill
+
+\texttt{{\large\textbf{dir\_exists}}}\textsf{(string):boolean}\\
+ Determines whether the specified directory exists.
+
+\hrulefill
+
+\texttt{{\large\textbf{rename\_file}}}\textsf{(string:old name, string:new name):boolean}\\
+ Renames an existing file.
+
+\hrulefill
+
+\texttt{{\large\textbf{remove\_file}}}\textsf{(string):boolean}\\
+ Deletes the specified file from the filesystem.
+
+\hrulefill
+
+\texttt{{\large\textbf{mkdir}}}\textsf{(string:path, \{boolean:make\_full=true\}):boolean}\\
+ Creates the specified directory, optionally creating directories as need for the full path.
+
+\hrulefill
+
+\texttt{{\large\textbf{path\_only}}}\textsf{(string):string}\\
+ Returns the path portion of a complete file path.
+
+\hrulefill
+
+\texttt{{\large\textbf{file\_only}}}\textsf{(string):string}\\
+ Returns the file name portion of a complete file path, including extension.
+
+\hrulefill
+
+\texttt{{\large\textbf{ext\_only}}}\textsf{(string):string}\\
+ Returns the extension of a file name.
+
+\hrulefill
+
+\texttt{{\large\textbf{cwd}}}\textsf{(void):string}\\
+ Returns the current working directory.
+
+\texttt{{\large\textbf{cwd}}}\textsf{(string):boolean}\\
+ Sets the current working directory.
+
+\emph{Notes:} Two modes of operation: set or retrieve the current working directory.
+
+\hrulefill
+
+\texttt{{\large\textbf{system}}}\textsf{(string):integer}\\
+ Executes the system command specified, and returns the exit code.
+
+\hrulefill
+
+\texttt{{\large\textbf{write\_text\_file}}}\textsf{(string:file, string:data):boolean}\\
+ Writes data to a text file.
+
+\hrulefill
+
+\texttt{{\large\textbf{read\_text\_file}}}\textsf{(string:file):string}\\
+ Reads the entire contents of the specified text file and returns the result.
+
+\hrulefill
+
+\texttt{{\large\textbf{open}}}\textsf{(string:file, string:rwa):integer}\\
+ Opens a file for 'r'eading, 'w'riting, or 'a'ppending.
+
+\hrulefill
+
+\texttt{{\large\textbf{close}}}\textsf{(integer:filenum):void}\\
+ Closes an open file.
+
+\hrulefill
+
+\texttt{{\large\textbf{seek}}}\textsf{(integer:filenum, integer:offset, integer:origin):integer}\\
+ Seeks to a position in an open file.
+
+\hrulefill
+
+\texttt{{\large\textbf{tell}}}\textsf{(integer:filenum):integer}\\
+ Returns the current value of the file position indicator.
+
+\hrulefill
+
+\texttt{{\large\textbf{eof}}}\textsf{(integer:filenum):boolean}\\
+ Determines whether the end of a file has been reached.
+
+\hrulefill
+
+\texttt{{\large\textbf{flush}}}\textsf{(integer:filenum):void}\\
+ Flushes the file output stream to disk.
+
+\hrulefill
+
+\texttt{{\large\textbf{read\_line}}}\textsf{(integer:filenum, @string:buffer):boolean}\\
+ Reads one line of text from a file, returning whether there are more lines to read.
+
+\hrulefill
+
+\texttt{{\large\textbf{write\_line}}}\textsf{(integer:filenum, string:dataline):boolean}\\
+ Writes one line of text to a file.
+
+\hrulefill
+
+\texttt{{\large\textbf{read}}}\textsf{(integer:filenum, @string:buffer, integer:bytes):boolean}\\
+ Reads data from a file, returning false if there is no more data to read.
+
+\hrulefill
+
+\texttt{{\large\textbf{write}}}\textsf{(integer:filenum, string:buffer, integer:bytes):boolean}\\
+ Writes data to a file.
+
+\hrulefill
+
+\texttt{{\large\textbf{load\_extension}}}\textsf{(string:path):boolean}\\
+ Loads an LK extension library.
+
+\hrulefill
+
+\texttt{{\large\textbf{extensions}}}\textsf{(none):table}\\
+ Returns information about currently loaded extensions
+
+\hrulefill
+
+\texttt{{\large\textbf{ostype}}}\textsf{(none):string}\\
+ Returns identifying information about the operating system type. ('osx', 'win32', 'linux', etc).
