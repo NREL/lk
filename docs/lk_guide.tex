@@ -1281,7 +1281,7 @@ outln("cwd=" + cwd() );
 
 \section{Writing Extensions}
 
-LK provides an application programming interface (API) for writing libraries of functions that can be loaded at runtime into the scripting engine.  Dynamically loaded libraries can be used to provide very high performance computations, ability to create linkages to other software packages, and to integrate existing codes written in other languages.  The C language extension API is fully defined in the header file \texttt{lk\_invoke.h}, and does require the extension to be linked to any other LK library or otherwise.  As a result, programming, compiling, and linking a standalone LK extension is very straightforward.  
+LK provides an application programming interface (API) for writing libraries of functions that can be loaded at runtime into the scripting engine.  Dynamically loaded libraries can be used to provide very high performance computations, ability to create linkages to other software packages, and to integrate existing codes written in other languages.  The C language extension API is fully defined in the header file \texttt{lk\_invoke.h}, and does not require the extension to be linked to any other LK library or otherwise.  As a result, programming, compiling, and linking a standalone LK extension is very straightforward.  
 
 \emph{Note:} Currently, the LK extension API does not support passing Unicode text back and forth between an extension and the core LK engine, even if the core engine is compiled utilizing a Unicode string class.
 
@@ -1406,7 +1406,7 @@ For additional variable manipulation macros, refer to the \texttt{lk\_invoke.h} 
 
 \subsection{Compiling and Loading}
 
-Using the MinGW compiler toolchain on Windows, it is very straightforward to create an LK extension library.  Simply issue the command below at the Windows command prompt (\texttt{cmd.exe} from Start/Run)
+Using the MinGW compiler toolchain on Windows, it is very straightforward to create an LK extension library.  Simply issue the command below at the Windows command prompt (\texttt{cmd.exe} from Start/Run).  These instructions assume that you are using a 32-bit version of \texttt{gcc} and the LK engine that you are loading the module from is also 32-bit.
 
 \begin{verbatim}
 c:\> gcc -shared -o testextension.dll testextension.c
@@ -1423,7 +1423,7 @@ if (!ok) {
 c = speed_of_light();
 \end{verbatim}
 
-The dynamic extension library will be unloaded when the script finishes executing.
+The dynamic extension library will be unloaded when the script finishes.
 
 
 
