@@ -27,47 +27,48 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{E3DE13A6-8FAD-4ED4-AB73-A330BFC5C74C}</ProjectGuid>
-    <RootNamespace>lkwx3lib</RootNamespace>
+    <ProjectGuid>{283B049A-0650-4981-87CA-A37B146442F9}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>sandbox</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x32|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x32|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -92,154 +93,121 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <TargetName>lkvc13wx3d</TargetName>
-    <OutDir>$(SolutionDir)\..\</OutDir>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x32|Win32'">
-    <TargetName>lkvc13wx3d</TargetName>
-    <OutDir>$(SolutionDir)\..\</OutDir>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>lkvc13wx3x64d</TargetName>
-    <OutDir>$(SolutionDir)\..\</OutDir>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='x32|x64'">
-    <TargetName>lkvc13wx3x64d</TargetName>
-    <OutDir>$(SolutionDir)\..\</OutDir>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)\..\</OutDir>
-    <TargetName>lkvc13wx3</TargetName>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>lkvc13wx3x64</TargetName>
-    <OutDir>$(SolutionDir)\..\</OutDir>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>LK_USE_WXWIDGETS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(WXMSW3)\include;$(WXMSW3)\lib\vc_lib\mswud</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <MinimalRebuild>false</MinimalRebuild>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(LKDIR);$(WXMSW3)\lib\vc_lib\mswud;$(WXMSW3)\include;$(ProjectDir)\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(LKDIR);$(ProjectDir)\..;$(WXMSW3)\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>wxbase30ud_xml.lib;wxbase30ud_net.lib;wxmsw30ud_webview.lib;wxmsw30ud_adv.lib;wxmsw30ud_html.lib;wxmsw30ud_aui.lib;wxmsw30ud_stc.lib;wxmsw30ud_core.lib;wxbase30ud.lib;wxscintillad.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;winspool.lib;winmm.lib;shell32.lib;comctl32.lib;ole32.lib;oleaut32.lib;uuid.lib;rpcrt4.lib;advapi32.lib;wsock32.lib;wininet.lib;lkvc13wx3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <Lib>
-      <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x32|Win32'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>LK_USE_WXWIDGETS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(WXMSW3)\include;$(WXMSW3)\lib\vc_lib\mswud</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <MinimalRebuild>false</MinimalRebuild>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(LKDIR);$(WXMSW3)\lib\vc_x64_lib\mswud;$(WXMSW3)\include;$(ProjectDir)\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Lib>
-      <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>LK_USE_WXWIDGETS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(WXMSW3)\include;$(WXMSW3)\lib\vc_x64_lib\mswud</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <MinimalRebuild>false</MinimalRebuild>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(LKDIR);$(WXMSW3)\lib\vc_x64_lib\mswud;$(WXMSW3)\include;$(ProjectDir)\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(LKDIR);$(ProjectDir)\..;$(WXMSW3)\lib\vc_x64_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>wxbase30ud_xml.lib;wxbase30ud_net.lib;wxmsw30ud_webview.lib;wxmsw30ud_adv.lib;wxmsw30ud_html.lib;wxmsw30ud_aui.lib;wxmsw30ud_stc.lib;wxmsw30ud_core.lib;wxbase30ud.lib;wxscintillad.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;winspool.lib;winmm.lib;shell32.lib;comctl32.lib;ole32.lib;oleaut32.lib;uuid.lib;rpcrt4.lib;advapi32.lib;wsock32.lib;wininet.lib;lkvc13wx3x64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <Lib>
-      <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x32|x64'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>LK_USE_WXWIDGETS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(WXMSW3)\include;$(WXMSW3)\lib\vc_x64_lib\mswud</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <MinimalRebuild>false</MinimalRebuild>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(LKDIR);$(WXMSW3)\lib\vc_x64_lib\mswud;$(WXMSW3)\include;$(ProjectDir)\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(LKDIR);$(ProjectDir)\..;$(WXMSW3)\lib\vc_x64_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>wxbase30ud_xml.lib;wxbase30ud_net.lib;wxmsw30ud_webview.lib;wxmsw30ud_adv.lib;wxmsw30ud_html.lib;wxmsw30ud_aui.lib;wxmsw30ud_stc.lib;wxmsw30ud_core.lib;wxbase30ud.lib;wxscintillad.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;winspool.lib;winmm.lib;shell32.lib;comctl32.lib;ole32.lib;oleaut32.lib;uuid.lib;rpcrt4.lib;advapi32.lib;wsock32.lib;wininet.lib;lkvc13wx3x64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <Lib>
-      <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(WXMSW3)\include;$(WXMSW3)\lib\vc_lib\mswu</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>LK_USE_WXWIDGETS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <Lib>
-      <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(WXMSW3)\include;$(WXMSW3)\lib\vc_x64_lib\mswu</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>LK_USE_WXWIDGETS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <Lib>
-      <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\lk_absyn.cpp" />
-    <ClCompile Include="..\lk_env.cpp" />
-    <ClCompile Include="..\lk_eval.cpp" />
-    <ClCompile Include="..\lk_invoke.cpp" />
-    <ClCompile Include="..\lk_lex.cpp" />
-    <ClCompile Include="..\lk_math.cpp" />
-    <ClCompile Include="..\lk_parse.cpp" />
-    <ClCompile Include="..\lk_stdlib.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\lk_absyn.h" />
-    <ClInclude Include="..\lk_env.h" />
-    <ClInclude Include="..\lk_eval.h" />
-    <ClInclude Include="..\lk_invoke.h" />
-    <ClInclude Include="..\lk_lex.h" />
-    <ClInclude Include="..\lk_math.h" />
-    <ClInclude Include="..\lk_parse.h" />
-    <ClInclude Include="..\lk_stdlib.h" />
+    <ClCompile Include="sandbox.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
