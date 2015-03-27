@@ -339,15 +339,13 @@ const local ERROR2 = ERROR1 + 1;
 
 The meaning of the \texttt{local} specifier will be explained in later sections.
 
-
-
 \section{Flow Control}
 
 \subsection{Comparison Operators}
 
 LK supports many ways of comparing data.  These types of tests can control the program flow with branching and looping constructs that we will discuss later.
 
-There are six standard comparison operators that can be used on most types of data.  For text strings, "less than" and "greater than" are with respect to alphabetical order.
+There are six standard comparison operators that can be used on most types of data.  For text strings, ``less than'' and ``greater than'' are with respect to alphabetical order.
 
 \begin{table}[ht]
 \begin{center}
@@ -1113,6 +1111,26 @@ outln( "D2R: " + deg2rad( 90 ) );
 \end{verbatim}
 
 Common programming advice is to minimize the number of global variables used in a program.  Sometimes the are certainly necessary, but too many can lead to mistakes that are harder to debug and correct, and can reduce the readability and maintainability of your script.
+
+
+
+\subsection{Organizing Programs}
+
+When you write a long program, it can become difficult to organize it in a single file.  LK lets you split a large program into manageable chunks so that you may call functions contained in other scripts.  Another script can be imported using the \texttt{import} command.
+
+\begin{verbatim}
+<--- file: c:\scripts\functions.lk --->
+
+const boltzmann = define() { return 1.3806488e-23; };
+
+<--- file: c:\scripts\main.lk --->
+
+import "c:/scripts/functions.lk";
+outln( boltzmann() + ' J/K' );
+
+\end{verbatim}
+
+In this example, the main program imports another script file that contains one or more functions that can be called directly.
 
 \subsection{Objects and Methods}
 
