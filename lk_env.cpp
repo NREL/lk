@@ -144,13 +144,36 @@ lk_string lk::vardata_t::as_string() const
 	}
 }
 
+static double my_atof( const char *str )
+{
+#define MAXBUF 128
+
+	char buf[MAXBUF];
+	const char *s = str;
+	char *p = buf;
+	int i = 0;	
+	while( *s && i++ < MAXBUF-1 )
+	{
+		if ( *s != ',' )
+			*p++ = *s;
+
+		s++;
+	}
+	
+	*p = 0;
+
+	return ::atof( buf );
+
+#undef MAXBUF
+}
+
 double lk::vardata_t::as_number() const
 {
 	switch( type() )
 	{
 	case NULLVAL: return 0;
 	case NUMBER: return m_u.v;
-	case STRING: return atof( (const char*) str().c_str() );
+	case STRING: return my_atof( (const char*) str().c_str() );
 	case REFERENCE: return deref().as_number();
 	default:
 		return std::numeric_limits<double>::quiet_NaN();
