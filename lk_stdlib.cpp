@@ -1162,7 +1162,11 @@ static void _mceil( lk::invoke_t &cxt )
 	LK_DOC("ceil", "Round to the smallest integral value not less than x.", "(real:x):real");
 	cxt.result().assign( ::ceil( cxt.arg(0).as_number() ));
 }
-
+static void _mround(lk::invoke_t &cxt)
+{
+	LK_DOC("round", "Round to the nearest integral value.", "(real:x):real");
+	cxt.result().assign(::round(cxt.arg(0).as_number()));
+}
 static void _mfloor( lk::invoke_t &cxt )
 {
 	LK_DOC("floor", "Round to the largest integral value not greater than x.", "(real:x):real");
@@ -1495,6 +1499,7 @@ lk::fcall_t* lk::stdlib_math()
 {
 	static const lk::fcall_t vec[] = {
 		_mceil,
+		_mround,
 		_mfloor,
 		_msqrt,
 		_mpow,
