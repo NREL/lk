@@ -144,15 +144,13 @@ lk_string lk::vardata_t::as_string() const
 	}
 }
 
-static double my_atof( const char *str )
+static double my_atof( const char *s )
 {
 #define MAXBUF 128
 
 	char buf[MAXBUF];
-	const char *s = str;
 	char *p = buf;
-	int i = 0;	
-	while( *s && i++ < MAXBUF-1 )
+	while( *s && (p-buf) < MAXBUF-1 )
 	{
 		if ( *s != ',' )
 			*p++ = *s;
