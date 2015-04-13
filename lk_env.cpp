@@ -697,6 +697,11 @@ bool lk::env_t::next( lk_string &key, vardata_t *&value )
 	return false;
 }
 
+void lk::env_t::set_parent( env_t *p )
+{
+	m_parent = p;
+}
+
 lk::env_t *lk::env_t::parent()
 {
 	return m_parent;

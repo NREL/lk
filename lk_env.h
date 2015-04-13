@@ -280,6 +280,7 @@ namespace lk {
 		bool first( lk_string &key, vardata_t *&value );
 		bool next( lk_string &key, vardata_t *&value );
 		unsigned int size();
+		void set_parent( env_t *p );
 		env_t *parent();
 		env_t *global();
 				
