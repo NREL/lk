@@ -507,17 +507,22 @@ static void _write_line( lk::invoke_t &cxt )
 
 static void _write( lk::invoke_t &cxt )
 {
-	LK_DOC("write", "Writes data to a file.", "(integer:filenum, string:buffer, integer:bytes):boolean");
+	LK_DOC("write", "Writes data to a file, optionally specifying the number of characters to write.", "(integer:filenum, string:buffer, [integer:nchars]):boolean");
 
 	stdfile_t *f = dynamic_cast<stdfile_t*>(
 			cxt.env()->query_object( cxt.arg(0).as_unsigned()));
 
-	int nchars = cxt.arg(2).as_integer();
-
-	if (f && f->ok() && nchars >= 0)
+	if ( f && f->ok() )
 	{
 		lk_string buf = cxt.arg(1).as_string();
-		buf.resize(nchars, ' ');
+		
+		if ( cxt.arg_count() > 2 )
+		{
+			int nch = cxt.arg(2).as_integer();
+			if ( nch > 0 )
+				buf.resize( cxt.arg(2).as_integer(), ' ' );
+		}
+
 		fputs( (const char*)buf.c_str(), *f );
 		cxt.result().assign( 1.0 );
 	}
