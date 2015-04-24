@@ -815,16 +815,24 @@ size_t lk::env_t::insert_object( objref_t *o )
 {
 	if ( env_t *g = global() )
 	{
-		std::vector< objref_t* >::iterator pos = std::find(g->m_objTable.begin(), g->m_objTable.end(), o);
-		if ( pos != g->m_objTable.end())
+		int iempty = -1;
+		for( size_t i=0;i<g->m_objTable.size();i++ )
 		{
-			return (pos - g->m_objTable.begin()) + 1;
+			if ( g->m_objTable[i] == o )
+				return i+1;
+
+			if ( g->m_objTable[i] == 0 && iempty < 0 )
+				iempty = (int) i;			
 		}
-		else
+
+		if( iempty >= 0 )
 		{
-			g->m_objTable.push_back( o );
-			return g->m_objTable.size();
+			g->m_objTable[iempty] = o;
+			return (size_t)(iempty+1);
 		}
+
+		g->m_objTable.push_back( o );
+		return g->m_objTable.size();
 	}
 	else
 		return 0;
@@ -840,7 +848,7 @@ bool lk::env_t::destroy_object( objref_t *o )
 			if (*pos != 0)
 				delete (*pos);
 
-			g->m_objTable.erase( pos );
+			*pos = 0;
 			return true;
 		}
 		else
