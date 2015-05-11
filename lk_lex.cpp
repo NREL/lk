@@ -32,8 +32,6 @@ char lk::input_stream::operator*()
 
 char lk::input_stream::operator++(int)
 {
-	int c;
-	
 	if (m_fp && !feof(m_fp)) m_ch = fgetc(m_fp);
 	else m_ch = 0;
 	return m_ch;
