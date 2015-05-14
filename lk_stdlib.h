@@ -20,6 +20,7 @@ namespace lk {
 				  const lk_string &title,
 				  fcall_t *lib );
 	lk_string html_doc( const lk_string &title, fcall_t *lib );
+	lk_string html_doc( fcall_t f );
 
 
 	std::vector< lk_string > dir_list( const lk_string &dir, const lk_string &extlist, bool ret_dirs=false );

@@ -2556,17 +2556,22 @@ lk_string lk::html_doc( const lk_string &title, fcall_t *lib )
 	lk_string data = "<h3>" + title + "</h3>\n";
 	size_t i=0;
 	while ( fcall_t f = lib[i++] )
-	{
-		lk::doc_t d;
-		if (lk::doc_t::info( f, d ))
-		{
-			data += "<b><font size=+1 color=#0066aa>" + d.func_name + "</font></b>&nbsp<font size=+1>" + format_sig(d.sig1) + "</font><br><i>" + d.desc1 + "</i>\n";
-			if (d.has_2) data += "<br><br><b><font size=+1 color=#0066aa>" + d.func_name + "</font></b>&nbsp<font size=+1>" + format_sig(d.sig2)  + "</font><br><i>" + d.desc2 + "</i>\n";
-			if (d.has_3) data += "<br><br><b><font size=+1 color=#0066aa>" + d.func_name + "</font></b>&nbsp<font size=+1>" + format_sig(d.sig3)  + "</font><br><i>" + d.desc3 + "</i>\n";
-			data += "<hr>\n";
-		}
-	}
+		data += html_doc( f );	
 
+	return data;
+}
+
+lk_string lk::html_doc( fcall_t f )
+{
+	lk_string data;
+	lk::doc_t d;
+	if (lk::doc_t::info( f, d ))
+	{
+		data += "<b><font size=+1 color=#0066aa>" + d.func_name + "</font></b>&nbsp<font size=+1>" + format_sig(d.sig1) + "</font><br><i>" + d.desc1 + "</i>\n";
+		if (d.has_2) data += "<br><br><b><font size=+1 color=#0066aa>" + d.func_name + "</font></b>&nbsp<font size=+1>" + format_sig(d.sig2)  + "</font><br><i>" + d.desc2 + "</i>\n";
+		if (d.has_3) data += "<br><br><b><font size=+1 color=#0066aa>" + d.func_name + "</font></b>&nbsp<font size=+1>" + format_sig(d.sig3)  + "</font><br><i>" + d.desc3 + "</i>\n";
+		data += "<hr>\n";
+	}
 	return data;
 }
 
