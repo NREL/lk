@@ -284,8 +284,6 @@ namespace lk {
 			}
 			else if ( funccall_t *f = dynamic_cast<funccall_t*>( root ))
 			{
-				
-				void *ud = 0;
 				lk::fcallinfo_t *fobj = env.lookup_func( f->name);
 				if ( fobj == 0 )
 					throw evalexception("undefined function: " + f->name );
@@ -785,7 +783,7 @@ namespace lk {
 						return f;
 					}
 					else						
-						return new lk::iden_t( line(), name, false, false );
+						return new lk::iden_t( line(), name, false, false, false );
 				}
 				break;
 			default:
@@ -808,34 +806,35 @@ static const char *eqn_default=
 "lambda*besj1(lambda)-Biot*besj0(lambda)=0;\n"
 "C=1/lambda*besj1(lambda)/(1/2*(besj0(lambda)^2 + besj1(lambda)^2));\n";
 
-class LKSolve : public wxFrame
+class FreesWindow : public wxFrame
 {
 private:
 	wxTextCtrl *m_input;
 	wxTextCtrl *m_output;
 	wxTextCtrl *m_maxIter;
 	wxTextCtrl *m_fTol;
-	wxTextCtrl *m_appFac;
+	wxTextCtrl *m_fRelax;
 	wxCheckBox *m_showIters;
 	wxTextCtrl *m_cmdLine;
 	lk::env_t m_evalEnv;
 
 public:
-	LKSolve( )
-		: wxFrame( NULL, wxID_ANY, "FREES", wxDefaultPosition, wxSize(730,600) )
+	FreesWindow( )
+		: wxFrame( NULL, wxID_ANY, "FREES", wxDefaultPosition, wxSize(800,600) )
 	{
-		//SetIcon( wxICON( appicon ) );
+		SetBackgroundColour( *wxWHITE );
+		SetIcon( wxICON( appicon ) );
 
 		wxBoxSizer *tools = new wxBoxSizer( wxHORIZONTAL );
-		tools->Add( new wxButton(this, ID_SOLVE, "Solve" ) );
-		tools->Add( new wxStaticText(this, wxID_ANY, "   MaxIter:") );
-		tools->Add( m_maxIter = new wxTextCtrl(this, wxID_ANY, "10000") );
-		tools->Add( new wxStaticText(this, wxID_ANY, "   fTol:") );
-		tools->Add( m_fTol = new wxTextCtrl(this, wxID_ANY, "1e-11") );
-		tools->Add( new wxStaticText(this, wxID_ANY, "   Appfac:") );
-		tools->Add( m_appFac = new wxTextCtrl(this, wxID_ANY, "0.2") );
-		tools->Add( m_showIters = new wxCheckBox(this, wxID_ANY, "Show intermediates") );
-		tools->Add( new wxButton(this, ID_DEMO, "Demo" ) );
+		tools->Add( new wxButton(this, ID_SOLVE, "Solve" ), 0, wxALIGN_CENTER_VERTICAL|wxALL, 2 );
+		tools->Add( new wxStaticText(this, wxID_ANY, "   Iterations:"), 0, wxALIGN_CENTER_VERTICAL|wxALL, 2 );
+		tools->Add( m_maxIter = new wxTextCtrl(this, wxID_ANY, "10000"), 0, wxALIGN_CENTER_VERTICAL|wxALL, 2 );
+		tools->Add( new wxStaticText(this, wxID_ANY, "   Tolerance:"), 0, wxALIGN_CENTER_VERTICAL|wxALL, 2 );
+		tools->Add( m_fTol = new wxTextCtrl(this, wxID_ANY, "1e-11"), 0, wxALIGN_CENTER_VERTICAL|wxALL, 2 );
+		tools->Add( new wxStaticText(this, wxID_ANY, "   Relax:"), 0, wxALIGN_CENTER_VERTICAL|wxALL, 2 );
+		tools->Add( m_fRelax = new wxTextCtrl(this, wxID_ANY, "0.2"), 0, wxALIGN_CENTER_VERTICAL|wxALL, 2 );
+		tools->Add( m_showIters = new wxCheckBox(this, wxID_ANY, "Show intermediates"), 0, wxALIGN_CENTER_VERTICAL|wxALL, 2 );
+		tools->Add( new wxButton(this, ID_DEMO, "Demo" ), 0, wxALIGN_CENTER_VERTICAL|wxALL, 2 );
 		m_showIters->SetValue( false );
 
 		tools->AddStretchSpacer();
@@ -856,15 +855,22 @@ public:
 		m_input->SetValue( eqn_default );
 
 		
-		wxString eqns, hist;
 		wxConfig cfg("FREES", "apdsoft");
-		cfg.Read("eqns", &eqns);
-		cfg.Read("hist", &hist);
+		
+		wxString eqns, hist;
+		if (cfg.Read("eqns", &eqns)) m_input->SetValue(eqns);
+		if (cfg.Read("hist", &hist)) m_output->SetValue(hist);
+		
+		double maxit, ftol, relax;
+		if (cfg.Read("maxit", &maxit)) m_maxIter->SetValue( wxString::Format("%lg",maxit) );
+		if (cfg.Read("ftol", &ftol)) m_fTol->SetValue( wxString::Format("%lg",ftol) );
+		if (cfg.Read("relax", &relax)) m_fRelax->SetValue( wxString::Format("%lg", relax) );
+		
+		bool intermed;
+		if (cfg.Read("intermed", &intermed)) m_showIters->SetValue( intermed );
+		
 
-		if (!eqns.IsEmpty()) m_input->SetValue(eqns);
-		m_output->SetValue(hist);
-
-		split->SplitHorizontally( m_input, m_output );
+		split->SplitHorizontally( m_input, m_output, 200 );
 
 		wxBoxSizer *sz = new wxBoxSizer( wxVERTICAL );
 		sz->Add( tools, 0, wxALL|wxEXPAND );
@@ -906,7 +912,7 @@ public:
 		wxStopWatch sw;
 		int code = ee.solve( m_evalEnv, atoi( m_maxIter->GetValue().c_str() ),
 			atof( m_fTol->GetValue().c_str() ),
-			atof( m_appFac->GetValue().c_str() ),
+			atof( m_fRelax->GetValue().c_str() ),
 			m_showIters->GetValue() ? m_output : 0 );
 		if ( code < 0 )
 		{
@@ -925,6 +931,10 @@ public:
 		wxConfig cfg("FREES", "apdsoft");
 		cfg.Write("eqns", m_input->GetValue());
 		cfg.Write("hist", m_output->GetValue());
+		cfg.Write("maxit", atof( m_maxIter->GetValue().c_str() ) );
+		cfg.Write("ftol", atof( m_fTol->GetValue().c_str() ) );
+		cfg.Write("relax", atof( m_fRelax->GetValue().c_str() ) );
+		cfg.Write("intermed", m_showIters->GetValue() );
 		Destroy();
 
 	}
@@ -1038,20 +1048,26 @@ public:
 	DECLARE_EVENT_TABLE()
 };
 
-BEGIN_EVENT_TABLE( LKSolve, wxFrame )
-	EVT_TEXT_ENTER( ID_CMDLINE, LKSolve::OnCmdLine )
-	EVT_BUTTON( ID_SOLVE, LKSolve::OnSolve )
-	EVT_BUTTON( ID_DEMO, LKSolve::OnDemo )
-	EVT_CLOSE( LKSolve::OnCloseFrame )
-	EVT_MENU( wxID_CLOSE, LKSolve::OnCloseRequest )
+BEGIN_EVENT_TABLE( FreesWindow, wxFrame )
+	EVT_TEXT_ENTER( ID_CMDLINE, FreesWindow::OnCmdLine )
+	EVT_BUTTON( ID_SOLVE, FreesWindow::OnSolve )
+	EVT_BUTTON( ID_DEMO, FreesWindow::OnDemo )
+	EVT_CLOSE( FreesWindow::OnCloseFrame )
+	EVT_MENU( wxID_CLOSE, FreesWindow::OnCloseRequest )
 END_EVENT_TABLE()
 
-void new_solver()
+class FreesApp : public wxApp
 {
-	wxLog::EnableLogging( false );
-	LKSolve *l = new LKSolve;
-	l->Show();
-}
+public:
+	bool OnInit()
+	{
+		(new FreesWindow)->Show();
+		return true;
+	}
+};
+
+IMPLEMENT_APP( FreesApp );
+
 #ifdef __WXMAC__
 #include "../lk_absyn.cpp"
 #include "../lk_env.cpp"
