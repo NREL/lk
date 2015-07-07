@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -159,7 +159,6 @@
     <ClCompile Include="..\lk_eval.cpp" />
     <ClCompile Include="..\lk_invoke.cpp" />
     <ClCompile Include="..\lk_lex.cpp" />
-    <ClCompile Include="..\lk_math.cpp" />
     <ClCompile Include="..\lk_parse.cpp" />
     <ClCompile Include="..\lk_stdlib.cpp" />
   </ItemGroup>
@@ -169,7 +168,6 @@
     <ClInclude Include="..\lk_eval.h" />
     <ClInclude Include="..\lk_invoke.h" />
     <ClInclude Include="..\lk_lex.h" />
-    <ClInclude Include="..\lk_math.h" />
     <ClInclude Include="..\lk_parse.h" />
     <ClInclude Include="..\lk_stdlib.h" />
   </ItemGroup>
