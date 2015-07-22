@@ -2708,7 +2708,7 @@ double lk::besj1(double x)
 
 double lk::besy0(double x)
 {
-	double lk::besj0(double x);
+//	double lk::besj0(double x);
 	double z;
 	double xx,y,ans,ans1,ans2;
 
@@ -2718,7 +2718,7 @@ double lk::besy0(double x)
 			+y*(10879881.29+y*(-86327.92757+y*228.4622733))));
 		ans2=40076544269.0+y*(745249964.8+y*(7189466.438
 			+y*(47447.26470+y*(226.1030244+y*1.0))));
-		ans=(ans1/ans2)+0.636619772*besj0(x)*log(x);
+		ans=(ans1/ans2)+0.636619772*lk::besj0(x)*log(x);
 	} else {
 		z=8.0/x;
 		y=z*z;
@@ -2735,7 +2735,7 @@ double lk::besy0(double x)
 
 double lk::besy1(double x)
 {
-	double lk::besj1(double x);
+//	double lk::besj1(double x);
 	double z;
 	double xx,y,ans,ans1,ans2;
 
@@ -2747,7 +2747,7 @@ double lk::besy1(double x)
 		ans2=0.2499580570e14+y*(0.4244419664e12
 			+y*(0.3733650367e10+y*(0.2245904002e8
 			+y*(0.1020426050e6+y*(0.3549632885e3+y)))));
-		ans=(ans1/ans2)+0.636619772*(besj1(x)*log(x)-1.0/x);
+		ans=(ans1/ans2)+0.636619772*(lk::besj1(x)*log(x)-1.0/x);
 	} else {
 		z=8.0/x;
 		y=z*z;
@@ -2785,12 +2785,12 @@ double lk::besi0(double x)
 
 double lk::besk0(double x)
 {
-	double lk::besi0(double x);
+	//double lk::besi0(double x);
 	double y,ans;
 
 	if (x <= 2.0) {
 		y=x*x/4.0;
-		ans=(-log(x/2.0)*besi0(x))+(-0.57721566+y*(0.42278420
+		ans=(-log(x/2.0)*lk::besi0(x))+(-0.57721566+y*(0.42278420
 			+y*(0.23069756+y*(0.3488590e-1+y*(0.262698e-2
 			+y*(0.10750e-3+y*0.74e-5))))));
 	} else {
@@ -2825,12 +2825,12 @@ double lk::besi1(double x)
 
 double lk::besk1(double x)
 {
-	double lk::besi1(double x);
+//	double lk::besi1(double x);
 	double y,ans;
 
 	if (x <= 2.0) {
 		y=x*x/4.0;
-		ans=(log(x/2.0)*besi1(x))+(1.0/x)*(1.0+y*(0.15443144
+		ans=(log(x/2.0)*lk::besi1(x))+(1.0/x)*(1.0+y*(0.15443144
 			+y*(-0.67278579+y*(-0.18156897+y*(-0.1919402e-1
 			+y*(-0.110404e-2+y*(-0.4686e-4)))))));
 	} else {
@@ -2984,12 +2984,12 @@ void lk::gcf(double *gammcf, double a, double x, double *gln)
 #define ITMAX 100
 #define EPS 3.0e-7
 #define FPMIN 1.0e-30
-	double gammln(double xx);
+//	double gammln(double xx);
 	void nrerror(char error_text[]);
 	int i;
 	double an,b,c,d,del,h;
 
-	*gln=gammln(a);
+	*gln=lk::gammln(a);
 	b=x+1.0-a;
 	c=1.0/FPMIN;
 	d=1.0/b;
