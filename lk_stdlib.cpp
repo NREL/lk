@@ -2708,7 +2708,7 @@ double lk::besj1(double x)
 
 double lk::besy0(double x)
 {
-	double besj0(double x);
+	double lk::besj0(double x);
 	double z;
 	double xx,y,ans,ans1,ans2;
 
@@ -2735,7 +2735,7 @@ double lk::besy0(double x)
 
 double lk::besy1(double x)
 {
-	double besj1(double x);
+	double lk::besj1(double x);
 	double z;
 	double xx,y,ans,ans1,ans2;
 
@@ -2785,7 +2785,7 @@ double lk::besi0(double x)
 
 double lk::besk0(double x)
 {
-	double besi0(double x);
+	double lk::besi0(double x);
 	double y,ans;
 
 	if (x <= 2.0) {
@@ -2825,7 +2825,7 @@ double lk::besi1(double x)
 
 double lk::besk1(double x)
 {
-	double besi1(double x);
+	double lk::besi1(double x);
 	double y,ans;
 
 	if (x <= 2.0) {
