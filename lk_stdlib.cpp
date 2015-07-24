@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <algorithm>
 #include <limits>
 #include <climits>
 #include <math.h>
@@ -781,6 +782,29 @@ static void _ostype( lk::invoke_t &cxt )
 	cxt.result().assign(os);
 }
 
+class vardata_compare
+{
+public:
+	bool operator() ( const lk::vardata_t &lhs, const lk::vardata_t &rhs )
+	{
+		if (lhs.type() == lk::vardata_t::NULLVAL && rhs.type() == lk::vardata_t::NUMBER)
+			return lhs.num() < rhs.num();
+		else
+			return lhs.as_string() < rhs.as_string();
+	}
+};
+static void _stable_sort( lk::invoke_t &cxt )
+{
+	LK_DOC("stable_sort", "Sort an array of numbers or strings in place while preserving relative ordering of elements.", "(array):none");
+	
+	lk::vardata_t &x = cxt.arg(0);
+	if (x.type() == lk::vardata_t::VECTOR )
+	{
+		vardata_compare cc;
+		std::stable_sort( x.vec()->begin(), x.vec()->end(), cc );
+	}
+}
+
 static void _sprintf( lk::invoke_t &cxt )
 {
 	LK_DOC("sprintf", "Returns a formatted string using standard C printf conventions, but adding the %m and %, specifiers for monetary and comma separated real numbers.", "(string:format, ...):string");
@@ -1464,6 +1488,7 @@ lk::fcall_t* lk::stdlib_basic()
 		_load_extension,
 		_extensions,
 		_ostype,
+		_stable_sort,
 		0 };
 
 	return (fcall_t*)vec;
