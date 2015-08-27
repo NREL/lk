@@ -144,8 +144,9 @@ static void _wx_choose_file( lk::invoke_t &cxt )
 		multiple = cxt.arg(4).as_boolean();
 
 	wxString file;
+	long style =  savedlg ? wxFD_SAVE|wxFD_OVERWRITE_PROMPT : wxFD_OPEN;
 	wxFileDialog fdlg( GetCurrentTopLevelWindow(), caption,
-		path, wxEmptyString, filter, savedlg? wxFD_SAVE|wxFD_OVERWRITE_PROMPT : wxFD_OPEN );
+		path, wxEmptyString, filter, style );
 
 	if (fdlg.ShowModal())
 	{
