@@ -139,16 +139,25 @@ const char *lk::expr_t::operstr()
 	case HASH: return "{}";
 	case THISCALL: return "->()";
 	case CALL: return "()";
-	case RETURN : return "&return";
-	case EXIT: return "&exit";
-	case BREAK: return "&break";
-	case CONTINUE: return "&continue";
 	case SIZEOF: return "&sizeof";
 	case KEYSOF: return "&keysof";
 	case TYPEOF: return "&typeof";
 	case INITVEC: return "&initvec";
 	case INITHASH: return "&inithash";
 	case SWITCH: return "&switch";
+	default:
+		return "<!inv!>";
+	}
+}
+
+const char *lk::ctlstmt_t::ctlstr()
+{
+	switch( ictl )
+	{
+	case RETURN : return "&return";
+	case EXIT: return "&exit";
+	case BREAK: return "&break";
+	case CONTINUE: return "&continue";
 	default:
 		return "<!inv!>";
 	}
@@ -212,6 +221,14 @@ void lk::pretty_print( lk_string &str, node_t *root, int level )
 		if (n->right)
 			str += "\n";
 		pretty_print( str, n->right, level+1 );
+		str += ")";
+	}
+	else if ( ctlstmt_t *n = dynamic_cast<ctlstmt_t*>( root ) )
+	{
+		str += spacer(level) + "(";
+		str += n->ctlstr();
+		if ( n->rexpr )	str += "  ";		
+		pretty_print( str, n->rexpr, level+1 );
 		str += ")";
 	}
 	else if ( iden_t *n = dynamic_cast<iden_t*>( root ) )

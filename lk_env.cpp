@@ -110,13 +110,15 @@ lk_string lk::vardata_t::as_string() const
 		{
 			register std::vector<vardata_t> &v = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
 
-			lk_string s;
+			lk_string s( "[ " );
 			for ( size_t i=0;i<v.size();i++ )
 			{
 				s += v[i].as_string();
 				if ( v.size() > 1 && i < v.size()-1 )
-					s += ",";
+					s += ", ";
 			}
+
+			s += " ]";
 			
 			return s;
 		}
@@ -137,6 +139,8 @@ lk_string lk::vardata_t::as_string() const
 
 			return s;
 		}
+	case INTFUNC:
+	case EXTFUNC:
 	case FUNCTION:
 		return "<function>";
 	default:
@@ -178,6 +182,32 @@ double lk::vardata_t::as_number() const
 	}
 }
 
+void lk::vardata_t::deep_localize()
+{
+	switch( type() )
+	{
+	case REFERENCE:
+		copy( deref() );
+		break;
+	case VECTOR:
+	{
+		for( size_t i=0;i<length();i++ )
+			index(i)->deep_localize();
+	}
+		break;
+	case HASH:
+	{
+		varhash_t &hh = *hash();
+		for( varhash_t::iterator it = hh.begin();
+			it != hh.end();
+			++it )
+			it->second->deep_localize();
+	}
+		break;
+		
+	}
+}
+
 bool lk::vardata_t::copy( vardata_t &rhs ) throw( error_t )
 {
 	switch( rhs.type() )
@@ -190,6 +220,8 @@ bool lk::vardata_t::copy( vardata_t &rhs ) throw( error_t )
 		assert_modify();
 		nullify();
 		set_type( REFERENCE );
+		if ( rhs.m_u.p == this )
+			throw error_t("internal error: copying self-referential reference" );
 		m_u.p = rhs.m_u.p;
 		return true;
 	case NUMBER:
@@ -224,10 +256,13 @@ bool lk::vardata_t::copy( vardata_t &rhs ) throw( error_t )
 			
 		}
 		return true;
+		
+	case EXTFUNC:		
+	case INTFUNC:		
 	case FUNCTION:		
 		assert_modify();
 		nullify();
-		set_type( FUNCTION );
+		set_type( rhs.type() );
 		m_u.p = rhs.m_u.p;
 		return true;
 
@@ -244,12 +279,62 @@ bool lk::vardata_t::equals(vardata_t &rhs) const
 	{
 	case NULLVAL:
 		return true;
+
 	case NUMBER:
 		return m_u.v == rhs.m_u.v;
+
 	case STRING:
-		return str() == rhs.str();
+		return str() == rhs.str();		
+
+	case VECTOR:
+	{
+		size_t len = vec()->size();
+		if ( len != rhs.vec()->size() )
+			return false;
+		for( size_t i=0;i<len;i++ )
+			if ( !(*vec())[i].equals( (*rhs.vec())[i] ) )
+				return false;
+
+		return true;
+	}
+		break;
+
+	case HASH:
+	{
+		varhash_t *h1 = hash();
+		varhash_t *h2 = rhs.hash();
+
+		// if number of pairs is different, not equal
+		if ( h1->size() != h2->size() )
+			return false;
+
+		for( varhash_t::iterator it = h1->begin();
+			it != h1->end();
+			++it )
+		{
+			// if second hash doesn't have this key, not equal
+			varhash_t::iterator it2 = h2->find( it->first );
+			if ( it2 == h2->end() )
+				return false;
+
+			// if the values of this key are different, not equal
+			if ( ! it->second->equals( *it2->second ) )
+				return false;
+		}
+
+		return true;
+	}
+		break;
+
 	case FUNCTION:
 		return func() == rhs.func();
+
+	case INTFUNC:
+		return faddr() == rhs.faddr();
+
+	case EXTFUNC:
+		return fcall() == rhs.fcall();
+
 	default:
 		return false;
 	}
@@ -280,7 +365,10 @@ const char *lk::vardata_t::typestr() const
 	case STRING: return "string";
 	case VECTOR: return "array";
 	case HASH: return "table";
-	case FUNCTION: return "function";
+	case INTFUNC:
+	case EXTFUNC:
+	case FUNCTION:
+		return "function";
 	default: return "unknown";
 	}
 }
@@ -311,17 +399,6 @@ void lk::vardata_t::nullify()
 	}
 
 	set_type( NULLVAL );
-}
-
-lk::vardata_t &lk::vardata_t::deref() const throw (error_t)
-{
-	vardata_t *p = const_cast<vardata_t*>(this);
-	while (p->type() == REFERENCE)
-		p = p->ref();
-
-	if (!p) throw error_t("dereference resulted in null target");
-
-	return *p;
 }
 
 void lk::vardata_t::assign( double d ) throw( error_t )
@@ -428,7 +505,28 @@ void lk::vardata_t::assign( vardata_t *ref ) throw( error_t )
 
 	nullify();
 	set_type( REFERENCE );
+	if ( ref == this )
+		throw error_t( "internal error: assigning self-referential reference");
 	m_u.p = ref;
+}
+
+void lk::vardata_t::assign_fcall( fcallinfo_t *fci ) throw( error_t )
+{
+	assert_modify();
+
+	nullify();
+	set_type( EXTFUNC );
+	m_u.p = fci;
+}
+
+
+void lk::vardata_t::assign_faddr( size_t ip ) throw( error_t )
+{
+	assert_modify();
+
+	nullify();
+	set_type( INTFUNC );
+	m_u.p = (void*)ip;
 }
 
 
@@ -506,6 +604,18 @@ lk::expr_t *lk::vardata_t::func() const throw(error_t)
 {
 	if (type() != FUNCTION) throw error_t("access violation to non-function data");
 	return reinterpret_cast< expr_t* >(m_u.p);
+}
+
+lk::fcallinfo_t *lk::vardata_t::fcall() const throw(error_t)
+{
+	if (type() != EXTFUNC) throw error_t("access violation to non-function data");
+	return reinterpret_cast< fcallinfo_t* >(m_u.p);
+}
+
+size_t lk::vardata_t::faddr() const throw(error_t)
+{
+	if (type() != INTFUNC) throw error_t("access violation to non-function data");
+	return reinterpret_cast< size_t >(m_u.p);
 }
 
 lk::varhash_t *lk::vardata_t::hash() const throw(error_t)
@@ -1011,7 +1121,7 @@ bool lk::doc_t::info( fcallinfo_t *f, doc_t &d )
 	if (f!=0)
 	{
 		lk::vardata_t dummy_var;
-		lk::invoke_t cxt("", 0, dummy_var, 0);
+		lk::invoke_t cxt( 0, dummy_var, 0);
 		cxt.m_docPtr = &d; // possible b/c friend class
 		d.m_ok = false;
 
@@ -1031,7 +1141,7 @@ bool lk::doc_t::info( fcall_t f, doc_t &d )
 	if (f!=0)
 	{
 		lk::vardata_t dummy_var;
-		lk::invoke_t cxt("", 0, dummy_var, 0);
+		lk::invoke_t cxt( 0, dummy_var, 0);
 		cxt.m_docPtr = &d; // possible b/c friend class
 		d.m_ok = false;
 		(*f)( cxt ); // each function begins LK_DOC which calls invoke_t::document(..), should set m_ok to true
@@ -1047,7 +1157,7 @@ bool lk::doc_t::info( lk_invokable f, doc_t &d )
 	if (f!=0)
 	{
 		lk::vardata_t dummy_var;
-		lk::invoke_t cxt("", 0, dummy_var, 0);
+		lk::invoke_t cxt( 0, dummy_var, 0);
 		cxt.m_docPtr = &d; // possible b/c friend class
 		d.m_ok = false;
 		lk::external_call( f, cxt ); // each function begins LK_DOC which calls invoke_t::document(..), should set m_ok to true

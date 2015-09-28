@@ -155,21 +155,25 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\lk_absyn.cpp" />
+    <ClCompile Include="..\lk_codegen.cpp" />
     <ClCompile Include="..\lk_env.cpp" />
     <ClCompile Include="..\lk_eval.cpp" />
     <ClCompile Include="..\lk_invoke.cpp" />
     <ClCompile Include="..\lk_lex.cpp" />
     <ClCompile Include="..\lk_parse.cpp" />
     <ClCompile Include="..\lk_stdlib.cpp" />
+    <ClCompile Include="..\lk_vm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lk_absyn.h" />
+    <ClInclude Include="..\lk_codegen.h" />
     <ClInclude Include="..\lk_env.h" />
     <ClInclude Include="..\lk_eval.h" />
     <ClInclude Include="..\lk_invoke.h" />
     <ClInclude Include="..\lk_lex.h" />
     <ClInclude Include="..\lk_parse.h" />
     <ClInclude Include="..\lk_stdlib.h" />
+    <ClInclude Include="..\lk_vm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

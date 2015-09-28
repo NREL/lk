@@ -7,20 +7,14 @@
 
 namespace lk
 {
-	class importer
-	{
-	public:
-		virtual bool read_source( const lk_string &path, 
-			lk_string *expandedPath, lk_string *data ) = 0;
-	};
-
 	class parser
 	{
 	public:
 		parser( input_base &input, const lk_string &name = "" );
 
-		void set_importer( importer *imploc );
-		void set_importer( importer *imploc, const std::vector< lk_string > &imported_names );
+		void add_search_path( const lk_string &path ) { m_searchPaths.push_back( path ); }
+		void add_search_paths( const std::vector<lk_string> &paths );
+		std::vector<lk_string> get_search_paths() const { return m_searchPaths; }
 				
 		node_t *script();
 		node_t *block();
@@ -42,6 +36,7 @@ namespace lk
 		node_t *postfix();
 		node_t *primary();		
 		
+		srcpos_t srcpos();
 		int line() { return lex.line(); }
 		int error_count() { return m_errorList.size(); }
 		lk_string error(int idx, int *line = 0);
@@ -56,6 +51,7 @@ namespace lk
 	private:
 		list_t *ternarylist( int septok, int endtok );
 		list_t *identifierlist( int septok, int endtok );
+
 	
 		void error( const char *fmt, ... );
 		
@@ -66,8 +62,7 @@ namespace lk
 		bool m_haltFlag;
 		struct errinfo { int line; lk_string text; };
 		std::vector<errinfo> m_errorList;
-		importer *m_importer;
-		std::vector< lk_string > m_importNameList;
+		std::vector< lk_string > m_importNameList, m_searchPaths;
 		lk_string m_name;
 	};
 };

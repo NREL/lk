@@ -19,6 +19,7 @@
 namespace lk {
 
 	class vardata_t;
+	struct fcallinfo_t;
 	typedef unordered_map< lk_string, vardata_t*, lk_string_hash, lk_string_equal > varhash_t;
 		
 	
@@ -64,6 +65,8 @@ namespace lk {
 		static const unsigned char VECTOR = 5;
 		static const unsigned char HASH = 6;
 		static const unsigned char FUNCTION = 7;
+		static const unsigned char EXTFUNC = 8;
+		static const unsigned char INTFUNC = 9;
 
 		static const unsigned char TYPEMASK = 0x0F;
 		static const unsigned char FLAGMASK = 0xF0;
@@ -93,7 +96,9 @@ namespace lk {
 		bool lessthan( vardata_t &rhs ) const;
 
 		void nullify(); // only function that override const-ness
-		 
+		
+		void deep_localize();
+
 		bool copy( vardata_t &rhs ) throw( error_t );
 		vardata_t &operator=(const vardata_t &rhs) throw( error_t )
 		{
@@ -101,8 +106,17 @@ namespace lk {
 			return *this;
 		}
 
-		vardata_t &deref() const throw (error_t);
-		
+		inline vardata_t &deref() const throw (error_t) {
+			vardata_t *p = const_cast<vardata_t*>(this);
+			while ( p->type() == REFERENCE ) {
+				vardata_t *pref = reinterpret_cast<vardata_t*>(p->m_u.p);
+				if ( p == pref ) throw error_t("self referential reference");
+				p = pref;
+			}
+			if (!p) throw error_t("dereference resulted in null target");
+			return *p;
+		}
+				
 		void assign( double d ) throw( error_t );
 		void assign( const char *s ) throw( error_t );
 		void assign( const lk_string &s ) throw( error_t );
@@ -112,6 +126,10 @@ namespace lk {
 		void unassign( const lk_string &key ) throw( error_t );
 		void assign( expr_t *func ) throw( error_t ); // does NOT take ownership (expr_t must be deleted by the environment
 		void assign( vardata_t *ref ) throw( error_t ); // makes this vardata_t a reference to the object 'ref'
+
+		void assign_fcall( fcallinfo_t *fci );
+		void assign_faddr( size_t bcip );
+
 		void resize( size_t n ) throw( error_t );
 
 		vardata_t *ref() const;
@@ -121,6 +139,8 @@ namespace lk {
 		vardata_t *index(size_t idx) const throw(error_t); // returned variable inherits const-ness of parent
 		size_t length() const ;
 		vardata_t *lookup( const lk_string &key ) const throw(error_t); // returned variable inherits const-ness of parent
+		fcallinfo_t *fcall() const throw(error_t);
+		size_t faddr() const throw(error_t);
 
 		std::vector<vardata_t> *vec() const throw(error_t);
 		void vec_append( double d ) throw(error_t);
@@ -208,7 +228,6 @@ namespace lk {
 		friend class doc_t;
 	private:
 		doc_t *m_docPtr;
-		lk_string m_funcName;
 		env_t *m_env;
 		vardata_t &m_resultVal;
 		std::vector< vardata_t > m_argList;
@@ -219,13 +238,12 @@ namespace lk {
 		void *m_userData;
 		
 	public:
-		invoke_t( const lk_string &n, env_t *e, vardata_t &result, void *user_data = 0)
-			: m_docPtr(0), m_funcName(n), m_env(e), m_resultVal(result), m_hasError(false), m_userData(user_data) { }
+		invoke_t( env_t *e, vardata_t &result, void *user_data = 0)
+			: m_docPtr(0), m_env(e), m_resultVal(result), m_hasError(false), m_userData(user_data) { }
 
 		bool doc_mode();
 		void document( doc_t d );
 		env_t *env() { return m_env; }
-		lk_string name() { return m_funcName; }
 		vardata_t &result() { return m_resultVal; }
 		void *user_data() { return m_userData; }
 

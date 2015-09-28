@@ -453,24 +453,37 @@ bool lk::eval::interpret( node_t *root,
 						if ( lk::fcallinfo_t *fi = cur_env->lookup_func( iden->name ) )
 						{
 							
-							lk::invoke_t cxt( iden->name, cur_env, result, fi->user_data );
-							
+							lk::invoke_t cxt( cur_env, result, fi->user_data );							
 							list_t *argvals = dynamic_cast<list_t*>(n->right);
-							int nargidx = 0;
-							while (argvals)
+							
+							// first determine number of arguments
+							int nargs = 0;
+							list_t *parg = argvals;
+							while( parg )
 							{
-								vardata_t v;
-								unsigned int c = CTL_NONE;
+								nargs++;
+								parg = parg->next;
+							}
 
-								if (!interpret( argvals->item, cur_env, v, flags, c ))
+							if ( nargs > 0 )
+							{
+								// allocate argument vector and evaluate each argument
+								cxt.arg_list().resize( nargs, vardata_t() );
+								size_t iarg = 0;
+								while (argvals)
 								{
-									m_errors.push_back( make_error( argvals, "failed to evaluate function call argument %d to '", nargidx) + iden->name + "()'\n" );
-									return false;
-								}
+									unsigned int c = CTL_NONE;
 
-								cxt.arg_list().push_back( v );
-								nargidx++;
-								argvals = argvals->next;
+									lk::vardata_t &argval = cxt.arg_list()[iarg];
+									if (!interpret( argvals->item, cur_env, argval, flags, c ))
+									{
+										m_errors.push_back( make_error( argvals, "failed to evaluate function call argument %d to '", (int) iarg) + iden->name + "()'\n" );
+										return false;
+									}
+
+									iarg++;
+									argvals = argvals->next;
+								}
 							}
 							
 							try {
@@ -486,6 +499,9 @@ bool lk::eval::interpret( node_t *root,
 							if (cxt.has_error())
 								m_errors.push_back( make_error( iden, "error in call to '") + iden->name + "()': " + cxt.error() );
 							
+							// do a deep copy of internalized references
+							result.deep_localize();
+
 							return !cxt.has_error();
 						}
 					}
@@ -603,6 +619,9 @@ bool lk::eval::interpret( node_t *root,
 						m_errors.push_back( make_error( block, "error inside function call\n" ));
 						return false;
 					}
+					
+					// do a deep copy of internalized references
+					result.deep_localize();
 
 					// reset the sequence control
 					if (ctl_id != CTL_EXIT)	ctl_id = CTL_NONE;
@@ -711,9 +730,9 @@ bool lk::eval::interpret( node_t *root,
 								varhash_t *h = result.hash();
 								varhash_t::iterator it = h->find( key );
 								if (it != h->end())
-									(*it).second->copy( vval );
+									(*it).second->copy( vval.deref() );
 								else
-									(*h)[key] = new vardata_t( vval );
+									(*h)[key] = new vardata_t( vval.deref() );
 							}
 						}
 
@@ -746,27 +765,40 @@ bool lk::eval::interpret( node_t *root,
 
 				return ok;
 			}
-			case expr_t::RETURN:
-				if ( n->left != 0 )
+			default:
+				break;
+			}
+		} catch ( lk::error_t &e ) {
+			m_errors.push_back( make_error(n, "!error: %s\n", (const char*)e.text.c_str()));
+			return false;
+		}
+	}
+	else if ( ctlstmt_t *n = dynamic_cast<ctlstmt_t*>( root ) )
+	{
+		try {
+			vardata_t l;
+			bool ok = true;
+			switch( n->ictl )
+			{
+			case ctlstmt_t::RETURN:
+				if ( n->rexpr != 0 )
 				{
-					ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+					ok = ok && interpret(n->rexpr, cur_env, l, flags, ctl_id);
 					result.copy( l.deref() );
 				}
 				ctl_id = CTL_RETURN;
 				return ok;
-			case expr_t::EXIT:
+			case ctlstmt_t::EXIT:
 				ctl_id = CTL_EXIT;
 				return true;
 				break;
-			case expr_t::BREAK:
+			case ctlstmt_t::BREAK:
 				ctl_id = CTL_BREAK;
 				return true;
 				break;
-			case expr_t::CONTINUE:
+			case ctlstmt_t::CONTINUE:
 				ctl_id = CTL_CONTINUE;
 				return true;
-				break;
-			default:
 				break;
 			}
 		} catch ( lk::error_t &e ) {

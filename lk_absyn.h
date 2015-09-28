@@ -62,15 +62,27 @@ namespace lk
 		virtual ~attr_t() {  };
 	};
 
+	class srcpos_t
+	{
+	public:
+		srcpos_t() { line = 0; }
+		srcpos_t( const lk_string &f, int l ) : file(f), line(l) { }
+		lk_string file;
+		int line;
+	};
+
 	class node_t
 	{
 	private:
-		int m_line;
+		srcpos_t m_srcpos;
 	public:
 		attr_t *attr;
-		node_t(int ln) : m_line(ln), attr(0) { _node_alloc++; }
+		node_t( srcpos_t pos ) : m_srcpos(pos), attr(0) { _node_alloc++; }
 		virtual ~node_t() { _node_alloc--; if (attr) delete attr; }
-		inline int line() { return m_line; }
+		inline int line() { return m_srcpos.line; }
+		inline lk_string file() { return m_srcpos.file; }
+		inline srcpos_t srcpos() { return m_srcpos; }
+
 	};
 	
 	class list_t : public node_t
@@ -78,7 +90,7 @@ namespace lk
 	public:
 		node_t *item;
 		list_t *next;
-		list_t( int line, node_t *i, list_t *n ) : node_t(line), item(i), next(n) {  };
+		list_t( srcpos_t pos, node_t *i, list_t *n ) : node_t(pos), item(i), next(n) {  };
 		virtual ~list_t() { if (item) delete item; if (next) delete next; }
 	};
 					
@@ -86,7 +98,7 @@ namespace lk
 	{
 	public:
 		node_t *init, *test, *adv, *block;
-		iter_t( int line, node_t *i, node_t *t, node_t *a, node_t *b ) : node_t(line), init(i), test(t), adv(a), block(b) { }
+		iter_t( srcpos_t pos, node_t *i, node_t *t, node_t *a, node_t *b ) : node_t(pos), init(i), test(t), adv(a), block(b) { }
 		virtual ~iter_t() { if (init) delete init; if (test) delete test; if (adv) delete adv; if (block) delete block; }
 	};
 	
@@ -94,7 +106,7 @@ namespace lk
 	{
 	public:
 		node_t *test, *on_true, *on_false;
-		cond_t(int line, node_t *t, node_t *ot, node_t *of) : node_t(line), test(t), on_true(ot), on_false(of) { }
+		cond_t(srcpos_t pos, node_t *t, node_t *ot, node_t *of) : node_t(pos), test(t), on_true(ot), on_false(of) { }
 		virtual ~cond_t() { if (test) delete test; if (on_true) delete on_true; if (on_false) delete on_false; }
 	};
 		
@@ -127,10 +139,6 @@ namespace lk
 			HASH,
 			CALL,
 			THISCALL,
-			RETURN,
-			EXIT,
-			BREAK,
-			CONTINUE,
 			SIZEOF,
 			KEYSOF,
 			TYPEOF,
@@ -147,7 +155,7 @@ namespace lk
 		int oper;
 		node_t *left, *right;
 		const char *operstr();
-		expr_t(int line, int op, node_t *l, node_t *r) : node_t(line), oper(op), left(l), right(r) {  }
+		expr_t(srcpos_t pos, int op, node_t *l, node_t *r) : node_t(pos), oper(op), left(l), right(r) {  }
 		virtual ~expr_t() { if (left) delete left; if (right) delete right; }
 	};
 				
@@ -158,15 +166,35 @@ namespace lk
 		bool common;
 		bool constval;
 		bool special;
-		iden_t(int line, const lk_string &n, bool com, bool cons, bool speci) : node_t(line), name(n), common(com), constval(cons), special(speci) {  }
+		iden_t( srcpos_t pos, const lk_string &n, bool cons, bool speci) : node_t(pos), name(n), constval(cons), special(speci) {  }
 		virtual ~iden_t() { }
+	};
+
+	class ctlstmt_t : public node_t
+	{
+	public:
+		enum { 
+			INVALID,
+
+			RETURN,
+			EXIT,
+			BREAK,
+			CONTINUE
+		};
+
+		const char *ctlstr();
+
+		int ictl;
+		node_t *rexpr;
+		ctlstmt_t( srcpos_t pos, int ctl, node_t *ex = 0) : node_t(pos), ictl(ctl), rexpr(ex) { }
+		virtual ~ctlstmt_t() { if ( rexpr ) delete rexpr; }
 	};
 				
 	class constant_t : public node_t
 	{
-	public:
+	public:		
 		double value;
-		constant_t(int line, double v) : node_t(line), value(v) {  }
+		constant_t( srcpos_t pos, double v) : node_t(pos), value(v) {  }
 		virtual ~constant_t() {  }
 	};
 	
@@ -174,14 +202,14 @@ namespace lk
 	{
 	public:
 		lk_string value;
-		literal_t(int line, const lk_string &s) : node_t(line), value(s) {  }
+		literal_t( srcpos_t pos, const lk_string &s) : node_t(pos), value(s) {  }
 		virtual ~literal_t() {  }
 	};
 
 	class null_t : public node_t
 	{
 	public:
-		null_t( int line ) : node_t(line) {  }
+		null_t( srcpos_t pos ) : node_t(pos) {  }
 		virtual ~null_t() {  }
 	};
 
