@@ -123,6 +123,52 @@ static void _wx_choose_from_list( lk::invoke_t &cxt )
 	cxt.result().assign( result );
 }
 
+static void _wx_transp( lk::invoke_t &cxt )
+{
+static wxFrame *s_trans = 0;
+
+	LK_DOC( "transp", "Create or hide a transparent overlay window on the current toplevel window.", "(array:x,y,width.height, [variant:color], [number:transparency level 0-255]):none" );
+
+	if ( s_trans )
+	{
+		s_trans->Destroy();
+		s_trans = 0;
+	}
+
+	if ( cxt.arg_count() > 0 )
+	{
+		wxPoint pos(0, 0);
+		wxSize size( 100, 100 );
+
+		lk::vardata_t &geom = cxt.arg(0).deref();
+		pos.x = geom.index(0)->as_integer();
+		pos.y = geom.index(1)->as_integer();
+		size.x = geom.index(2)->as_integer();
+		size.y = geom.index(3)->as_integer();
+
+		wxColour color( *wxLIGHT_GREY );
+		int itran = 230;
+
+		if ( cxt.arg_count() > 1 )
+		{
+			lk::vardata_t &acol = cxt.arg(1).deref();
+			if ( acol.type() == lk::vardata_t::VECTOR )
+				color.Set( acol.index(0)->as_integer(), acol.index(1)->as_integer(), acol.index(2)->as_integer() );
+			else
+				color = wxColour( acol.as_string() );
+		}
+
+		if ( cxt.arg_count() > 2 )
+			itran = cxt.arg(2).as_integer();
+		
+		s_trans = new wxFrame( GetCurrentTopLevelWindow(), wxID_ANY, wxEmptyString,  pos, size, 
+			wxBORDER_NONE | wxFRAME_FLOAT_ON_PARENT | wxFRAME_NO_TASKBAR );
+		s_trans->SetBackgroundColour( color );
+		s_trans->SetTransparent( itran );
+		s_trans->Show();
+	}
+}
+
 static void _wx_scrnres( lk::invoke_t &cxt )
 {
 	LK_DOC("scrnres", "Obtain screen resolution in pixels.", "(none):array");
@@ -299,6 +345,7 @@ lk::fcall_t* lk::stdlib_wxui()
 		_wx_env,
 		_wx_uiyield,
 		_wx_scrnres,
+		_wx_transp,
 		0 };
 	return (fcall_t*) vec;
 }
