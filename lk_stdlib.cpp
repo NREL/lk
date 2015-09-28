@@ -21,6 +21,7 @@
 #include <wx/wx.h>
 #include <wx/toplevel.h>
 #include <wx/html/htmlwin.h>
+#include <wx/choicdlg.h>
 
 static wxWindow *GetCurrentTopLevelWindow()
 {
@@ -42,22 +43,36 @@ static void _wx_msgbox( lk::invoke_t &cxt )
 
 static void _wx_in(  lk::invoke_t &cxt )
 {
-	LK_DOC("in", "Input text from the user using a popup dialog box.", "([string:message], [string:default value], [string:caption]):string");
+	LK_DOC("in", "Input text from the user using a popup dialog box.", "([string:message], [string:default value], [string:caption], [array:window position [x,y]]):string");
 	wxString message("Standard input:"), capt( wxGetTextFromUserPromptStr ), defval;
+	int x = wxDefaultCoord, y = wxDefaultCoord;
+	bool cntr = true;
+
 	if ( cxt.arg_count() > 0 )
 		message = cxt.arg(0).as_string();
 	if ( cxt.arg_count() > 1 )
 		defval = cxt.arg(1).as_string();
 	if ( cxt.arg_count() > 2 )
 		capt = cxt.arg(2).as_string();
+	if ( cxt.arg_count() > 3 )
+	{
+		lk::vardata_t &pos = cxt.arg(3).deref();
+		x = pos.index(0)->as_number();
+		y = pos.index(1)->as_number();
+		cntr = false;
+	}
 
-	cxt.result().assign( wxGetTextFromUser(message, capt, defval, GetCurrentTopLevelWindow() ) );	
+	cxt.result().assign( wxGetTextFromUser(message, capt, defval, GetCurrentTopLevelWindow(), x, y, cntr ) );	
 }
 
 static void _wx_choose_from_list( lk::invoke_t &cxt )
 {
-	LK_DOC("choose_from_list", "Show a dialog for the user to select one item from a list", "(array:options, [string:message], [string:caption], [integer:initial selection]):string" );
+	LK_DOC("choose_from_list", "Show a dialog for the user to select one item from a list", "(array:options, [string:message], [string:caption], [integer:initial selection], [array:window position [x,y] or geometry [x,y,w,h]]):string" );
 	
+	int x = wxDefaultCoord, y = wxDefaultCoord, width = wxCHOICE_WIDTH, height = wxCHOICE_HEIGHT;
+	bool cntr = true;
+
+
 	wxArrayString list;
 	for( size_t i=0;i<cxt.arg(0).length();i++ )
 		list.Add( cxt.arg(0).index(i)->as_string() );
@@ -71,13 +86,50 @@ static void _wx_choose_from_list( lk::invoke_t &cxt )
 	int isel = -1;
 	if ( cxt.arg_count() > 3 ) isel = cxt.arg(3).as_integer();
 
-	wxString result;
-	if ( isel >= 0  && isel < (int)list.size() )
-		result = wxGetSingleChoice( msg, capt, list, isel, GetCurrentTopLevelWindow() );
+	if( cxt.arg_count() > 4 && cxt.arg(4).deref().type() == lk::vardata_t::VECTOR )
+	{
+		cntr = false;
+		if ( cxt.arg(4).length() == 2 )
+		{
+			x = (int)cxt.arg(4).index(0)->as_number();
+			y = (int)cxt.arg(4).index(1)->as_number();
+		}
+		else if ( cxt.arg(4).length() == 4 )
+		{
+			x = (int)cxt.arg(4).index(0)->as_number();
+			y = (int)cxt.arg(4).index(1)->as_number();
+			width = (int)cxt.arg(4).index(2)->as_number();
+			height = (int)cxt.arg(4).index(3)->as_number();
+		}
+	}
+	
+	wxSingleChoiceDialog sdlg( GetCurrentTopLevelWindow(), msg, capt, list );
+	if ( isel > 0 ) sdlg.SetSelection( isel );
+
+	if ( cntr )
+	{
+		sdlg.CenterOnParent();
+	}
 	else
-		result = wxGetSingleChoice( msg, capt, list, GetCurrentTopLevelWindow() );
+	{
+		sdlg.SetPosition( wxPoint(x,y) );
+		sdlg.SetClientSize( wxSize(width,height) );
+	}
+
+	wxString result;
+	if ( sdlg.ShowModal() == wxID_OK )
+		result = sdlg.GetStringSelection();
 
 	cxt.result().assign( result );
+}
+
+static void _wx_scrnres( lk::invoke_t &cxt )
+{
+	LK_DOC("scrnres", "Obtain screen resolution in pixels.", "(none):array");
+	wxSize pix = wxGetDisplaySize();
+	cxt.result().empty_vector();
+	cxt.result().vec_append( (double)pix.x );
+	cxt.result().vec_append( (double)pix.y );
 }
 
 static void _wx_html_dialog( lk::invoke_t &cxt )
@@ -233,12 +285,12 @@ lk::fcall_t* lk::stdlib_wxui()
 	static const lk::fcall_t vec[] = {
 		_wx_msgbox,
 		_wx_in,
+		_wx_choose_from_list,
+		_wx_html_dialog,
 		_wx_yesno,
 		_wx_choose_file,
 		_wx_choose_dir,
-		_wx_choose_from_list,
 		_wx_date_time,
-		_wx_html_dialog,
 		_wx_start_timer,
 		_wx_elapsed_time,
 		_wx_millisleep,
@@ -246,6 +298,7 @@ lk::fcall_t* lk::stdlib_wxui()
 		_wx_username,
 		_wx_env,
 		_wx_uiyield,
+		_wx_scrnres,
 		0 };
 	return (fcall_t*) vec;
 }
