@@ -363,8 +363,8 @@ public:
 		m_asm->Freeze();
 		m_asm->Clear();
 		wxArrayString asmlines( wxStringTokenize(assembly, "\n") );
-		if ( asmlines.Count() != program.size() )
-			wxMessageBox( wxString::Format("Error in number of assembly lines: %d vs %d", asmlines.Count(), program.size()));
+		//if ( asmlines.Count() != program.size() )
+		//	wxMessageBox( wxString::Format("Error in number of assembly lines: %d vs %d", asmlines.Count(), program.size()));
 		m_asm->Append( asmlines );
 		m_asm->Thaw();
 		m_bytecode->ChangeValue( bytecode_text );

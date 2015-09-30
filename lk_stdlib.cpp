@@ -34,12 +34,111 @@ static wxWindow *GetCurrentTopLevelWindow()
 	return 0;
 }
 
-static void _wx_msgbox( lk::invoke_t &cxt )
+class MyMessageDialog : public wxDialog
 {
-	LK_DOC("msgbox", "Shows a message dialog box.", "(string:message):none");
-	wxMessageBox( cxt.arg(0).as_string(), "Notice", wxOK|wxCENTRE, GetCurrentTopLevelWindow() );
+public:
+	MyMessageDialog( wxWindow *parent,
+		const wxString &message,
+		const wxString &title,
+		long buttons,
+		const wxPoint &pos = wxDefaultPosition,
+		const wxSize &size = wxDefaultSize )
+		: wxDialog( parent, wxID_ANY, title, pos, size, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER )
+	{
+		
+		wxPanel *panel = new wxPanel( this );
+		panel->SetBackgroundColour( *wxWHITE );
+		wxStaticText *label = new wxStaticText( panel, wxID_ANY, message, wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT );
+		wxBoxSizer *szpnl = new wxBoxSizer( wxVERTICAL );
+		szpnl->Add( label, 1, wxALL|wxEXPAND, 22 );
+		panel->SetSizer( szpnl );
+				
+		wxBoxSizer *sizer = new wxBoxSizer( wxVERTICAL );
+		sizer->Add( panel, 1, wxALL|wxEXPAND, 0 );
+		sizer->Add( CreateButtonSizer( buttons ), 0, wxALL|wxEXPAND, 11 );
+		SetSizerAndFit( sizer );
+		
+		if ( size != wxDefaultSize )
+			SetClientSize( size );
+		else
+		{
+			wxSize sz = GetClientSize();
+			if ( sz.x < 340 ) sz.x = 340;
+			if ( sz.y < 120 ) sz.y = 120;
+			SetClientSize( sz );
+		}
+		
+		if ( pos == wxDefaultPosition )
+		{
+			if ( parent )
+				CenterOnParent();
+			else 
+				CenterOnScreen();
+		}
+	}
+
+	void OnCommand( wxCommandEvent &evt )
+	{
+		EndModal( evt.GetId() );
+	}
+
+	DECLARE_EVENT_TABLE();
+};
+
+BEGIN_EVENT_TABLE( MyMessageDialog, wxDialog )
+	EVT_BUTTON( wxID_YES, MyMessageDialog::OnCommand )
+	EVT_BUTTON( wxID_NO, MyMessageDialog::OnCommand )
+	EVT_BUTTON( wxID_CANCEL, MyMessageDialog::OnCommand )
+	EVT_BUTTON( wxID_OK, MyMessageDialog::OnCommand )
+END_EVENT_TABLE()
+
+static void run_message_box( lk::invoke_t &cxt, long style, const wxString &title )
+{
+	wxPoint pt( wxDefaultPosition );	
+	wxSize sz( wxDefaultSize );
+
+	if ( cxt.arg_count() > 1 )
+	{
+		lk::vardata_t &pos = cxt.arg(1).deref();
+		pt.x = pos.index(0)->as_integer();
+		pt.y = pos.index(1)->as_integer();
+
+		if ( pos.length() > 2 )
+		{
+			sz.x = pos.index(2)->as_integer();
+			sz.y = pos.index(3)->as_integer();
+		}
+	}
+	else
+		style |= wxCENTER;
+	
+	int ret = wxID_CANCEL;
+	if ( pt != wxDefaultPosition || sz != wxDefaultSize )
+	{
+		MyMessageDialog dlg( GetCurrentTopLevelWindow(), cxt.arg(0).as_string(), title, style, pt, sz );
+		ret = dlg.ShowModal();
+	}
+	else
+	{
+		wxMessageDialog dialog( NULL, cxt.arg(0).as_string(), title, style );
+		ret = dialog.ShowModal();
+	}
+
+    cxt.result().assign( (ret==wxID_OK||ret==wxID_YES) ? 1.0 : 0.0 ) ;
 }
 
+static void _wx_msgbox( lk::invoke_t &cxt )
+{
+	LK_DOC("msgbox", "Shows a message dialog box.", "(string:message, [array:window position [x,y] or geometry [x,y,w,h]):boolean");
+	run_message_box( cxt, wxOK, "Notice" );
+
+}
+
+static void _wx_yesno( lk::invoke_t &cxt )
+{
+	LK_DOC("yesno", "Shows a message box with yes and no buttons.  The function returns true when yes is clicked, false otherwise.", "(string:message, [array:window position [x,y] or geometry [x,y,w,h]]):boolean");
+	run_message_box( cxt, wxYES_NO, "Query" );
+}
 
 static void _wx_in(  lk::invoke_t &cxt )
 {
@@ -210,12 +309,6 @@ static void _wx_html_dialog( lk::invoke_t &cxt )
 	wxHtmlWindow *html = new wxHtmlWindow( frm, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_DEFAULT_STYLE|wxBORDER_NONE );
 	html->SetPage( cxt.arg(0).as_string() );
 	frm->Show();
-}
-
-static void _wx_yesno( lk::invoke_t &cxt )
-{
-	LK_DOC("yesno", "Shows a message box with yes and no buttons.  The function returns true when yes is clicked, false otherwise.", "(string:message):boolean");
-	cxt.result().assign( wxYES==wxMessageBox( cxt.arg(0).as_string(), "Query", wxYES_NO, GetCurrentTopLevelWindow() ) ? 1.0 : 0.0 );
 }
 
 static void _wx_choose_file( lk::invoke_t &cxt )
