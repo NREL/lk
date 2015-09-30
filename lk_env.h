@@ -127,8 +127,8 @@ namespace lk {
 		void assign( expr_t *func ) throw( error_t ); // does NOT take ownership (expr_t must be deleted by the environment
 		void assign( vardata_t *ref ) throw( error_t ); // makes this vardata_t a reference to the object 'ref'
 
-		void assign_fcall( fcallinfo_t *fci );
-		void assign_faddr( size_t bcip );
+		void assign_fcall( fcallinfo_t *fci ) throw (error_t);
+		void assign_faddr( size_t bcip ) throw(error_t);
 
 		void resize( size_t n ) throw( error_t );
 
