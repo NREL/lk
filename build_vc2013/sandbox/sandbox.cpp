@@ -28,8 +28,8 @@
 #include "mtrand.h"
 
 
-enum { ID_CODE = wxID_HIGHEST+149, ID_SAVE, ID_PARSE, ID_IBRK, ID_ASM, ID_BYTECODE, ID_OUTPUT, ID_DEBUG,
-	ID_LOAD, ID_RESET, ID_STEP1, ID_VMRUN, ID_EVAL };
+enum { ID_CODE = wxID_HIGHEST+149, ID_SAVE, ID_PARSE, ID_IBRK, ID_ASM, ID_BYTECODE, ID_OUTPUT,
+	ID_LOAD, ID_RESET, ID_STEP_ASM, ID_DEBUG, ID_STEP_LINE, ID_EVAL };
 
 class VMTestFrame : public wxFrame
 {
@@ -80,8 +80,9 @@ public:
 		buttons->Add( new wxButton( this, ID_SAVE, "save code"), 0, wxALL|wxEXPAND, 3 );
 		buttons->Add( new wxButton( this, ID_LOAD, "load bytecode"), 0, wxALL|wxEXPAND, 3 );
 		buttons->Add( new wxButton( this, ID_RESET, "reset"), 0, wxALL|wxEXPAND, 3 );
-		buttons->Add( new wxButton( this, ID_STEP1, "step"), 0, wxALL|wxEXPAND, 3 );
-		buttons->Add( new wxButton( this, ID_VMRUN, "execvm"), 0, wxALL|wxEXPAND, 3 );
+		buttons->Add( new wxButton( this, ID_STEP_ASM, "stepasm"), 0, wxALL|wxEXPAND, 3 );
+		buttons->Add( new wxButton( this, ID_DEBUG, "debug"), 0, wxALL|wxEXPAND, 3 );
+		buttons->Add( new wxButton( this, ID_STEP_LINE, "stepln"), 0, wxALL|wxEXPAND, 3 );
 		buttons->Add( new wxButton( this, ID_EVAL, "interpret"), 0, wxALL|wxEXPAND, 3 );
 		buttons->Add( m_error=new wxTextCtrl( this, wxID_ANY, "ready."), 1, wxALL|wxALIGN_CENTER_VERTICAL, 3 );
 		buttons->Add( new wxStaticText( this, wxID_ANY, "   brk: "), 0, wxALL|wxALIGN_CENTER_VERTICAL, 3 );
@@ -106,7 +107,7 @@ public:
 		m_output = new wxTextCtrl( this, ID_OUTPUT, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE );
 		m_output->SetForegroundColour( "Dark green" );
 		
-		m_debug = new wxTextCtrl( this, ID_DEBUG, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE );
+		m_debug = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE );
 		m_debug->SetFont( font );
 		m_debug->SetForegroundColour( "Maroon" );
 
@@ -286,7 +287,11 @@ public:
 			int line = debuginfo[ip].line;
 			if ( line > 0 && line <= m_code->GetNumberOfLines() )
 			{
-				m_code->ScrollToLine( line-1 );
+				int ifirst = m_code->GetFirstVisibleLine();
+				int nnl = m_code->LinesOnScreen();
+
+				int ln_to_scroll = line - nnl/2 - 1;
+				m_code->ScrollToLine( ln_to_scroll );
 				m_code->MarkerDeleteAll(m_markArrow );
 				m_code->MarkerAdd( line-1, m_markArrow );
 			}
@@ -413,12 +418,12 @@ public:
 			vm.initialize(m_runEnv);
 			UpdateVMView();
 			break;
-		case ID_STEP1:
+		case ID_STEP_ASM:
 			vm.run( lk::vm::SINGLE );
 			m_error->ChangeValue( vm.error() );			
 			UpdateVMView();
 			break;
-		case ID_VMRUN:
+		case ID_DEBUG:
 		{
 			int ln = atoi( m_ibrk->GetValue().c_str() );
 			if ( ln > 0 )
@@ -427,7 +432,7 @@ public:
 				m_ibrk->ChangeValue( wxString::Format("%d", ln) );
 			}
 			wxStopWatch sw;
-			vm.run( lk::vm::DEBUG );
+			vm.run( lk::vm::DEBUG_RUN );
 			if( ln > 0 )
 			{
 				ln = vm.setbrk( ln+1 );
@@ -436,6 +441,15 @@ public:
 
 			long ms = sw.Time();
 			m_error->ChangeValue( vm.error() + wxString::Format("  (elapsed %d ms)\n", ms ) );			
+			UpdateVMView();
+			break;
+		}
+		case ID_STEP_LINE:
+		{
+			wxStopWatch sw;
+			vm.run( lk::vm::DEBUG_STEP );
+			long ms = sw.Time();
+			m_error->ChangeValue( vm.error() + wxString::Format("  (elapsed %d ms)\n", ms ) );		
 			UpdateVMView();
 			break;
 		}

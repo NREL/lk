@@ -42,7 +42,7 @@ private:
 	std::vector< srcpos_t > debuginfo;
 	std::vector< frame* > frames;
 	lk_string errStr;
-	int ibrkln;
+	srcpos_t brkln, lastbrk;
 
 	void free_frames();
 	bool error( const char *fmt, ... );
@@ -53,7 +53,7 @@ private:
 #endif
 
 public:
-	enum ExecMode { NORMAL, DEBUG, SINGLE };
+	enum ExecMode { NORMAL, DEBUG_RUN, DEBUG_STEP, SINGLE };
 
 	vm( size_t ssize = 2048 );
 	virtual ~vm();
@@ -63,6 +63,9 @@ public:
 	lk_string error() { return errStr; }
 
 	int setbrk( int line );
+	int setbrk( const srcpos_t &spos );
+	int getbrk() { return brkln.line; }
+	void getbrk( srcpos_t &spos ) { spos = brkln; }
 
 	size_t get_ip() { return ip; }
 	frame **get_frames( size_t *nfrm );
