@@ -45,12 +45,44 @@ public:
 		const wxSize &size = wxDefaultSize )
 		: wxDialog( parent, wxID_ANY, title, pos, size, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER )
 	{
-		
+		SetEscapeId( wxID_NONE );
+
 		wxPanel *panel = new wxPanel( this );
 		panel->SetBackgroundColour( *wxWHITE );
-		wxStaticText *label = new wxStaticText( panel, wxID_ANY, message, wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT );
+
 		wxBoxSizer *szpnl = new wxBoxSizer( wxVERTICAL );
-		szpnl->Add( label, 1, wxALL|wxEXPAND, 22 );
+		
+
+		int wrap = 600;
+		if ( size != wxDefaultSize && size.x > 100 )
+			wrap = size.x - 40;
+
+
+		int nlpos  =  message.Find( '\n' );
+		if ( nlpos > 0 )
+		{
+			wxStaticText *label1 = new wxStaticText( panel, wxID_ANY, message.Left(nlpos), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT );
+			wxFont font( label1->GetFont() );
+			font.SetPointSize( font.GetPointSize() + 2 );
+			label1->SetFont( font );
+			label1->SetForegroundColour( wxColour(0,0,120) );
+			label1->Wrap( wrap );
+
+			wxStaticText *label2 = new wxStaticText( panel, wxID_ANY, message.Mid(nlpos+1), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT );
+			label2->Wrap( wrap );
+			
+			szpnl->Add( label1, 0, wxTOP|wxLEFT|wxRIGHT|wxEXPAND, 20 );
+			szpnl->Add( label2, 1,  wxALL|wxEXPAND, 20 );
+
+		}
+		else
+		{
+			wxStaticText *label = new wxStaticText( panel, wxID_ANY, message, wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT );
+			label->Wrap( wrap );
+
+			szpnl->Add( label, 1, wxALL|wxEXPAND, 20 );
+		}
+
 		panel->SetSizer( szpnl );
 				
 		wxBoxSizer *sizer = new wxBoxSizer( wxVERTICAL );
@@ -77,6 +109,17 @@ public:
 		}
 	}
 
+	void OnClose( wxCloseEvent &evt )
+	{
+		EndModal( wxID_CANCEL );
+	}
+
+	void OnCharHook( wxKeyEvent &evt )
+	{
+		if ( evt.GetKeyCode() == WXK_ESCAPE )
+			EndModal( wxID_CANCEL );
+	}
+
 	void OnCommand( wxCommandEvent &evt )
 	{
 		EndModal( evt.GetId() );
@@ -90,6 +133,8 @@ BEGIN_EVENT_TABLE( MyMessageDialog, wxDialog )
 	EVT_BUTTON( wxID_NO, MyMessageDialog::OnCommand )
 	EVT_BUTTON( wxID_CANCEL, MyMessageDialog::OnCommand )
 	EVT_BUTTON( wxID_OK, MyMessageDialog::OnCommand )
+	EVT_CLOSE( MyMessageDialog::OnClose )
+	EVT_CHAR_HOOK( MyMessageDialog::OnCharHook )
 END_EVENT_TABLE()
 
 static void run_message_box( lk::invoke_t &cxt, long style, const wxString &title )
@@ -112,18 +157,8 @@ static void run_message_box( lk::invoke_t &cxt, long style, const wxString &titl
 	else
 		style |= wxCENTER;
 	
-	int ret = wxID_CANCEL;
-	if ( pt != wxDefaultPosition || sz != wxDefaultSize )
-	{
-		MyMessageDialog dlg( GetCurrentTopLevelWindow(), cxt.arg(0).as_string(), title, style, pt, sz );
-		ret = dlg.ShowModal();
-	}
-	else
-	{
-		wxMessageDialog dialog( NULL, cxt.arg(0).as_string(), title, style );
-		ret = dialog.ShowModal();
-	}
-
+	MyMessageDialog dlg( GetCurrentTopLevelWindow(), cxt.arg(0).as_string(), title, style, pt, sz );
+	int ret = dlg.ShowModal();	
     cxt.result().assign( (ret==wxID_OK||ret==wxID_YES) ? 1.0 : 0.0 ) ;
 }
 
