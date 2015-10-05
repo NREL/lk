@@ -434,6 +434,17 @@ static void _wx_homedir( lk::invoke_t &cxt )
 	cxt.result().assign( ::wxGetHomeDir() );
 }
 
+static void _wx_tempfile( lk::invoke_t &cxt )
+{
+	LK_DOC( "tempfile", "Returns a new temporary file name path.", "([string:extension], [string:prefix]):string");
+	wxString tf;
+	wxString pfx("pfx"), ext("tmp");
+	if ( cxt.arg_count() > 0 ) ext = cxt.arg(0).as_string();
+	if ( cxt.arg_count() > 1 ) pfx = cxt.arg(1).as_string();
+	wxGetTempFileName( pfx, tf );
+	cxt.result().assign( tf + "." + ext );
+}
+
 static void _wx_uiyield( lk::invoke_t &cxt )
 {
 	LK_DOC("uiyield", "Yield to the user interface to process any pending events.", "(none):none");
@@ -472,6 +483,7 @@ lk::fcall_t* lk::stdlib_wxui()
 		_wx_username,
 		_wx_env,
 		_wx_uiyield,
+		_wx_tempfile,
 		_wx_scrnres,
 		_wx_transp,
 		0 };
