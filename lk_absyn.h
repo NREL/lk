@@ -163,7 +163,6 @@ namespace lk
 	{
 	public:
 		lk_string name;
-		bool common;
 		bool constval;
 		bool special;
 		iden_t( srcpos_t pos, const lk_string &n, bool cons, bool speci) : node_t(pos), name(n), constval(cons), special(speci) {  }

@@ -811,9 +811,7 @@ bool lk::eval::interpret( node_t *root,
 		if ( n->special && !(flags&ENV_MUTABLE) )
 			return special_get( n->name, result );
 
-		vardata_t *x = cur_env->lookup(n->name, (
-			 ((flags&ENV_MUTABLE) && n->common ) 
-			     || !(flags&ENV_MUTABLE) ) ? true : false );
+		vardata_t *x = cur_env->lookup(n->name, !(flags&ENV_MUTABLE) );
 
 		if (x)
 		{
