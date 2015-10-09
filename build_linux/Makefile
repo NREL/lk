@@ -9,6 +9,8 @@ TARGET = ../$(LIBNAME).a
 
 OBJECTS = \
 	lk_absyn.o \
+	lk_codegen.o \
+	lk_vm.o \
 	lk_env.o \
 	lk_eval.o \
 	lk_invoke.o \

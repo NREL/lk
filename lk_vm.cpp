@@ -1,3 +1,7 @@
+#include <numeric>
+#include <limits>
+#include <cmath>
+
 #include "lk_vm.h"
 
 namespace lk {
