@@ -67,6 +67,7 @@ namespace lk
 	public:
 		srcpos_t() { line = 0; }
 		srcpos_t( const lk_string &f, int l ) : file(f), line(l) { }
+		static srcpos_t npos;
 		lk_string file;
 		int line;
 	};

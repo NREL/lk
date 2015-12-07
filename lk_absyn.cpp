@@ -9,6 +9,10 @@
 #include "lk_lex.h"
 
 
+// static npos storage
+lk::srcpos_t lk::srcpos_t::npos;
+
+
 #if defined(LK_USE_WXWIDGETS)
 
 lk_string lk::to_string( lk_char c )

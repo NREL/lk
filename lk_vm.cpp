@@ -86,6 +86,11 @@ vm::~vm()
 	free_frames();
 }
 
+bool vm::on_run( const srcpos_t &spos)
+{
+	return true;
+}
+
 void vm::free_frames()
 {
 	for( size_t i=0;i<frames.size(); i++ )
@@ -141,10 +146,10 @@ void vm::initialize( lk::env_t *env )
 		stack[i].nullify();
 		
 	frames.push_back( new frame( env, 0, 0, 0 ) );
-
-	brkln.line = 0;
-	brkln.file.clear();
-	lastbrk = brkln;
+	
+	brkpt.resize( program.size(), false );
+	lastbrk.line = -1; // initialize to no valid break position
+	lastbrk.file.clear();
 }
 
 
@@ -162,11 +167,12 @@ bool vm::run( ExecMode mode )
 	const size_t code_size = program.size();
 	size_t next_ip = code_size;
 	vardata_t *lhs, *rhs;
-
-	// initialize the last code point
+	
+	
+	// initialize the last code point for debugging
 	if ( ip < debuginfo.size() )
 		lastbrk = debuginfo[ip];
-
+	
 	try {
 		while ( ip < code_size )
 		{
@@ -177,23 +183,25 @@ bool vm::run( ExecMode mode )
 			opcount[op]++;
 #endif
 
-			if ( mode != NORMAL && ip < debuginfo.size() )
-			{
-				srcpos_t &di = debuginfo[ip];
-
-				if ( mode == DEBUG_RUN
-					&& di.line == brkln.line
-					&& di.file == brkln.file )
+			if ( mode != NORMAL && ip < debuginfo.size() && ip < brkpt.size() )
+			{				
+				const srcpos_t &di = debuginfo[ip];
+				if ( mode == DEBUG_RUN )
 				{
-					return true;
+					if ( brkpt[ip] && (nexecuted > 0 || ip == 0)  )
+						return true;
 				}
-				else if ( mode == DEBUG_STEP
+				else if ( mode == DEBUG_STEP 
 					&& di.line != lastbrk.line 
 					&& di.file == lastbrk.file )
 				{
 					return true;
 				}
 			}
+
+			const srcpos_t &spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
+			if ( !on_run( spos ) )
+				return false;
 
 			next_ip = ip+1;
 			
@@ -697,9 +705,11 @@ bool vm::error( const char *fmt, ... )
 
 int vm::setbrk( int line )
 {
-	for( size_t i=0;i<debuginfo.size();i++ ) {
-		if ( debuginfo[i].line >= line ) {
-			brkln.line = debuginfo[i].line;
+	for( size_t i=0;i<debuginfo.size()&&i<brkpt.size();i++ )
+	{
+		if ( debuginfo[i].line >= line )
+		{
+			brkpt[i] = true;
 			return debuginfo[i].line;
 		}
 	}
@@ -707,10 +717,10 @@ int vm::setbrk( int line )
 	return -1;
 }
 
-int vm::setbrk( const srcpos_t &spos )
+void vm::clrbrk()
 {
-	brkln.file = spos.file;
-	return setbrk( spos.line );
+	for( size_t i=0;i<brkpt.size();i++ )
+		brkpt[i] = false;
 }
 
 } // namespace lk;

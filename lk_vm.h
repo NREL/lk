@@ -41,8 +41,10 @@ private:
 	std::vector< lk_string > identifiers;
 	std::vector< srcpos_t > debuginfo;
 	std::vector< frame* > frames;
+	std::vector< bool > brkpt;
+
 	lk_string errStr;
-	srcpos_t brkln, lastbrk;
+	srcpos_t lastbrk;
 
 	void free_frames();
 	bool error( const char *fmt, ... );
@@ -61,21 +63,25 @@ public:
 	void initialize( lk::env_t *env );
 	bool run( ExecMode mode = NORMAL );
 	lk_string error() { return errStr; }
+	virtual bool on_run( const srcpos_t &spos);
 
+	void clrbrk();
 	int setbrk( int line );
-	int setbrk( const srcpos_t &spos );
-	int getbrk() { return brkln.line; }
-	void getbrk( srcpos_t &spos ) { spos = brkln; }
 
 	size_t get_ip() { return ip; }
 	frame **get_frames( size_t *nfrm );
 	vardata_t *get_stack( size_t *psp );
 
+	const std::vector<unsigned int> &get_program() { return program; }
+	const std::vector<vardata_t> &get_constants() { return constants; }
+	const std::vector<lk_string> &get_identifiers() { return identifiers; }
+	const std::vector<srcpos_t> &get_debuginfo() { return debuginfo; }
+
 	void load( const std::vector<unsigned int> &code,
 		const std::vector<vardata_t> &cnstvals,
 		const std::vector<lk_string> &ids,
 		const std::vector<lk::srcpos_t> &dbginf);
-	
+
 	virtual bool special_set( const lk_string &name, vardata_t &val );
 	virtual bool special_get( const lk_string &name, vardata_t &val );
 	
