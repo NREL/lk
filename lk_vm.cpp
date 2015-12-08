@@ -200,8 +200,12 @@ bool vm::run( ExecMode mode )
 			}
 
 			const srcpos_t &spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
-			if ( !on_run( spos ) )
-				return false;
+
+			// expression & (constant-1) is equivalent to expression % constant where 
+			// constant is a power of two: so use bitwise operator for better performance
+			// see https://en.wikipedia.org/wiki/Modulo_operation#Performance_issues 
+			if ( (nexecuted & 7) && !on_run( spos ) )
+				return error( "halted by user after %d ops", nexecuted );
 
 			next_ip = ip+1;
 			
