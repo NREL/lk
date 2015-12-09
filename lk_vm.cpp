@@ -291,6 +291,27 @@ bool vm::run( ExecMode mode )
 						offset = 2;
 						F.env.assign( "this", new vardata_t( stack[sp-2] ) );
 						F.thiscall = true;
+						
+						if ( ip > 2 && PSH == (Opcode)(unsigned char)program[ip-2] )
+						{
+							size_t arg = ( program[ip-2] >> 8 );
+							F.id = "->" + constants[arg].as_string();
+						}
+						else if ( lhs != 0 )
+						{
+							F.id = "->" + lhs->as_string();
+						}
+						else F.id = "->???";
+					}
+					else
+					{
+						if ( ip > 1 && RREF == (Opcode)(unsigned char)program[ip-1] )
+						{
+							size_t arg = ( program[ip-1] >> 8 );
+							F.id = identifiers[arg];
+						}
+						else
+							F.id = "???";
 					}
 
 					for( size_t i=0;i<arg;i++ )

@@ -31,6 +31,7 @@ public:
 		size_t nargs;
 		size_t iarg;
 		bool thiscall;
+		lk_string id;
 	};
 
 private:

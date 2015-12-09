@@ -312,7 +312,7 @@ public:
 		for( size_t i=0;i<nfrm;i++ )
 		{
 			lk::vm::frame &F = *frames[nfrm-i-1];
-			sout += wxString::Format( "frame[%d] ret=%d fp=%d iarg=%d narg=%d %s\n", 
+			sout += wxString::Format( F.id + "().frame[%d] ret=%d fp=%d iarg=%d narg=%d %s\n", 
 				nfrm-i-1, F.retaddr, F.fp, F.iarg, F.nargs, F.thiscall ? "(thiscall)" : "" );
 			lk_string key;
 			lk::vardata_t *val;
