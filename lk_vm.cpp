@@ -473,20 +473,18 @@ bool vm::run( ExecMode mode )
 			case INC:
 				CHECK_FOR_ARGS( 1 );
 				rhs_deref.assign( rhs_deref.num() + 1.0 );
-				//result.copy( *rhs );
 				break;
 			case DEC:
 				CHECK_FOR_ARGS( 1 );
 				rhs_deref.assign( rhs_deref.num() - 1.0 );
-				//result.copy( *rhs );
 				break;
 			case NOT:
 				CHECK_FOR_ARGS( 1 );
-				result.assign( ((int)rhs_deref.num()) ? 0 : 1 );
+				rhs_deref.assign( ((int)rhs_deref.num()) ? 0 : 1 );
 				break;
 			case NEG:
 				CHECK_FOR_ARGS( 1 );
-				result.assign( 0.0 - rhs_deref.num() );
+				rhs_deref.assign( 0.0 - rhs_deref.num() );
 				break;
 			case MAT:
 				CHECK_FOR_ARGS( 2 );
@@ -583,20 +581,22 @@ bool vm::run( ExecMode mode )
 				if (rhs_deref.type() == vardata_t::HASH)
 				{
 					varhash_t *h = rhs_deref.hash();
-					result.empty_vector();
-					result.vec()->reserve( h->size() );
+
+					lk::vardata_t keys;
+					keys.empty_vector();
+					keys.vec()->reserve( h->size() );
 					for( varhash_t::iterator it = h->begin();
 						it != h->end();
 						++it )
 					{
 						if ( (*it).second->deref().type() != vardata_t::NULLVAL )
-							result.vec_append( (*it).first );
+							keys.vec_append( (*it).first );
 					}
-					return true;
+					rhs->copy( keys );
 				}
 				else
 					return error( "operand to @ (keysof) must be a table");
-				sp--;
+
 				break;
 			case WR:
 				CHECK_FOR_ARGS( 2 );
