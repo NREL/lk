@@ -14,6 +14,8 @@ OBJECTS = \
 	lk_invoke.o \
 	lk_lex.o \
 	lk_parse.o \
+	lk_codegen.o \
+	lk_vm.o \
 	lk_stdlib.o
 
 $(TARGET) : $(OBJECTS)

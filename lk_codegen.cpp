@@ -494,7 +494,6 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			{
 				if ( !pfgen( n->right, flags ) ) return false;
 
-				bool sset = false;
 				// if on the LHS of the assignment we have a special variable i.e. ${xy}, use a 
 				// hack to assign the value to the storage location
 				if ( lk::iden_t *iden = dynamic_cast<lk::iden_t*>(n->left) )
@@ -653,7 +652,6 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			place_label( Lf );
 
 			list_t *p = dynamic_cast<list_t*>(n->left );
-			int iarg = 0;
 			while( p )
 			{
 				iden_t *id = dynamic_cast<iden_t*>( p->item );
