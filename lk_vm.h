@@ -58,8 +58,7 @@ private:
 public:
 	enum ExecMode { NORMAL, DEBUG_RUN, DEBUG_STEP, SINGLE };
 
-//	vm(size_t ssize = 2048);
-	vm(size_t ssize = 65536);
+	vm( size_t ssize = 4096 );
 	virtual ~vm();
 	
 	void initialize( lk::env_t *env );

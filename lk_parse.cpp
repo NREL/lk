@@ -743,8 +743,18 @@ lk::node_t *lk::parser::unary()
 		skip();
 		return new lk::expr_t( srcpos(), expr_t::NOT, unary(), 0 );
 	case lk::lexer::OP_MINUS:
+	{
 		skip();
-		return new lk::expr_t( srcpos(), expr_t::NEG, unary(), 0 );
+		// little optimization here: if unary() expression is a constant number, 
+		// just negate it right here and return that rather than a new expression
+		lk::node_t *un = unary();
+		if ( lk::constant_t *cnst = dynamic_cast<lk::constant_t*>( un ) )
+		{
+			cnst->value = 0 - cnst->value;
+			return cnst;
+		}
+		else return new lk::expr_t( srcpos(), expr_t::NEG, un, 0 );
+	}
 	case lk::lexer::OP_POUND:
 		skip();
 		return new lk::expr_t( srcpos(), expr_t::SIZEOF, unary(), 0 );
