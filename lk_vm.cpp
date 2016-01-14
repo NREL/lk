@@ -711,7 +711,13 @@ bool vm::run( ExecMode mode )
 			if ( mode == SINGLE && nexecuted > 0 ) return true;
 		}
 	} catch( std::exception &exc ) {
-		return error("runtime exception @ %d: %s", (int)ip, exc.what() );
+		
+		srcpos_t spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
+
+		return error("runtime exception at %s %d: %s", 
+			spos.line < 0 ? "ip" : "line",
+			spos.line < 0 ? (int)ip : (int)spos.line, 
+			exc.what() );
 	}
 
 	return true;
