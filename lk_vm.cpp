@@ -40,8 +40,9 @@ OpCodeEntry op_table[] = {
 	{ GET, "get" }, // impl
 	{ WR, "wr" }, // impl
 	{ RREF, "rref" }, // impl
-	{ NREF, "nref" }, // impl
-	{ CREF, "cref" }, // impl
+	{ LREF, "lref" }, // impl
+	{ LCREF, "lcref" }, // impl
+	{ LGREF, "lgref" }, // impl
 	{ FREF, "fref" }, // impl
 	{ CALL, "call" }, // impl
 	{ TCALL, "tcall" }, // impl
@@ -167,7 +168,9 @@ bool vm::run( ExecMode mode )
 	const size_t code_size = program.size();
 	size_t next_ip = code_size;
 	vardata_t *lhs, *rhs;
-	
+
+	// environment where all 'global' variables go
+	env_t &globals = frames.front()->env; 	
 	
 	// initialize the last code point for debugging
 	if ( ip < debuginfo.size() )
@@ -219,8 +222,9 @@ bool vm::run( ExecMode mode )
 			switch( op )
 			{
 			case RREF:
-			case CREF:
-			case NREF:
+			case LREF:
+			case LCREF:
+			case LGREF:
 			{
 				frame &F = *frames.back();
 				CHECK_OVERFLOW();
@@ -234,16 +238,35 @@ bool vm::run( ExecMode mode )
 				{
 					stack[sp++].assign( x );
 				}
-				else if ( op == CREF || op == NREF )
+				else if ( op == LREF || op == LCREF || op == LGREF )
 				{
-					vardata_t *x = new vardata_t;
-					if ( op == CREF )
+					// if this is lefthand side lookup, check if the variable
+					// is in the global frame and was created as a global variable
+					// if so, then place it on the stack.  globals are editable from
+					// any context if they were flagged as such when created
+					vardata_t *x = globals.lookup( identifiers[arg], false );
+					if ( x && x->flagval( vardata_t::GLOBALVAL ) )
+						stack[sp++].assign( x );
+					else
 					{
-						x->set_flag( vardata_t::CONSTVAL );
-						x->clear_flag( vardata_t::ASSIGNED );
+						x = new vardata_t;
+
+						// set up flags
+						if ( op == LCREF )
+						{
+							x->set_flag( vardata_t::CONSTVAL );
+							x->clear_flag( vardata_t::ASSIGNED );
+						}
+						else if( op == LGREF )
+							x->set_flag( vardata_t::GLOBALVAL );
+					
+						// now insert record
+						if ( op == LGREF ) globals.assign( identifiers[arg], x ); // global frame
+						else F.env.assign( identifiers[arg], x ); // local frame
+
+						
+						stack[sp++].assign( x );
 					}
-					F.env.assign( identifiers[arg], x );
-					stack[sp++].assign( x );
 				}
 				else
 					return error("referencing unassigned variable: %s\n", (const char*)identifiers[arg].c_str() );

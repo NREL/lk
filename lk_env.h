@@ -72,8 +72,9 @@ namespace lk {
 		static const unsigned char FLAGMASK = 0xF0;
 
 		// flags
-		static const unsigned char CONSTVAL = 1;
-		static const unsigned char ASSIGNED = 2;
+		static const unsigned char ASSIGNED = 1;
+		static const unsigned char CONSTVAL = 2;
+		static const unsigned char GLOBALVAL = 3;
 
 		vardata_t();
 		vardata_t( const vardata_t &cp );

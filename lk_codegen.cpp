@@ -94,7 +94,8 @@ void code_gen::textout( lk_string &assembly, lk_string &bytecode )
 					nnl.Replace( "\n", "" );
 					assembly += nnl ;
 				}
-				else if ( ip.op == SET || ip.op == GET || ip.op == RREF || ip.op == NREF || ip.op == CREF || ip.op == ARG )
+				else if ( ip.op == SET || ip.op == GET || ip.op == RREF 
+					|| ip.op == LREF || ip.op == LCREF || ip.op == LGREF || ip.op == ARG )
 				{
 					assembly += m_idList[ip.arg];
 				}
@@ -714,8 +715,13 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 		else
 		{
 			Opcode op = RREF;
-			if ( n->constval && flags & F_MUTABLE ) op = CREF;
-			else if ( flags & F_MUTABLE ) op = NREF;
+
+			if ( flags & F_MUTABLE )
+			{
+				if ( n->globalval ) op = LGREF;
+				else if ( n->constval ) op = LCREF;
+				else op = LREF;
+			}
 
 			emit( n->srcpos(), op, place_identifier(n->name) );
 		}

@@ -138,8 +138,10 @@ public:
 	
 	void SetupCodeEditorStyle()
 	{
-		static  char *LKWordlist1  =
-	"if while for return exit break continue function const enum class else elseif define this typeof true false null import ";
+		static  char *LKWordlist1  =	
+	"if while for return exit break continue "
+	"function const enum else elseif define "
+	"this typeof global true false null import";
 
 		m_code->SetScrollWidthTracking( true );
 

@@ -165,8 +165,9 @@ namespace lk
 	public:
 		lk_string name;
 		bool constval;
+		bool globalval;
 		bool special;
-		iden_t( srcpos_t pos, const lk_string &n, bool cons, bool speci) : node_t(pos), name(n), constval(cons), special(speci) {  }
+		iden_t( srcpos_t pos, const lk_string &n, bool cons, bool glob, bool speci) : node_t(pos), name(n), constval(cons), globalval(glob), special(speci) {  }
 		virtual ~iden_t() { }
 	};
 

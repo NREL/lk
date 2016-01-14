@@ -822,11 +822,27 @@ bool lk::eval::interpret( node_t *root,
 				return false;
 			}
 
+			if (n->globalval)
+			{
+				m_errors.push_back( make_error(n, "overriding previous non-global identifier with global-ness not allowed: %s\n", (const char*)n->name.c_str() ));
+				result.nullify();
+				return false;
+			}
+
 			result.assign( x );
 			return true;
 		}
 		else if ( !x && (flags&ENV_MUTABLE)  )
 		{
+			// check if the variable exists in the global frame
+			// and it was originally created as a global variable
+			x = cur_env->global()->lookup( n->name, false );
+			if ( x && x->flagval( vardata_t::GLOBALVAL ) )
+			{
+				result.assign( x );
+				return true;
+			}
+
 			x = new vardata_t;
 
 			if (n->constval)
@@ -835,7 +851,14 @@ bool lk::eval::interpret( node_t *root,
 				x->clear_flag( vardata_t::ASSIGNED );
 			}
 
-			cur_env->assign( n->name, x );
+			if ( n->globalval )
+			{
+				x->set_flag( vardata_t::GLOBALVAL );
+				cur_env->global()->assign( n->name, x );
+			}
+			else
+				cur_env->assign( n->name, x );
+
 			result.assign( x );
 			return true;
 		}

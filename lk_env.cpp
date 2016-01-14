@@ -51,8 +51,7 @@ void lk::vardata_t::assert_modify() throw( error_t )
 		throw error_t("cannot modify a constant value");
 	}
 
-	if ( flagval( CONSTVAL ) )
-		set_flag( ASSIGNED );
+	set_flag( ASSIGNED );
 }
 
 

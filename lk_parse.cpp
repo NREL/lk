@@ -209,7 +209,7 @@ lk::node_t *lk::parser::statement()
 		node_t *b = block();	
 
 		return new expr_t( pos, expr_t::ASSIGN,
-			new iden_t( pos, name, true, false ), 
+			new iden_t( pos, name, true, false, false ), 
 			new expr_t( pos, expr_t::DEFINE,
 				a, b ));
 	}
@@ -404,7 +404,7 @@ lk::node_t *lk::parser::enumerate()
 
 		list_t *link = new list_t( srcpos(), 
 			new expr_t( srcpos(), expr_t::ASSIGN,
-				new iden_t( srcpos_t( m_name, line_num), name, true, false ),
+				new iden_t( srcpos_t( m_name, line_num), name, true, false, false ),
 				new constant_t( srcpos(), cur_value ) ),
 			0 );
 
@@ -769,7 +769,7 @@ lk::node_t *lk::parser::unary()
 			node_t *id = 0;
 			if ( token() == lk::lexer::IDENTIFIER )
 			{
-				id = new iden_t( srcpos(), lex.text(), false, false );
+				id = new iden_t( srcpos(), lex.text(), false, false, false );
 				skip();
 			}
 			else
@@ -959,7 +959,7 @@ lk::node_t *lk::parser::primary()
 		skip();
 		return n; 
 	case lk::lexer::SPECIAL: // special identifiers like ${ab.fkn_34}
-		n = new lk::iden_t( srcpos(), lex.text(), false, true );
+		n = new lk::iden_t( srcpos(), lex.text(), false, false, true );
 		skip();
 		return n;
 	case lk::lexer::IDENTIFIER:
@@ -985,14 +985,22 @@ lk::node_t *lk::parser::primary()
 		else
 		{
 			bool constval = false;
+			bool globalval = false;
 			
 			if ( lex.text() == "const" )
 			{
 				constval = true;
 				skip();
+			} 
+			else if ( lex.text() == "global" )
+			{
+				globalval = true;
+				skip();
 			}
 
-			n = new lk::iden_t( srcpos(), lex.text(), constval, false );
+			// can't have both const global - not needed in practice.
+			
+			n = new lk::iden_t( srcpos(), lex.text(), constval, globalval, false );
 			match(lk::lexer::IDENTIFIER);
 		}
 		return n;
@@ -1035,7 +1043,7 @@ lk::list_t *lk::parser::identifierlist( int septok, int endtok)
 		
 	while ( !m_haltFlag && token(lk::lexer::IDENTIFIER) )
 	{
-		list_t *link = new list_t( srcpos(), new iden_t( srcpos(), lex.text(), false, false ), 0 );
+		list_t *link = new list_t( srcpos(), new iden_t( srcpos(), lex.text(), false, false, false ), 0 );
 		
 		if ( !head ) head = link;
 		

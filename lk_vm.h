@@ -8,7 +8,7 @@ namespace lk {
 
 enum Opcode {
 	ADD, SUB, MUL, DIV, LT, GT, LE, GE, NE, EQ, INC, DEC, OR, AND, NOT, NEG, EXP, PSH, POP, DUP, NUL, ARG,
-	J, JF, JT, IDX, KEY, MAT, WAT, SET, GET, WR, RREF, NREF, CREF, FREF, CALL, TCALL, RET, END, SZ, KEYS, TYP, VEC, HASH,
+	J, JF, JT, IDX, KEY, MAT, WAT, SET, GET, WR, RREF, LREF, LCREF, LGREF, FREF, CALL, TCALL, RET, END, SZ, KEYS, TYP, VEC, HASH,
 	__MaxOp };
 
 struct OpCodeEntry { Opcode op; const char *name; };
