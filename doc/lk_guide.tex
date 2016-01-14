@@ -23,7 +23,7 @@
 \maketitle
 \vspace{3in}
 \begin{abstract}
-The LK (Language Kit) language is a simple but powerful scripting language that is designed to be small, fast, and easily embedded in other applications.  It allows users to extend the built-in functionality of programs, and provides a cross-platform standard library of function calls.  The core LK engine, including lexical analyzer, parser, and evaluator comprises less than 4000 lines of ISO-standard C++ code, and is only dependent on the Standard C++ Library (STL), making it extremely tight and portable to various platforms.  LK also provides a C language API for writing extensions that can be dynamically loaded at runtime.
+The LK (Language Kit) language is a simple but powerful scripting language that is designed to be small, fast, and easily embedded in other applications.  It allows users to extend the built-in functionality of programs, and provides a cross-platform standard library of function calls.  The core LK engine, including lexical analyzer, parser, compiler, and virtual machine comprises roughly 7000 lines of ISO-standard C++ code, and is only dependent on the Standard C++ Library (STL), making it extremely tight and portable to various platforms.  LK also provides a C language API for writing extensions that can be dynamically loaded at runtime.
 
 \textbf{Note:} LK can utilize standard 8-bit ASCII strings via the built-in \texttt{std::string} class, or can be configured to utilize an \texttt{std::string}-compliant string class from an external library.  In this way, Unicode text can be supported natively.  For example, direct integration and linkage with the wxWidgets C++ GUI library string class is provided as an option.
 \end{abstract} 
@@ -841,7 +841,7 @@ db{"doe"} = { "name"="Joe Doe", "email"="joe@lk.org", "phone"="0008886666" };
 db{"doe"}.email = "joe123@gmail.com";
 outln( db{"ruth"}.phone );
 
-// delete jane from the address book
+// delete ruth from the address book
 db{"ruth"} = null;
 
 \end{verbatim}
@@ -989,11 +989,9 @@ const show_welcome = define( <args> )  {  <statements>  };
 
 The alternate syntax described here can help clarify programs and is generally easier for people familiar with other languages, at least initially.  It automatically enforces \emph{const-ness}, so that the function isn't inadvertently replaced later in the code by an assignment statement.
 
-\subsection{Environments and Scope}
 
-This sections reviews in technical detail the mechanisms in LK for storing information about data and function variables.  The rules for variable access are simple but important to understand for writing script code that works as expected in all situations.
 
-\subsubsection{First-class Functions}
+\subsection{First-class Functions}
 
 Functions in LK are \emph{first-class} values, meaning that they are referenced just as any other variable, and can be passed to other functions, replaced with new bodies, or defined implicitly.  Functions can also be declared within other functions, stored in arrays, or referenced by keys in a table.  The \texttt{define} keyword simply returns an internal LK representation of a function, and the assignment statement assigns that 'value' to the variable name.  This ties the variable name to the function, implying that when the variable name is typed as a function call, LK knows to evaluate the function to which it refers.
 
@@ -1027,18 +1025,25 @@ outln( meta("double")(-23) ); // prints -46
 
 It is important to note that the function returned by \texttt{meta} does not retain the context in which it was created.  For example, if the body of the implicit function returned by \texttt{meta} referenced the \texttt{mode} argument in its calculations, running the returned function would result in an error because the \texttt{mode} argument would no longer be present in the current \emph{environment}.
 
-\subsubsection{Environments}
+\subsection{Built-in Functions}
+
+Throughout this guide, we have made use of built-in functions like \texttt{in}, \texttt{outln}, and others.  These functions are included from the LK standard library automatically, and called in exactly the same way as user functions.  Like user functions, they can return values, and sometimes they modify the arguments sent to them.  Refer to the ``Standard Library Reference'' at the end of this guide for documentation on each function's capabilities, parameters, and return values.  When LK is embedded in other programs, additional functions may become available that are specific to the program, and are usually documented by the program separately.
+
+
+\section{Environments}
+
+This section describes how LK stores information about data and functions.  The rules for variable access are simple but important to understand for writing script code that works as expected in all situations.
 
 During the execution of a script, all variables (and thus functions) are stored in a special lookup table called the \emph{environment}.  The environment stores a reference from the variable name to the actual data or function represented by the variable, and allows new variables to be created and queried.  When a script starts executing, the environment is empty, and as variables are assigned values, they are added to the environment.  When an assignment statement changes the value of an existing variable, the old value is discarded and replaced with the new value.
 
-\subsubsection{Variable Lookup Mechanism}
+\subsection{Variable Lookup Mechanism}
 When a function is called, a new environment is created to store variables \emph{local} to the function.  The new environment retains a reference to its \emph{parent environment}, which provides the mechanism by which variables and functions assigned outside a function can be accessed within it.  LK follows these lookup rules:
 
 \begin{enumerate}
 \item The current environment is checked for the existence of the requested variable.
 \item If it exists, the query is over and the variable has been found.
-\item If the variable is not found, and the variable is referenced in a read-only or non-mutable context, LK checks all of the \emph{parent environments} of the current environment to see if the variable has ever previously held a value visible in the environment hierarchy.  If so, the variable has been found and the query is over. Otherwise, an error is thrown indicating an invalid access to an undefined variable.
-\item If the variable is referenced in a mutable context (i.e. on the left hand side of an assignment statement), a new variable entry is created in the current (topmost or nearest) environment, even if a variable of the same name exists in a parent environment.  This prevents variables outside of the function from being inadvertently updated.  This behavior can be overridden using the \texttt{common} keyword, which explicitly allows a function to change a variable external to it.
+\item If the variable is not found, and the variable is referenced in a read-only or non-mutable context (i.e. right-hand side of an assignment statement), LK checks all of the \emph{parent environments} of the current environment to see if the variable exists in the environment hierarchy.  If so, the variable has been found and the query is over. Otherwise, an error is thrown indicating an invalid access to an undefined variable.
+\item If the variable is referenced in a mutable context (i.e. left-hand side of an assignment statement), first the global (top level) environment is searched for the variable name.  If it exists already, and has been marked as a global variable upon its creation, the query is over and the global variable is used.  Otherwise, a new variable is created.  If the \texttt{global} keyword is used, the variable entry is created in the global environment and marked as global, and if not, it is created in the current function's local environment.
 \end{enumerate}
 
 In the script below, the variable \texttt{y} is not defined in any environment when it is first referenced in the body of the \texttt{triple} function.  As a result, a new environment entry is created in the \texttt{triple} environment to hold its value, according to the lookup rules listed above.
@@ -1059,48 +1064,12 @@ triple( 4 );
 outln( y ); // this will print 24
 \end{verbatim}
 
-\subsubsection{The \texttt{common} Specifier}
-
-In the example above with the \texttt{triple} function, writing to variable \texttt{y} in the function call did not overwrite the external value previously defined in the caller's context.  This default behavior helps avoid situations in which externally defined variables are inadvertently modified by a function call, which can become very difficult to debug.
-
-However, in some programming situations, it may be desirable to use a function to change the variable defined in a parent environment.  For this purpose, the \texttt{common} keyword is provided.  It changes step 3 of the variable lookup rules to keep searching the hierarchy of environments when querying the existence of a variable, even when in a mutable or write context.  The \texttt{common} specifier is typed before the name of a variable, and tells the LK engine that it is OK to modify the variable if it already exists outside the function.  If it does not exist in any environment, the variable is created in the local context per the normal rules.
-
-\begin{verbatim}
-y = 24;
-// ... other code ...
-triple = define (x) { common y=3*x; return y; };
-triple( 4 );
-outln( y ); // this will print 12
-\end{verbatim}
-
-More examples of the \texttt{common} keyword are listed below.  Note that in most situations the \texttt{common} specifier is not needed and may be indicative of a sub-optimal program structure, and may introduce undesired behaviors that are difficult to trace and correct.  In the example below, the counter variable \texttt{i} is declared \texttt{common} inside the \texttt{sum} function and so will have a different value after the \texttt{sum} function is called.
-
-
-\begin{verbatim}
-for (i=0;i<5;i++) outln("hello, " + i);
-
-// ... other code ...
-
-sum = define (x) 
-{ 
-   sum=0;
-   for (common i=0;i<#x;i++)
-      sum = sum+x[i];
-   return sum;
-};
-
-outln( sum( [ 1,2,3,4,5,6,7,8,9 ] )); // this will print 45
-outln( i ); // prints 9
-outln( sum );  // prints "<function>"
-\end{verbatim}
-
-Arguments declared in the \texttt{define( )} operator are automatically created as local names in the function's environment.
 
 \subsection{Global Values}
 As we have seen, we can write useful functions using arguments and return values to pass data into and out of functions.  However, sometimes there are some many inputs to a function that it becomes very cumbersome to list them all as arguments.  Alternatively, you might have some variables that are used throughout your program, or are considered reference values or constants.  Because of the hierarchical environment query rules, variables declared in the \emph{main} body of the script can be treated as global values.
 
 \begin{verbatim}
-m_pi = 3.1415926;  // treat this variable as a global
+const m_pi = 3.1415926;  // constant value defined in the 'main' script
 
 circumference = define( r ) { return 2*m_pi*r; };
 deg2rad = define( x ) { return m_pi/180*x; };
@@ -1110,13 +1079,32 @@ outln( "CIRC: " + circumference( 3 ) );
 outln( "D2R: " + deg2rad( 90 ) );
 \end{verbatim}
 
-Common programming advice is to minimize the number of global variables used in a program.  Sometimes the are certainly necessary, but too many can lead to mistakes that are harder to debug and correct, and can reduce the readability and maintainability of your script.
+By default, variables outside the scope of the current environment are read-only.  To make a global variable that can be changed from inside a function, use the \texttt{global} keyword when first assigning it in the main script. Example:
+
+\begin{verbatim}
+global counter = 0;
+
+function increment( step ) {
+	counter += step;
+}
+
+increment( 1 );
+increment( 2 );
+// counter now has value 3
+\end{verbatim}
+
+Common programming advice is to minimize the number of globally writable variables used in a program.  Sometimes they are certainly necessary, but too many can lead to mistakes that are harder to debug and correct, and can reduce the readability and maintainability of your script.
 
 
 
-\subsection{Organizing Programs}
 
-When you write a long program, it can become difficult to organize it in a single file.  LK lets you split a large program into manageable chunks so that you may call functions contained in other scripts.  Another script can be imported using the \texttt{import} command.
+\section{Organizing Programs}
+
+When you write a long program, it can become difficult to organize it in a single file.  This section describes some ways in which LK scripts can be organized into manageable chunks of code.
+
+\subsection{Importing Scripts}
+
+LK lets you split a large program into manageable chunks so that you may call functions contained in other scripts.  Another script can be imported using the \texttt{import} command.
 
 \begin{verbatim}
 <--- file: c:\scripts\functions.lk --->
@@ -1132,7 +1120,7 @@ outln( boltzmann() + ' J/K' );
 
 In this example, the main program imports another script file that contains one or more functions that can be called directly.
 
-\subsection{Objects and Methods}
+\subsection{Object-oriented Programming}
 
 Using functions and tables, it is possible to create objects in LK that encapsulate functionality in a reusable unit.  LK does not explicitly support classes and inheritance like true object-oriented languages like C++ and Java, but clever use of the facilities described thus far in this manual can go a long way in providing the user with powerful capabilities.
 
@@ -1176,17 +1164,14 @@ outln("new side: " + sq[0]->scale_side(1/3));
 outln("area: " + sq[0]->area());
 \end{verbatim}
 
-In this example, the \texttt{make\_square} function works like a \emph{constructor} to create a new object of type square, implemented internally as a table.  The \texttt{area} and \texttt{perim} functions defined within the constructor both take a parameter called \texttt{this}, which is a reference to an object created with \texttt{make\_square}.  Once all of the fields and methods of the square object are defined, the object is returned.  When we say object, in fact we are simply referring internally to a table, whose fields are the memb
+In this example, the \texttt{make\_square} function works like a \emph{constructor} to create a new object of type square, implemented internally as a table.  The \texttt{area} and \texttt{perim} functions defined within the constructor both take a parameter called \texttt{this}, which is a reference to an object created with \texttt{make\_square}.  Once all of the fields and methods of the square object are defined, the object is returned.  When we say object, in fact we are simply referring internally to a table, whose fields are the members.
 
 We then create two instances of a square as two elements in the array \emph{sq}.  In the \texttt{for} loop that prints information about each square in the array, the member functions are called using the \texttt{-\gt} operator.  The \texttt{-\gt} is the \emph{thiscall} operator.  It implicitly passes the left hand side of the operator to the function, in a special local variable called \texttt{this}.  For example, in the \texttt{scale\_side} method, the variable \texttt{this} variable is used to access the data members of the object.
 
-\subsection{Built-in Functions}
-
-Throughout this guide, we have made use of built-in functions like \texttt{in}, \texttt{outln}, and others.  These functions are included from the LK standard library automatically, and called in exactly the same way as user functions.  Like user functions, they can return values, and sometimes they modify the arguments sent to them.  Refer to the "Standard Library Reference" at the end of this guide for documentation on each function's capabilities, parameters, and return values.
 
 \section{Input, Output, and System Access}
 
-LK provides a variety of standard library functions to work with files, directories, and interact with other programs.  So far, we have used the \texttt{in} and \texttt{outln} functions to accept user input and display program output in the runtime console window.  Now we will learn about accessing files and other programs.
+LK provides a variety of standard library functions to work with files, directories, and interact with other programs.  So far, we have used the \texttt{in} and \texttt{outln} functions to accept user input and display program output in the runtime console window.  Now we will learn about accessing files and other programs.  This section describes only a small part of the large standard library of functions included in LK.  Refer to the ``Standard Library Reference'' at the end of this guide for documentation on each function's capabilities, parameters, and return values.  
 
 \subsection{Working with Text Files}
 
