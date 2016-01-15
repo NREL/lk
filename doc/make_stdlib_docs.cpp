@@ -4,7 +4,6 @@
 #include "../lk_parse.cpp"
 #include "../lk_lex.cpp"
 #include "../lk_stdlib.cpp"
-#include "../lk_math.cpp"
 #include "../lk_invoke.cpp"
 
 int main(int argc, char *argv[])

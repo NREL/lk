@@ -139,8 +139,8 @@
 
 \hrulefill
 
-\texttt{{\large\textbf{write}}}\textsf{(integer:filenum, string:buffer, integer:bytes):boolean}\\
- Writes data to a file.
+\texttt{{\large\textbf{write}}}\textsf{(integer:filenum, string:buffer, [integer:nchars]):boolean}\\
+ Writes data to a file, optionally specifying the number of characters to write.
 
 \hrulefill
 
@@ -156,3 +156,8 @@
 
 \texttt{{\large\textbf{ostype}}}\textsf{(none):string}\\
  Returns identifying information about the operating system type. ('osx', 'win32', 'linux', etc).
+
+\hrulefill
+
+\texttt{{\large\textbf{stable\_sort}}}\textsf{(array):none}\\
+ Sort an array of numbers or strings in place while preserving relative ordering of elements.
