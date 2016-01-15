@@ -402,11 +402,11 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			emit( n->srcpos(), EQ );
 			break;
 		case expr_t::INCR:
-			pfgen( n->left, flags );
+			pfgen( n->left, flags|F_MUTABLE );
 			emit( n->srcpos(), INC );
 			break;
 		case expr_t::DECR:
-			pfgen( n->left, flags );
+			pfgen( n->left, flags|F_MUTABLE );
 			emit( n->srcpos(), DEC );
 			break;
 		case expr_t::LOGIOR:
@@ -468,28 +468,28 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			pfgen(n->left, F_NONE);
 			pfgen(n->right, F_NONE);
 			emit( n->srcpos(), ADD );
-			pfgen(n->left, F_NONE);
+			pfgen(n->left, F_MUTABLE );
 			emit( n->srcpos(), WR );
 			break;
 		case expr_t::MINUSEQ:
 			pfgen(n->left, F_NONE);
 			pfgen(n->right, F_NONE);
 			emit( n->srcpos(), SUB );
-			pfgen(n->left, F_NONE);
+			pfgen(n->left, F_MUTABLE );
 			emit( n->srcpos(), WR );
 			break;
 		case expr_t::MULTEQ:
 			pfgen(n->left, F_NONE);
 			pfgen(n->right, F_NONE);
 			emit( n->srcpos(), MUL );
-			pfgen(n->left, F_NONE);
+			pfgen(n->left, F_MUTABLE );
 			emit( n->srcpos(), WR );
 			break;
 		case expr_t::DIVEQ:
 			pfgen(n->left, F_NONE);
 			pfgen(n->right, F_NONE);
 			emit( n->srcpos(), DIV );
-			pfgen(n->left, F_NONE);
+			pfgen(n->left, F_MUTABLE );
 			emit( n->srcpos(), WR );
 			break;
 		case expr_t::ASSIGN:

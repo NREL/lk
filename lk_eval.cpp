@@ -254,13 +254,13 @@ bool lk::eval::interpret( node_t *root,
 				return true;
 
 			case expr_t::INCR:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n->left, cur_env, l, flags|ENV_MUTABLE, ctl_id);
 				newval = l.deref().num() + 1;
 				l.deref().assign( newval );
 				result.assign( newval );
 				return ok;
 			case expr_t::DECR:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n->left, cur_env, l, flags|ENV_MUTABLE, ctl_id);
 				newval = l.deref().num() - 1;
 				l.deref().assign( newval );
 				result.assign( newval );
