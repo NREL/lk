@@ -1,6 +1,7 @@
 #include <limits>
 #include <numeric> 
 
+#include "lk_stdlib.h"
 #include "lk_codegen.h"
 
 namespace lk {
@@ -90,8 +91,8 @@ void code_gen::textout( lk_string &assembly, lk_string &bytecode )
 				}
 				else if ( ip.op == PSH )
 				{
-					wxString nnl(m_constData[ip.arg].as_string());
-					nnl.Replace( "\n", "" );
+					lk_string nnl(m_constData[ip.arg].as_string());
+					lk::replace( nnl, "\n", "" );
 					assembly += nnl ;
 				}
 				else if ( ip.op == SET || ip.op == GET || ip.op == RREF 
