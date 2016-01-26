@@ -1066,31 +1066,21 @@ outln( y ); // this will print 24
 
 
 \subsection{Global Values}
-As we have seen, we can write useful functions using arguments and return values to pass data into and out of functions.  However, sometimes there are some many inputs to a function that it becomes very cumbersome to list them all as arguments.  Alternatively, you might have some variables that are used throughout your program, or are considered reference values or constants.  Because of the hierarchical environment query rules, variables declared in the \emph{main} body of the script can be treated as global values.
+As we have seen, we can write useful functions using arguments and return values to pass data into and out of functions.  However, sometimes there are some many inputs to a function that it becomes very cumbersome to list them all as arguments.  Alternatively, you might have some variables that are used throughout your program, or are considered reference values or constants.  Because of the hierarchical environment query rules, variables declared in the \emph{main} body of the script can be treated as global values.  To make a global variable that can be changed from inside a function, use the \texttt{global} keyword when first assigning it in the main script. Example:
 
 \begin{verbatim}
-const m_pi = 3.1415926;  // constant value defined in the 'main' script
-
-circumference = define( r ) { return 2*m_pi*r; };
-deg2rad = define( x ) { return m_pi/180*x; };
-
-outln( "PI: " + m_pi );
-outln( "CIRC: " + circumference( 3 ) );
-outln( "D2R: " + deg2rad( 90 ) );
-\end{verbatim}
-
-By default, variables outside the scope of the current environment are read-only.  To make a global variable that can be changed from inside a function, use the \texttt{global} keyword when first assigning it in the main script. Example:
-
-\begin{verbatim}
-global counter = 0;
+global counter1 = 0;
+counter2 = 0;
 
 function increment( step ) {
-	counter += step;
+   counter1 += step;
+   counter2 += step;	
 }
 
 increment( 1 );
 increment( 2 );
-// counter now has value 3
+
+// counter1 now has value 3, counter2 is still zero
 \end{verbatim}
 
 Common programming advice is to minimize the number of globally writable variables used in a program.  Sometimes they are certainly necessary, but too many can lead to mistakes that are harder to debug and correct, and can reduce the readability and maintainability of your script.
