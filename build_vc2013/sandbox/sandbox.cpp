@@ -434,7 +434,7 @@ public:
 				m_ibrk->ChangeValue( wxString::Format("%d", ln) );
 			}
 			wxStopWatch sw;
-			vm.run( lk::vm::DEBUG_RUN );
+			vm.run( lk::vm::DEBUG);
 			if( ln > 0 )
 			{
 				ln = vm.setbrk( ln+1 );
@@ -449,7 +449,7 @@ public:
 		case ID_STEP_LINE:
 		{
 			wxStopWatch sw;
-			vm.run( lk::vm::DEBUG_STEP );
+			vm.run( lk::vm::STEP );
 			long ms = sw.Time();
 			m_error->ChangeValue( vm.error() + wxString::Format("  (elapsed %d ms)\n", ms ) );		
 			UpdateVMView();

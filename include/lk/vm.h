@@ -57,7 +57,12 @@ private:
 #endif
 
 public:
-	enum ExecMode { NORMAL, DEBUG_RUN, DEBUG_STEP, SINGLE };
+	enum ExecMode { 
+		NORMAL,   // run with no debugging
+		DEBUG,    // run until next breakpoint
+		STEP,     // step 1 code statement
+		SINGLE    // step 1 assembly instruction
+	};
 
 	vm( size_t ssize = 4096 );
 	virtual ~vm();

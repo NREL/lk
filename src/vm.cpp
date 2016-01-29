@@ -192,12 +192,12 @@ bool vm::run( ExecMode mode )
 			if ( mode != NORMAL && ip < debuginfo.size() && ip < brkpt.size() )
 			{				
 				const srcpos_t &di = debuginfo[ip];
-				if ( mode == DEBUG_RUN )
+				if ( mode == DEBUG )
 				{
 					if ( brkpt[ip] && (nexecuted > 0 || ip == 0)  )
 						return true;
 				}
-				else if ( mode == DEBUG_STEP 
+				else if ( mode == STEP 
 					&& di.stmt != lastbrk.stmt 
 					&& di.file == lastbrk.file )
 				{
