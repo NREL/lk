@@ -5,8 +5,8 @@
 
 #include <sstream>
 
-#include "lk_absyn.h"
-#include "lk_lex.h"
+#include <lk/absyn.h>
+#include <lk/lex.h>
 
 
 // static npos storage

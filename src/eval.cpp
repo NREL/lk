@@ -3,8 +3,8 @@
 #include <cmath>
 #include <limits>
 
-#include "lk_eval.h"
-#include "lk_invoke.h"
+#include <lk/eval.h>
+#include <lk/invoke.h>
 
 static lk_string make_error( lk::node_t *n, const char *fmt, ...)
 {

@@ -1,7 +1,7 @@
 #ifndef __lk_stdlib_h
 #define __lk_stdlib_h
 
-#include "lk_env.h"
+#include <lk/env.h>
 
 namespace lk {
 	

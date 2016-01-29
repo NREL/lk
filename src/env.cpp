@@ -3,8 +3,8 @@
 #include <cstdlib>
 #include <limits>
 
-#include "lk_env.h"
-#include "lk_eval.h"
+#include <lk/env.h>
+#include <lk/eval.h>
 
 #if defined(__WINDOWS__)||defined(WIN32)||defined(_WIN32)||defined(__MINGW___)||defined(_MSC_VER)
 #include <Windows.h>

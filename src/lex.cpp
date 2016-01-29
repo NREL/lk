@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "lk_lex.h"
+#include <lk/lex.h>
 
 
 lk::input_stream::input_stream(FILE *fp)

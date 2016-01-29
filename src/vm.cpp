@@ -2,7 +2,7 @@
 #include <limits>
 #include <cmath>
 
-#include "lk_vm.h"
+#include <lk/vm.h>
 
 namespace lk {
 

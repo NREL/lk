@@ -23,8 +23,8 @@ typedef wxUniChar lk_char;
 #else
 typedef wxChar lk_char;
 #endif
-typedef wxString lk_string;
 
+typedef wxString lk_string;
 typedef wxStringHash lk_string_hash;
 typedef wxStringEqual lk_string_equal;
 

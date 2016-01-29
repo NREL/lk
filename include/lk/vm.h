@@ -1,8 +1,8 @@
 #ifndef __lk_vm_h
 #define __lk_vm_h
 
-#include "lk_absyn.h"
-#include "lk_env.h"
+#include <lk/absyn.h>
+#include <lk/env.h>
 
 namespace lk {
 

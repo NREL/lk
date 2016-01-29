@@ -2,8 +2,8 @@
 #define __lk_parse_h
 
 #include <vector>
-#include "lk_lex.h"
-#include "lk_absyn.h"
+#include <lk/lex.h>
+#include <lk/absyn.h>
 
 namespace lk
 {

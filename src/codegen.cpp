@@ -1,8 +1,8 @@
 #include <limits>
 #include <numeric> 
 
-#include "lk_stdlib.h"
-#include "lk_codegen.h"
+#include <lk/stdlib.h>
+#include <lk/codegen.h>
 
 namespace lk {
 

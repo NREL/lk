@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "lk_parse.h"
+#include <lk/parse.h>
 
 lk::parser::parser( input_base &input, const lk_string &name )
 	: lex( input )

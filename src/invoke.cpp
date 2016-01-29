@@ -1,7 +1,7 @@
 #include <cstring>
 
-#include "lk_env.h"
-#include "lk_invoke.h"
+#include <lk/env.h>
+#include <lk/invoke.h>
 
 
 class extobj : public lk::objref_t

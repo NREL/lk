@@ -9,7 +9,7 @@
 #include <math.h>
 #include <float.h>
 
-#include "lk_stdlib.h"
+#include <lk/stdlib.h>
 
 
 #ifndef M_PI

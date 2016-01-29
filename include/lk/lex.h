@@ -12,7 +12,7 @@ Define _DEBUG if compile with debugging
 
 */
 
-#include "lk_absyn.h"
+#include <lk/absyn.h>
 
 namespace lk {
 

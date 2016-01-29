@@ -1,8 +1,8 @@
 #ifndef __lk_codegen_h
 #define __lk_codegen_h
 
-#include "lk_absyn.h"
-#include "lk_vm.h"
+#include <lk/absyn.h>
+#include <lk/vm.h>
 
 namespace lk {
 

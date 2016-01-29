@@ -6,8 +6,8 @@
 #include <cstdarg>
 #include <exception>
 
-#include "lk_absyn.h"
-#include "lk_invoke.h"
+#include <lk/absyn.h>
+#include <lk/invoke.h>
 
 
 #define LK_DOC(  fn, desc, sig ) if (cxt.doc_mode()) { cxt.document( lk::doc_t(fn , "", desc, sig ) ); return; }

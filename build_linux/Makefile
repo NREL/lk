@@ -1,22 +1,22 @@
-VPATH = ..
+VPATH = ../src
 CC = gcc
 CXX = g++
-CFLAGS = -fPIC -Wall -O2 -DLK_USE_WXWIDGETS `wx-config-3 --cflags`
+CFLAGS = -I../include -fPIC -Wall -O2 -DLK_USE_WXWIDGETS `wx-config-3 --cflags`
 CXXFLAGS = $(CFLAGS)
 
 LIBNAME = lkuxwx3
 TARGET = ../$(LIBNAME).a
 
 OBJECTS = \
-	lk_absyn.o \
-	lk_codegen.o \
-	lk_vm.o \
-	lk_env.o \
-	lk_eval.o \
-	lk_invoke.o \
-	lk_lex.o \
-	lk_parse.o \
-	lk_stdlib.o
+	absyn.o \
+	codegen.o \
+	vm.o \
+	env.o \
+	eval.o \
+	invoke.o \
+	lex.o \
+	parse.o \
+	stdlib.o
 
 $(TARGET) : $(OBJECTS)
 	ar rs $@ $^ 
