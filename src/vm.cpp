@@ -119,7 +119,7 @@ void vm::load( const std::vector<unsigned int> &code,
 	constants = cnstvals;
 	identifiers = ids;
 	debuginfo = dbginf;
-
+	
 	free_frames();
 }
 	
@@ -149,7 +149,10 @@ void vm::initialize( lk::env_t *env )
 	frames.push_back( new frame( env, 0, 0, 0 ) );
 	
 	brkpt.resize( program.size(), false );
-	lastbrk.line = -1; // initialize to no valid break position
+	
+	// initialize to no valid break position
+	lastbrk.line = -1;
+	lastbrk.stmt = -1;
 	lastbrk.file.clear();
 }
 
@@ -195,7 +198,7 @@ bool vm::run( ExecMode mode )
 						return true;
 				}
 				else if ( mode == DEBUG_STEP 
-					&& di.line != lastbrk.line 
+					&& di.stmt != lastbrk.stmt 
 					&& di.file == lastbrk.file )
 				{
 					return true;
@@ -212,6 +215,8 @@ bool vm::run( ExecMode mode )
 
 			next_ip = ip+1;
 			
+			if ( sp < 0 ) throw error_t( "stack corruption" );
+
 			rhs = ( sp >= 1 ) ? &stack[sp-1] : NULL;
 			lhs = ( sp >= 2 ) ? &stack[sp-2] : NULL;
 
@@ -372,7 +377,6 @@ bool vm::run( ExecMode mode )
 				stack[sp++].copy( constants[arg] );
 				break;
 			case POP:
-				if ( sp == 0 ) return error("stack corruption at level 0");
 				sp--;
 				break;
 			case J:
@@ -737,9 +741,10 @@ bool vm::run( ExecMode mode )
 		
 		srcpos_t spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
 
-		return error("runtime exception at %s %d: %s", 
+		return error("runtime exception at %s %d{%d}: %s", 
 			spos.line < 0 ? "ip" : "line",
 			spos.line < 0 ? (int)ip : (int)spos.line, 
+			spos.stmt < 0 ? (int)ip : (int)spos.stmt, 
 			exc.what() );
 	}
 
@@ -763,8 +768,12 @@ int vm::setbrk( int line )
 	{
 		if ( debuginfo[i].line >= line )
 		{
+			// snap the breakpoint to the beginning of the statement
+			while( i > 0 && debuginfo[i-1].stmt == debuginfo[i].stmt )
+				i--;
+			
 			brkpt[i] = true;
-			return debuginfo[i].line;
+			return debuginfo[i].stmt; 
 		}
 	}
 

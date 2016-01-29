@@ -286,7 +286,7 @@ public:
 
 		if ( ip < debuginfo.size() )
 		{
-			int line = debuginfo[ip].line;
+			int line = debuginfo[ip].stmt;
 			if ( line > 0 && line <= m_code->GetNumberOfLines() )
 			{
 				int ifirst = m_code->GetFirstVisibleLine();
@@ -315,7 +315,7 @@ public:
 		{
 			lk::vm::frame &F = *frames[nfrm-i-1];
 			sout += wxString::Format( F.id + "().frame[%d] ret=%d fp=%d iarg=%d narg=%d %s\n", 
-				nfrm-i-1, F.retaddr, F.fp, F.iarg, F.nargs, F.thiscall ? "(thiscall)" : "" );
+				(int)(nfrm-i-1), (int)F.retaddr, (int)F.fp, (int)F.iarg, (int)F.nargs, F.thiscall ? "(thiscall)" : "" );
 			lk_string key;
 			lk::vardata_t *val;
 			bool has_more = F.env.first( key, val );

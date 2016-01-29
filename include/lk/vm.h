@@ -35,7 +35,8 @@ public:
 	};
 
 private:
-	size_t ip, sp;
+	size_t ip;
+	int sp; // use int so that values can go negative and errors easier to catch rather than wrapping around to a large number
 	std::vector< vardata_t > stack;
 	std::vector< unsigned int > program;
 	std::vector< vardata_t > constants;

@@ -58,6 +58,7 @@ namespace lk
 		lexer lex;				
 		int m_tokType;
 		int m_lastLine;
+		int m_lastStmt;
 		lk_string m_lexError;
 		bool m_haltFlag;
 		struct errinfo { int line; lk_string text; };

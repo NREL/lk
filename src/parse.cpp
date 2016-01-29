@@ -9,6 +9,7 @@ lk::parser::parser( input_base &input, const lk_string &name )
 {
 	m_haltFlag = false;
 	m_lastLine = lex.line();
+	m_lastStmt = 0;
 	m_tokType = lex.next();
 	m_name = name;
 }
@@ -83,7 +84,7 @@ bool lk::parser::match(int t)
 
 lk::srcpos_t lk::parser::srcpos()
 {
-	return srcpos_t( m_name, line() );
+	return srcpos_t( m_name, line(), m_lastStmt );
 }
 
 void lk::parser::skip()
@@ -187,6 +188,10 @@ lk::node_t *lk::parser::block()
 lk::node_t *lk::parser::statement()
 {
 	node_t *stmt = 0;
+
+	// update the line number in the source position data
+	// at the beginning of each logical statement in the code
+	m_lastStmt = line();
 	
 	if (lex.text() == "function")
 	{
@@ -404,7 +409,7 @@ lk::node_t *lk::parser::enumerate()
 
 		list_t *link = new list_t( srcpos(), 
 			new expr_t( srcpos(), expr_t::ASSIGN,
-				new iden_t( srcpos_t( m_name, line_num), name, true, false, false ),
+				new iden_t( srcpos_t( m_name, line_num, m_lastStmt), name, true, false, false ),
 				new constant_t( srcpos(), cur_value ) ),
 			0 );
 

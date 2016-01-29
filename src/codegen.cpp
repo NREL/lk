@@ -82,7 +82,7 @@ void code_gen::textout( lk_string &assembly, lk_string &bytecode )
 		{
 			if ( ip.op == op_table[j].op )
 			{
-				sprintf( buf, "%4d  %4s ", ip.pos.line, op_table[j].name );
+				sprintf( buf, "%4d{%4d} %4s ", ip.pos.line, ip.pos.stmt, op_table[j].name );
 				assembly += buf;
 
 				if ( ip.label )
@@ -133,6 +133,7 @@ bool code_gen::emitasm( lk::node_t *root )
 	m_labelCounter = 0;
 	m_breakAddr.clear();
 	m_continueAddr.clear();
+
 	return pfgen(root, F_NONE );
 }
 
