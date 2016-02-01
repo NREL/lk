@@ -157,8 +157,8 @@ void vm::initialize( lk::env_t *env )
 }
 
 
-#define CHECK_FOR_ARGS(n) if ( sp < n ) return error("stack [sp=%d] error, %d arguments required", sp, n );
-#define CHECK_OVERFLOW() if ( sp >= stack.size() ) return error("stack overflow [sp=%d]", stack.size())
+#define CHECK_FOR_ARGS(n) if ( sp < (int)(n) ) return error("stack [sp=%d] error, %d arguments required", sp, n );
+#define CHECK_OVERFLOW() if ( sp >= (int)stack.size() ) return error("stack overflow [sp=%d]", stack.size())
 #define CHECK_CONSTANT() if ( arg >= constants.size() ) return error( "invalid constant value address: %d\n", arg )
 #define CHECK_IDENTIFIER() if ( arg >= identifiers.size() ) return error( "invalid identifier address: %d\n", arg )
 
@@ -675,7 +675,7 @@ bool vm::run( ExecMode mode )
 						
 					vardata_t *result = &stack[sp-1];
 					frame &F = *frames.back();
-					size_t ncleanup = F.nargs + 1 + arg;
+					int ncleanup = (int)( F.nargs + 1 + arg );
 					if ( F.thiscall ) ncleanup++;
 
 					if ( sp <= ncleanup ) 
