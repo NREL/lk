@@ -403,7 +403,19 @@ bool vm::run( ExecMode mode )
 						|| arr.length() <= index ) )
 						arr.resize( index + 1 );
 
-					result.assign( arr.index(index) );
+					vardata_t *x = arr.index(index);
+					
+					// if the array is a local directly on the stack, not a reference,
+					// copy the value before the table is destroyed when it is removed
+					// from the stack.
+					if ( lhs->type() != lk::vardata_t::REFERENCE )
+					{
+						vardata_t *cpy = new vardata_t;
+						cpy->copy( *x );
+						x = cpy;
+					}
+
+					result.assign( x );
 					sp--;
 				}
 				break;
@@ -418,6 +430,16 @@ bool vm::run( ExecMode mode )
 
 					vardata_t *x = hash.lookup( key );
 					if ( !x ) hash.assign( key, x=new vardata_t );
+
+					// if the table is a local directly on the stack, not a reference,
+					// copy the value before the table is destroyed when it is removed
+					// from the stack.
+					if ( lhs->type() != lk::vardata_t::REFERENCE )
+					{
+						vardata_t *cpy = new vardata_t;
+						cpy->copy( *x );
+						x = cpy;
+					}						
 
 					result.assign( x );
 					sp--;

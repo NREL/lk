@@ -65,13 +65,16 @@ namespace lk
 	class srcpos_t
 	{
 	public:
+		static const srcpos_t npos;
+
 		srcpos_t() { line = 0; stmt = 0; }
 		srcpos_t( const lk_string &f, int l, int s ) : file(f), line(l), stmt(s) { }
-		static srcpos_t npos;
 		lk_string file;
 		int line;
 		int stmt;
 	};
+	
+	bool operator==(const srcpos_t &, const srcpos_t &);
 
 	class node_t
 	{

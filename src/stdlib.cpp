@@ -22,6 +22,7 @@
 #include <wx/toplevel.h>
 #include <wx/html/htmlwin.h>
 #include <wx/choicdlg.h>
+#include <wx/filename.h>
 
 static wxWindow *GetCurrentTopLevelWindow()
 {
@@ -441,8 +442,7 @@ static void _wx_tempfile( lk::invoke_t &cxt )
 	wxString pfx("pfx"), ext("tmp");
 	if ( cxt.arg_count() > 0 ) ext = cxt.arg(0).as_string();
 	if ( cxt.arg_count() > 1 ) pfx = cxt.arg(1).as_string();
-	wxGetTempFileName( pfx, tf );
-	cxt.result().assign( tf + "." + ext );
+	cxt.result().assign( wxFileName::CreateTempFileName( pfx ) + "." + ext );
 }
 
 static void _wx_uiyield( lk::invoke_t &cxt )

@@ -433,16 +433,20 @@ lk::node_t *lk::parser::enumerate()
 
 lk::node_t *lk::parser::test()
 {
+	srcpos_t pos = srcpos();
+
 	match("if");
 	match( lk::lexer::SEP_LPAREN );
 	node_t *test = logicalor();
 	match( lk::lexer::SEP_RPAREN );
 	node_t *on_true = block();
 
-	cond_t *c_top = new cond_t( srcpos(), test, on_true, 0 );
+	cond_t *c_top = new cond_t( pos, test, on_true, 0 );
 
 	if ( lex.text() == "else" )
 	{
+		// update statement line since 'else' is like a statement
+		m_lastStmt = line();
 		skip();
 		c_top->on_false = block();
 	}
@@ -452,19 +456,25 @@ lk::node_t *lk::parser::test()
 
 		while( lex.text() == "elseif" )
 		{
+			// update statement line since 'elseif' is like a statement
+			m_lastStmt = line();
+			pos = srcpos();
+
 			skip();
 			match( lk::lexer::SEP_LPAREN );
 			test = logicalor();
 			match( lk::lexer::SEP_RPAREN );
 			on_true = block();
 
-			cond_t *link = new cond_t( srcpos(), test, on_true, 0 );
+			cond_t *link = new cond_t( pos, test, on_true, 0 );
 			tail->on_false = link;
 			tail = link;
 		}
 
 		if ( lex.text() == "else" )
 		{
+			m_lastStmt = line();
+
 			skip();
 			tail->on_false = block();
 		}
@@ -476,7 +486,7 @@ lk::node_t *lk::parser::test()
 lk::node_t *lk::parser::loop()
 {
 	iter_t *it = 0;
-
+	
 	if ( lex.text() == "while" )
 	{
 		it = new iter_t( srcpos(), 0, 0, 0, 0 );
@@ -484,6 +494,7 @@ lk::node_t *lk::parser::loop()
 		match( lk::lexer::SEP_LPAREN );
 		it->test = logicalor();
 		match( lk::lexer::SEP_RPAREN );
+
 		it->block = block();
 	}
 	else if ( lex.text() == "for" )

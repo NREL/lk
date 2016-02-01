@@ -91,7 +91,13 @@ void code_gen::textout( lk_string &assembly, lk_string &bytecode )
 				}
 				else if ( ip.op == PSH )
 				{
-					lk_string nnl(m_constData[ip.arg].as_string());
+					static const int MAXWIDTH = 24;
+					lk_string nnl( m_constData[ip.arg].as_string() );
+					if ( nnl.size() > MAXWIDTH )
+					{
+						nnl = nnl.substr( 0, MAXWIDTH );
+						nnl += "...";
+					}					
 					lk::replace( nnl, "\n", "" );
 					assembly += nnl ;
 				}
@@ -187,12 +193,24 @@ void code_gen::place_label( const lk_string &s )
 
 int code_gen::emit( srcpos_t pos, Opcode o, int arg )
 {
+	// copy previous line's position if parser doesn't know the statement line,
+	// such as when generating if-elseif-else structures for the 'J' instruction
+	// or for implicit function returns
+	if ( pos == srcpos_t::npos && m_asm.size() > 0 )
+		pos = m_asm.back().pos; 
+
 	m_asm.push_back( instr( pos, o, arg ) );
 	return m_asm.size();
 }
 
 int code_gen::emit( srcpos_t pos, Opcode o, const lk_string &L )
 {
+	// copy previous line's position if parser doesn't know the statement line,
+	// such as when generating if-elseif-else structures for the 'J' instruction
+	// or for implicit function returns
+	if ( pos == srcpos_t::npos && m_asm.size() > 0 )
+		pos = m_asm.back().pos; 
+
 	m_asm.push_back( instr(pos, o, 0, (const char*) L.c_str()) );
 	return m_asm.size();
 }
@@ -342,7 +360,10 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 		if ( n->on_false )
 		{
 			L2 = new_label();
-			emit( n->srcpos(), J, L2 );
+
+			// use previous assembly output line as statement position for debugging
+			// since it's unknown at parse time
+			emit( srcpos_t::npos, J, L2 );
 			place_label( L1 );
 			pfgen_stmt( n->on_false, flags );
 		}
@@ -664,8 +685,14 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 
 			pfgen( n->right, F_NONE );
 
+			// if the last statement in the function block,
+			// is not a return issue an implicit return statement
 			if ( m_asm.back().op != RET )
-				emit( n->srcpos(), RET, 0 );
+			{
+				// for implicit return at end of function, use last statement line 
+				// for debugging info since parser can't know where this will be in code.
+				emit( srcpos_t::npos, RET, 0 );
+			}
 
 			place_label( Le );
 			emit( n->srcpos(), FREF, Lf );

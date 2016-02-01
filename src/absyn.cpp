@@ -10,8 +10,14 @@
 
 
 // static npos storage
-lk::srcpos_t lk::srcpos_t::npos;
+const lk::srcpos_t lk::srcpos_t::npos;
 
+bool lk::operator==(const srcpos_t &a, const srcpos_t &b)
+{
+	return a.line == b.line
+		&& a.stmt == b.stmt
+		&& a.file == b.file;
+}
 
 #if defined(LK_USE_WXWIDGETS)
 
