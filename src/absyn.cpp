@@ -16,6 +16,7 @@ bool lk::operator==(const srcpos_t &a, const srcpos_t &b)
 {
 	return a.line == b.line
 		&& a.stmt == b.stmt
+		&& a.stmt_end == b.stmt_end
 		&& a.file == b.file;
 }
 

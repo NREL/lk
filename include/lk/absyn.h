@@ -67,11 +67,10 @@ namespace lk
 	public:
 		static const srcpos_t npos;
 
-		srcpos_t() { line = 0; stmt = 0; }
-		srcpos_t( const lk_string &f, int l, int s ) : file(f), line(l), stmt(s) { }
+		srcpos_t() { line = 0; stmt = 0; stmt_end = 0; }
+		srcpos_t( const lk_string &f, int l, int s, int e=0 ) : file(f), line(l), stmt(s), stmt_end(e) { }
 		lk_string file;
-		int line;
-		int stmt;
+		int line, stmt, stmt_end;
 	};
 	
 	bool operator==(const srcpos_t &, const srcpos_t &);

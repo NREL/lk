@@ -10,6 +10,7 @@ lk::parser::parser( input_base &input, const lk_string &name )
 	m_haltFlag = false;
 	m_lastLine = lex.line();
 	m_lastStmt = 0;
+	m_lastBlockEnd = 0;
 	m_tokType = lex.next();
 	m_name = name;
 }
@@ -172,6 +173,7 @@ lk::node_t *lk::parser::block()
 			
 		}
 		
+		m_lastBlockEnd = line();
 		if (!match( lk::lexer::SEP_RCURLY ))
 		{
 			m_haltFlag = true;
@@ -210,13 +212,20 @@ lk::node_t *lk::parser::statement()
 		node_t *a = identifierlist( lk::lexer::SEP_COMMA, lk::lexer::SEP_RPAREN );
 		match( lk::lexer::SEP_RPAREN );
 		
+		node_t *b = block();
+		
+		// save line position at end of function block as stmt_end
+		// for debugging information in code generator when generating
+		// implicit return statements at the end of a function
+		pos.stmt_end = m_lastBlockEnd;
+		expr_t *expr = new expr_t( pos, expr_t::DEFINE,	a, b );
 
-		node_t *b = block();	
+		pos.stmt_end = pos.stmt;
+		node_t *asgn = new expr_t( pos, expr_t::ASSIGN,	
+			new iden_t( pos, name, true, false, false ),
+			expr );
 
-		return new expr_t( pos, expr_t::ASSIGN,
-			new iden_t( pos, name, true, false, false ), 
-			new expr_t( pos, expr_t::DEFINE,
-				a, b ));
+		return asgn;
 	}
 	else if (lex.text() == "if")
 	{
@@ -409,7 +418,7 @@ lk::node_t *lk::parser::enumerate()
 
 		list_t *link = new list_t( srcpos(), 
 			new expr_t( srcpos(), expr_t::ASSIGN,
-				new iden_t( srcpos_t( m_name, line_num, m_lastStmt), name, true, false, false ),
+				new iden_t( srcpos_t( m_name, line_num, m_lastStmt ), name, true, false, false ),
 				new constant_t( srcpos(), cur_value ) ),
 			0 );
 
@@ -540,6 +549,8 @@ lk::node_t *lk::parser::define()
 	node_t *a = identifierlist( lk::lexer::SEP_COMMA, lk::lexer::SEP_RPAREN );
 	match( lk::lexer::SEP_RPAREN );
 	node_t *b = block();
+
+	pos.stmt_end = m_lastBlockEnd; // take note of where the end of the block is for implicit return statements in debugging
 	
 	return new expr_t( pos, expr_t::DEFINE, a, b );
 }

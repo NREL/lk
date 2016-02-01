@@ -689,9 +689,10 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			// is not a return issue an implicit return statement
 			if ( m_asm.back().op != RET )
 			{
-				// for implicit return at end of function, use last statement line 
-				// for debugging info since parser can't know where this will be in code.
-				emit( srcpos_t::npos, RET, 0 );
+				// for implicit return at end of function, use last code line number of block
+				srcpos_t posend = n->srcpos();
+				posend.stmt = posend.stmt_end;
+				emit( posend, RET, 0 );
 			}
 
 			place_label( Le );
