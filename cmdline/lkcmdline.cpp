@@ -1,33 +1,34 @@
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "../lk_absyn.cpp"
-#include "../lk_env.cpp"
-#include "../lk_eval.cpp"
-#include "../lk_parse.cpp"
-#include "../lk_lex.cpp"
-#include "../lk_stdlib.cpp"
-#include "../lk_invoke.cpp"
-#include "../lk_math.cpp"
+#include <memory>
+
+#include <lk/absyn.h>
+#include <lk/env.h>
+#include <lk/eval.h>
+#include <lk/parse.h>
+#include <lk/lex.h>
+#include <lk/stdlib.h>
+#include <lk/invoke.h>
+#include <lk/codegen.h>
+#include <lk/vm.h>
 
 void fcall_out( lk::invoke_t &cxt )
 {
 	LK_DOC("out", "Output data to the console.", "(...):none");
 	for (size_t i=0;i<cxt.arg_count();i++)
-		std::cout << lk::to_utf8(cxt.arg(i).as_string());
-		
-	std::cout << std::flush;
+		fputs( lk::to_utf8(cxt.arg(i).as_string()).c_str(), stdout );
 }
 
 void fcall_outln( lk::invoke_t &cxt )
 {
 	LK_DOC("outln", "Output data to the console followed by a newline.", "(...):none");
 	for (size_t i=0;i<cxt.arg_count();i++)
-		std::cout << lk::to_utf8(cxt.arg(i).as_string());
+		fputs( lk::to_utf8(cxt.arg(i).as_string()).c_str(), stdout );
 	
-	std::cout << std::endl << std::flush;
+	fputs( "\n", stdout );
+	fflush( stdout );
 }
 void fcall_in(  lk::invoke_t &cxt )
 {
@@ -40,62 +41,85 @@ void fcall_in(  lk::invoke_t &cxt )
 
 int main(int argc, char *argv[])
 {
-	FILE *fp_in = stdin;	
 	bool parse_only = false;
+	bool use_vm = true;
 	
-	if ( argc > 2 
-		&& strcmp( argv[2], "--parse" ) == 0 ) parse_only = true;
-		
-	if ( argc > 1 )
+	if ( argc <= 1 )
 	{
-		fp_in = fopen( argv[1], "r" );
-		if (!fp_in)
+		printf("no input file specified\n");
+		return -1;
+	}
+	
+	if ( argc > 2 )
+	{
+		if( strcmp( argv[2], "--parse" ) == 0 ) parse_only = true;
+		if( strcmp( argv[2], "--eval" ) == 0 ) use_vm = false;
+	}
+	
+	lk::input_file p( argv[1] );
+	lk::parser parse( p );
+
+	std::auto_ptr<lk::node_t> tree( parse.script() );			
+	int i=0;
+	while ( i < parse.error_count() )
+		printf( "%s\n", parse.error(i++).c_str() );
+	
+	if ( tree.get() == NULL || parse.token() != lk::lexer::END)
+		printf("parsing did not reach end of input\n");
+
+	if ( tree.get() == NULL || parse.error_count() > 0 || parse.token() != lk::lexer::END )
+		return -1;
+	
+	if ( parse_only ) return 0;
+	
+	lk::env_t env;
+	env.register_func( fcall_in );
+	env.register_func( fcall_out );
+	env.register_func( fcall_outln );
+
+	env.register_funcs( lk::stdlib_basic() );
+	env.register_funcs( lk::stdlib_string() );
+	env.register_funcs( lk::stdlib_math() );
+
+	if ( use_vm )
+	{
+		lk::code_gen C;
+		if ( C.emitasm( tree.get() ) )
 		{
-			printf("lk: could not read %s\n", argv[1]);
+			std::vector<unsigned int> code;
+			std::vector<lk::vardata_t> data;
+			std::vector<lk_string> id;
+			std::vector<lk::srcpos_t> dbg;		
+
+			C.bytecode( code, data, id, dbg );
+			
+			lk::vm V;
+			V.load( code, data, id, dbg );
+			V.initialize( &env );
+			if ( !V.run() )
+			{
+				printf("vm: %s\n", (const char*)V.error().c_str());
+				return -1;
+			}
+		}
+		else
+		{
+			printf("codegen: %s\n", (const char*)C.error().c_str() );
 			return -1;
 		}
 	}
-	
-	lk::input_stream p( fp_in );
-	lk::parser parse( p );
-
-	lk::node_t *tree = parse.script();
-	int code = 0;
-	if ( parse.error_count() != 0 
-		|| parse.token() != lk::lexer::END)
+	else
 	{
-		printf("parsing did not reach end of input\n");
-	}
-	else if ( !parse_only )
-	{	
-		lk::env_t env;
-		env.register_func( fcall_in );
-		env.register_func( fcall_out );
-		env.register_func( fcall_outln );
-
-		env.register_funcs( lk::stdlib_basic() );
-		env.register_funcs( lk::stdlib_string() );
-		env.register_funcs( lk::stdlib_math() );
-
-		lk::vardata_t result;
-		unsigned int ctl_id = lk::CTL_NONE;
-		std::vector<lk_string> errors;
-		if ( !lk::eval( tree, &env, errors, result, 0, ctl_id, 0, 0 ) )
+		lk::eval ev( tree.get(), &env );
+		if ( !ev.run() )
 		{
-			code = -1;
-			printf("eval failed\n");
-			for (size_t i=0;i<errors.size();i++)
-				printf( ">> %s\n", (const char*)errors[i].c_str() );
+			for( size_t i=0;i<ev.error_count();i++ )
+				printf("eval: %s\n", (const char*) ev.get_error(i).c_str() );
+			
+			return -1;
 		}
+		
 	}
-	
-	for (int i=0; i<parse.error_count(); i++ )
-		printf( ">> %s\n",  (const char*)parse.error(i).c_str() );
-
-	delete tree;
-
-	if ( fp_in != stdin )
-		fclose(fp_in);
-	
-	return code;
+		
+	return 0;
 }

@@ -7,55 +7,17 @@
 
 #include <lk/lex.h>
 
-
-lk::input_stream::input_stream(FILE *fp)
+lk::input_string::input_string()
 {
-	m_ch = 0;
-	m_fp = fp;
-	(*this)++;
-}
-
-lk::input_stream::~input_stream()
-{
-	/* nothing to do */
-}
-
-bool lk::input_stream::is_ok()
-{
-	return m_fp != 0;
-}
-
-char lk::input_stream::operator*()
-{
-	return m_ch;
-}
-
-char lk::input_stream::operator++(int)
-{
-	if (m_fp && !feof(m_fp)) m_ch = fgetc(m_fp);
-	else m_ch = 0;
-	return m_ch;
-}	
-
-char lk::input_stream::peek()
-{
-	if (m_fp)
-	{
-		int c = fgetc(m_fp);
-		if (c==EOF) return 0;
-		else
-		{
-			ungetc(c, m_fp);
-			return (char)c;
-		}
-	}
-	return 0;
+	m_buf = m_p = 0;
 }
 
 lk::input_string::input_string( const lk_string &in )
 {
-	std::string utf8 = lk::to_utf8( in );
-	m_buf = new char[utf8.length()+1];
+	m_buf = 0;
+
+	std::string utf8 = lk::to_utf8( in );	
+	allocate( utf8.length()+1 );
 	if ( m_buf != 0 )
 	{
 		strcpy(m_buf, utf8.c_str());
@@ -68,6 +30,13 @@ lk::input_string::input_string( const lk_string &in )
 lk::input_string::~input_string()
 {
 	if ( m_buf != 0 ) delete [] m_buf;
+}
+
+bool lk::input_string::allocate( size_t n )
+{
+	if ( m_buf ) delete [] m_buf;
+	m_buf = new char[n];
+	return ( 0 != m_buf );
 }
 
 char lk::input_string::operator*()
@@ -90,6 +59,42 @@ char lk::input_string::operator++(int)
 char lk::input_string::peek()
 {
 	if (m_p && *m_p) return *(m_p+1); else return 0;
+}
+
+lk::input_file::input_file( const lk_string &file )
+	: input_string()
+{
+	int len;
+	FILE *f = fopen( file.c_str(), "r" );
+	if ( !f ) return;
+	
+	if ( 0 != fseek( f, 0, SEEK_END ) )
+	{
+		fclose( f );
+		return;
+	}
+	
+	len = ftell( f );
+	
+	allocate( len + 1 );
+	if ( !m_buf )
+	{
+		fclose( f );
+		return;
+	}
+
+	rewind( f );
+	
+	len = (int)fread( m_buf, sizeof(char), len, f );	
+	m_buf[len] = 0;
+	m_p = m_buf;
+
+	fclose( f );
+}
+
+lk::input_file::~input_file()
+{
+	// nothing to do, parent class will free memory
 }
 
 lk::lexer::lexer( input_base &input )

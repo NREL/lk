@@ -24,33 +24,27 @@ namespace lk {
 		virtual char peek() = 0;
 		virtual char operator++(int) = 0;
 	};
-	
-	class input_stream : public input_base
-	{
-	private:
-		FILE *m_fp;
-		char m_ch;
-	public:
-		input_stream(FILE *fp);
-		virtual ~input_stream();
-		bool is_ok();
-		
-		virtual char operator*();
-		virtual char operator++(int);
-		virtual char peek();
-	};
 		
 	class input_string : public input_base
 	{
-	private:
+	protected:
 		char *m_buf;
 		char *m_p;
+		bool allocate( size_t n );
 	public:
+		input_string();
 		input_string( const lk_string &in );
 		virtual ~input_string();
 		virtual char operator*();
 		virtual char operator++(int);
 		virtual char peek();
+	};
+
+	class input_file : public input_string
+	{
+	public:
+		input_file( const lk_string &file );
+		virtual ~input_file();
 	};
 	
 			
