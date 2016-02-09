@@ -127,18 +127,17 @@ void lk::parser::error( const char *fmt, ... )
 
 lk::node_t *lk::parser::script()
 {
-	list_t *head = 0, *tail = 0;
-	node_t *stmt = 0;
+	list_t *head = 0;
+	node_t *stmt;
+
+	srcpos_t startpos = srcpos();
 
 	while ( !token(lk::lexer::END)
 	   && !token(lk::lexer::INVALID)
 		&& (stmt = statement()) )
 	{
-		list_t *link = new list_t( srcpos(), stmt, 0 );
-
-		if (!head) head = link;
-		if (tail) tail->next = link;
-		tail = link;
+		if ( 0 == head ) head = new list_t( startpos );
+		head->items.push_back( stmt );
 	}
 
 	return head;
@@ -155,18 +154,15 @@ lk::node_t *lk::parser::block()
 		
 		if (!token( lk::lexer::SEP_RCURLY ))
 		{
-			list_t *head = new list_t( srcpos(), n, 0 );
-			list_t *tail = head;
+			list_t *head = new list_t( srcpos() );
+			head->items.push_back( n );
 						
 			while ( token() != lk::lexer::END
 				&& token() != lk::lexer::INVALID
 				&& token() != lk::lexer::SEP_RCURLY
 				&& !m_haltFlag )
 			{
-				list_t *link = new list_t( srcpos(), statement(), 0 );
-				
-				tail->next = link;				
-				tail = link;
+				head->items.push_back( statement() );
 			}
 			
 			n = head;
@@ -382,7 +378,8 @@ lk::node_t *lk::parser::enumerate()
 	match( lk::lexer::SEP_LCURLY );
 
 	double cur_value = 0;
-	list_t *head=0, *tail=0;
+	list_t *head=0;
+	srcpos_t startpos = srcpos();
 
 	while ( !m_haltFlag && token(lk::lexer::IDENTIFIER) )
 	{
@@ -416,15 +413,11 @@ lk::node_t *lk::parser::enumerate()
 
 		}
 
-		list_t *link = new list_t( srcpos(), 
-			new expr_t( srcpos(), expr_t::ASSIGN,
-				new iden_t( srcpos_t( m_name, line_num, m_lastStmt ), name, true, false, false ),
-				new constant_t( srcpos(), cur_value ) ),
-			0 );
+		if (!head) head = new list_t( startpos );
 
-		if (!head) head = link;
-		if (tail) tail->next = link;
-		tail = link;
+		head->items.push_back( new expr_t( srcpos(), expr_t::ASSIGN,
+							new iden_t( srcpos_t( m_name, line_num, m_lastStmt ), name, true, false, false ),
+							new constant_t( srcpos(), cur_value  ) ) );
 
 		cur_value += 1.0;
 
@@ -944,21 +937,18 @@ lk::node_t *lk::parser::primary()
 		match( lk::lexer::SEP_RBRACK );
 		return new lk::expr_t( srcpos(), lk::expr_t::INITVEC, n, 0 );
 	case lk::lexer::SEP_LCURLY:
-		{
+		{			
+			srcpos_t startpos = srcpos();
 			skip();
-			list_t *head=0, *tail=0;
+			list_t *head = 0;
 			while ( token() != lk::lexer::INVALID
 				&& token() != lk::lexer::END
 				&& token() != lk::lexer::SEP_RCURLY
 				&& !m_haltFlag )
 			{
-				list_t *link = new list_t( srcpos(), assignment(), 0 );
+				if ( !head ) head = new list_t( startpos );
 
-				if ( !head ) head = link;
-
-				if (tail) tail->next = link;
-
-				tail = link;
+				head->items.push_back( assignment() );
 
 				if ( token() != lk::lexer::SEP_RCURLY )
 					if (!match( lk::lexer::SEP_COMMA ))
@@ -1040,21 +1030,15 @@ lk::node_t *lk::parser::primary()
 
 lk::list_t *lk::parser::ternarylist( int septok, int endtok)
 {
-	list_t *head=0, *tail=0;
-		
+	srcpos_t startpos = srcpos();
+	list_t *head=0;
 	while ( token() != lk::lexer::INVALID
 		&& token() != lk::lexer::END
 		&& token() != endtok 
 		&& !m_haltFlag )
 	{
-		list_t *link = new list_t( srcpos(), ternary(), 0 );
-		
-		if ( !head ) head = link;
-		
-		if (tail) tail->next = link;
-	
-		tail = link;
-
+		if ( !head ) head = new list_t( startpos );
+		head->items.push_back( ternary() );
 		if ( token() != endtok )
 			if (!match( septok ))
 				m_haltFlag = true;
@@ -1066,20 +1050,15 @@ lk::list_t *lk::parser::ternarylist( int septok, int endtok)
 
 lk::list_t *lk::parser::identifierlist( int septok, int endtok)
 {
-	list_t *head=0, *tail=0;
+	srcpos_t startpos = srcpos();
+	list_t *head=0;
 		
 	while ( !m_haltFlag && token(lk::lexer::IDENTIFIER) )
 	{
-		list_t *link = new list_t( srcpos(), new iden_t( srcpos(), lex.text(), false, false, false ), 0 );
-		
-		if ( !head ) head = link;
-		
-		if (tail) tail->next = link;
-		
-		tail = link;
-		
+		if ( !head ) head = new list_t( startpos );
+		head->items.push_back( new iden_t( srcpos(), lex.text(), false, false, false ) );
 		skip();
-								
+
 		if ( token() != endtok )
 			if (!match( septok ))
 				m_haltFlag = true;

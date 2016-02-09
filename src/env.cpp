@@ -992,12 +992,7 @@ void lk::env_t::call( const lk_string &name, std::vector< vardata_t > &args, var
 		env_t frame( this );
 
 		int nargs_expected = 0;
-		list_t *p = argnames;
-		while(p)
-		{
-			nargs_expected++;
-			p=p->next;
-		}
+		if ( argnames ) nargs_expected = argnames->items.size();
 
 		int nargs_given = args.size();
 		if (nargs_given < nargs_expected)
@@ -1006,17 +1001,14 @@ void lk::env_t::call( const lk_string &name, std::vector< vardata_t > &args, var
 		vardata_t *__args = new vardata_t;
 		__args->empty_vector();
 
-		p = argnames;
 		for (size_t aidx=0; aidx < args.size(); aidx++ )
 		{
 			__args->vec()->push_back( vardata_t( args[aidx] ) );
 
-			if (p)
+			if ( argnames && aidx < argnames->items.size() )
 			{
-				if (iden_t *id = dynamic_cast<iden_t*>(p->item))
+				if (iden_t *id = dynamic_cast<iden_t*>(argnames->items[aidx]))
 					frame.assign( id->name, new vardata_t( args[aidx] ));
-
-				p = p->next;
 			}
 		}
 

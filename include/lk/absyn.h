@@ -92,10 +92,9 @@ namespace lk
 	class list_t : public node_t
 	{
 	public:
-		node_t *item;
-		list_t *next;
-		list_t( srcpos_t pos, node_t *i, list_t *n ) : node_t(pos), item(i), next(n) {  };
-		virtual ~list_t() { if (item) delete item; if (next) delete next; }
+		std::vector<node_t*> items;
+		list_t( srcpos_t pos ) : node_t(pos) { }
+		virtual ~list_t() { for( size_t i=0;i<items.size();i++ ) delete items[i]; }
 	};
 					
 	class iter_t : public node_t

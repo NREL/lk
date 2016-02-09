@@ -188,11 +188,10 @@ void lk::pretty_print( lk_string &str, node_t *root, int level )
 	if ( list_t *n = dynamic_cast<list_t*>( root ) )
 	{
 		str += spacer(level) + "{\n";
-		while (n)
+		for( size_t i=0;i<n->items.size();i++ )
 		{
-			pretty_print( str, n->item, level+1 );
+			pretty_print( str, n->items[i], level+1 );
 			str += "\n";
-			n = n->next;
 		}
 		str += spacer(level) + "}";
 	}

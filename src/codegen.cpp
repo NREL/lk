@@ -217,13 +217,15 @@ int code_gen::emit( srcpos_t pos, Opcode o, const lk_string &L )
 
 bool code_gen::initialize_const_vec( lk::list_t *v, vardata_t &vvec )
 {
-	while( v )
+	for( std::vector<node_t*>::iterator it = v->items.begin();
+		it != v->items.end();
+		++it )
 	{
-		if ( lk::constant_t *cc = dynamic_cast<constant_t*>(v->item) )				
+		if ( lk::constant_t *cc = dynamic_cast<constant_t*>( *it ) )				
 			vvec.vec_append( cc->value );
-		else if ( lk::literal_t *cc = dynamic_cast<literal_t*>(v->item) )
+		else if ( lk::literal_t *cc = dynamic_cast<literal_t*>( *it ) )
 			vvec.vec_append( cc->value );
-		else if ( lk::expr_t *expr = dynamic_cast<expr_t*>(v->item) )
+		else if ( lk::expr_t *expr = dynamic_cast<expr_t*>( *it ) )
 		{
 			if ( expr->oper == expr_t::INITVEC )
 			{
@@ -246,8 +248,6 @@ bool code_gen::initialize_const_vec( lk::list_t *v, vardata_t &vvec )
 		}
 		else
 			return false;
-
-		v = v->next;
 	}
 
 	return true;
@@ -255,9 +255,12 @@ bool code_gen::initialize_const_vec( lk::list_t *v, vardata_t &vvec )
 
 bool code_gen::initialize_const_hash( lk::list_t *v, vardata_t &vhash )
 {
-	while( v )
+	for( std::vector<node_t*>::iterator it = v->items.begin();
+		it != v->items.end();
+		++it )
 	{
-		expr_t *assign = dynamic_cast<expr_t*>(v->item);
+		expr_t *assign = dynamic_cast<expr_t*>( *it );
+
 		if (assign && assign->oper == expr_t::ASSIGN)
 		{
 			lk_string key;
@@ -293,8 +296,6 @@ bool code_gen::initialize_const_hash( lk::list_t *v, vardata_t &vhash )
 		}
 		else
 			return false;
-
-		v = v->next;
 	}
 
 	return true;
@@ -314,13 +315,11 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 
 	if ( list_t *n = dynamic_cast<list_t*>( root ) )
 	{
-		while( n )
-		{
-			if ( !pfgen_stmt( n->item, flags ) )
+		for( std::vector<node_t*>::iterator it = n->items.begin();
+			it != n->items.end();
+			++it )
+			if ( !pfgen_stmt( *it, flags ) )
 				return false;
-				
-			n=n->next;
-		}
 	}
 	else if ( iter_t *n = dynamic_cast<iter_t*>( root ) )
 	{
@@ -541,16 +540,17 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 
 			// evaluate all the arguments and pushon to stack
 			list_t *argvals = dynamic_cast<list_t*>(n->right);
-			list_t *p = argvals;
 			int nargs = 0;
-																
-			while( p )
-			{
-				pfgen( p->item, F_NONE );
-				p = p->next;
-				nargs++;
+			if( argvals )
+			{			
+				for( std::vector<node_t*>::iterator it = argvals->items.begin();
+					it != argvals->items.end();
+					++it )
+				{
+					pfgen( *it, F_NONE );
+					nargs++;
+				}
 			}
-
 			expr_t *lexpr = dynamic_cast<expr_t*>(n->left);
 			if ( n->oper == expr_t::THISCALL && 0 != lexpr )
 			{
@@ -592,11 +592,15 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			else
 			{
 				int len = 0;
-				while( p )
+				if ( p )
 				{
-					pfgen( p->item, F_NONE );
-					p = p->next;
-					len++;
+					for( std::vector<node_t*>::iterator it = p->items.begin();
+						it != p->items.end();
+						++it )
+					{
+						pfgen( *it, F_NONE );
+						len++;
+					}
 				}
 				emit( n->srcpos(), VEC, len );
 			}
@@ -613,19 +617,24 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			}
 			else
 			{
-				int npairs = 0;
-				while (p)
-				{
-					expr_t *assign = dynamic_cast<expr_t*>(p->item);
-					if (assign && assign->oper == expr_t::ASSIGN)
+				int len = 0;
+				if ( p )
+				{	
+					for( std::vector<node_t*>::iterator it = p->items.begin();
+						it != p->items.end();
+						++it )
 					{
-						pfgen( assign->left, F_NONE );
-						pfgen( assign->right, F_NONE );
+						expr_t *assign = dynamic_cast<expr_t*>( *it );
+						if (assign && assign->oper == expr_t::ASSIGN)
+						{
+							pfgen( assign->left, F_NONE );
+							pfgen( assign->right, F_NONE );
+							len++;
+						}
 					}
-					p = p->next;
-					npairs++;
 				}
-				emit( n->srcpos(), HASH, npairs );
+
+				emit( n->srcpos(), HASH, len );
 			}
 		}
 			break;
@@ -634,34 +643,30 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			lk_string Le( new_label() );
 			std::vector<lk_string> labels;
 			list_t *p = dynamic_cast<list_t*>( n->right );
-			while( p )
+			if ( p )
 			{
-				labels.push_back( new_label() );
-				p = p->next;
+				for( size_t i=0;i<p->items.size();i++ )
+					labels.push_back( new_label() );
+				
+				for( size_t i=0;i<p->items.size();i++ )
+				{
+					pfgen( n->left, F_NONE );
+					emit( n->srcpos(), PSH,  const_value(i) );
+					emit( n->srcpos(), EQ );
+					emit( n->srcpos(), JT, labels[i] );
+				}
 			}
-
-			p = dynamic_cast<list_t*>( n->right );
-			int idx = 0;
-			while( p )
-			{
-				pfgen( n->left, F_NONE );
-				emit( n->srcpos(), PSH,  const_value(idx) );
-				emit( n->srcpos(), EQ );
-				emit( n->srcpos(), JT, labels[idx] );
-				p = p->next;
-				idx++;
-			}
-
+			
 			emit( n->srcpos(), J, Le );
 				
-			p = dynamic_cast<list_t*>( n->right );
-			idx = 0;
-			while( p )
-			{
-				place_label( labels[idx++] );
-				pfgen( p->item, F_NONE );
-				emit( p->item ? p->item->srcpos() : n->srcpos(), J, Le );
-				p = p->next;
+			if( p )
+			{	
+				for( size_t i=0;i<p->items.size();i++ )
+				{
+					place_label( labels[i] );
+					pfgen( p->items[i], F_NONE );
+					emit( p->items[i] ? p->items[i]->srcpos() : n->srcpos(), J, Le );
+				}
 			}
 
 			place_label( Le );
@@ -676,11 +681,13 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			place_label( Lf );
 
 			list_t *p = dynamic_cast<list_t*>(n->left );
-			while( p )
+			if( p )
 			{
-				iden_t *id = dynamic_cast<iden_t*>( p->item );
-				emit( p->item ? p->item->srcpos() : n->srcpos(), ARG, place_identifier(id->name) );
-				p = p->next;
+				for( size_t i=0;i<p->items.size();i++ )
+				{
+					iden_t *id = dynamic_cast<iden_t*>( p->items[i] );
+					emit( p->items[i] ? p->items[i]->srcpos() : n->srcpos(), ARG, place_identifier(id->name) );
+				}
 			}
 
 			pfgen( n->right, F_NONE );

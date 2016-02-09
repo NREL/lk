@@ -110,20 +110,16 @@ bool lk::eval::interpret( node_t *root,
 	
 	if ( list_t *n = dynamic_cast<list_t*>( root ) )
 	{
-
 		ctl_id = CTL_NONE;
 		bool ok = true;
-		while (n 
-			&& (ok=interpret(n->item, cur_env, result, flags, ctl_id))
-			&& ctl_id == CTL_NONE)
+		for( size_t i=0; i<n->items.size() && ctl_id == CTL_NONE; i++ )
 		{
-			if (!ok)
+			ok=interpret(n->items[i], cur_env, result, flags, ctl_id);
+			if ( !ok )
 			{
 				m_errors.push_back( make_error(n, "eval error in statement list\n" ));
 				return false;
 			}
-
-			n = n->next;
 		}
 
 		return ok;
@@ -457,32 +453,25 @@ bool lk::eval::interpret( node_t *root,
 							list_t *argvals = dynamic_cast<list_t*>(n->right);
 							
 							// first determine number of arguments
-							int nargs = 0;
-							list_t *parg = argvals;
-							while( parg )
-							{
-								nargs++;
-								parg = parg->next;
-							}
+							size_t nargs = 0;
+							if ( argvals ) nargs = argvals->items.size();
 
 							if ( nargs > 0 )
 							{
 								// allocate argument vector and evaluate each argument
 								cxt.arg_list().resize( nargs, vardata_t() );
-								size_t iarg = 0;
-								while (argvals)
+								for( size_t iarg = 0; iarg<nargs;iarg++ )
 								{
 									unsigned int c = CTL_NONE;
 
 									lk::vardata_t &argval = cxt.arg_list()[iarg];
-									if (!interpret( argvals->item, cur_env, argval, flags, c ))
+									if (!interpret( argvals->items[iarg], cur_env, argval, flags, c ))
 									{
-										m_errors.push_back( make_error( argvals, "failed to evaluate function call argument %d to '", (int) iarg) + iden->name + "()'\n" );
+										m_errors.push_back( 
+											make_error( argvals, 
+												"failed to evaluate function call argument %d to '", (int) iarg) + iden->name + "()'\n" );
 										return false;
 									}
-
-									iarg++;
-									argvals = argvals->next;
 								}
 							}
 							
@@ -514,36 +503,21 @@ bool lk::eval::interpret( node_t *root,
 						return false;
 					}
 
-					list_t *argnames = dynamic_cast<list_t*>( define->left );
 					node_t *block = define->right;
 
 					// create new environment frame
 					env_t frame( cur_env );
 
-					// count up expected arguments
-					int nargs_expected = 0;
-					list_t *p = argnames;
-					while(p)
-					{
-						nargs_expected++;
-						p = p->next;
-					}
+					// number of expected arguments
+					list_t *argnames = dynamic_cast<list_t*>( define->left );
+					size_t nargs_expected = argnames ? argnames->items.size() : 0;
 
-					// count up provided arguments
-
+					// number of provided arguments
 					list_t *argvals = dynamic_cast<list_t*>(n->right);
-					p = argvals;
-					int nargs_given = 0;
-					while(p)
-					{
-						nargs_given++;
-						p=p->next;
-					}
+					size_t nargs_given = argvals ? argvals->items.size() : 0;
 
 					if (n->oper == expr_t::THISCALL)
-					{
 						nargs_given++;
-					}
 
 					if (nargs_given < nargs_expected)
 					{
@@ -579,36 +553,30 @@ bool lk::eval::interpret( node_t *root,
 						frame.assign( "this", new vardata_t(thisobj) );
 					}
 
-
-					unsigned int c = CTL_NONE;
-					list_t *n = argnames;
-					p = argvals;
 					vardata_t *__args = new vardata_t;
 					__args->empty_vector();
 
-					int argindex = 0;
-					while (p||n)
+					if ( argvals )
 					{
-						vardata_t v;
-						iden_t *id = 0;
-						if (p)
+						for( size_t argindex=0;
+							argindex<argvals->items.size();
+							argindex++ )
 						{
-							if (!interpret(p->item, cur_env, v, flags, c))
+							vardata_t v;
+							iden_t *id = 0;
+						
+							unsigned int c = CTL_NONE;
+							if (!interpret(argvals->items[argindex], cur_env, v, flags, c))
 							{
-								m_errors.push_back( make_error( p, "failed to initialize function call argument\n" ) );
+								m_errors.push_back( make_error( argvals->items[argindex], "failed to initialize function call argument\n" ) );
 								return false;
 							}
 
-							if (n && (id = dynamic_cast<iden_t*>(n->item)))
+							if ( argindex < argnames->items.size() && (id = dynamic_cast<iden_t*>(argnames->items[argindex])))
 								frame.assign( id->name, new vardata_t( v ) );
 
 							__args->vec()->push_back( vardata_t( v ) );
 						}
-
-						if (p) p = p->next;
-						if (n) n = n->next;
-
-						argindex++;
 					}
 
 					frame.assign( "__args", __args );
@@ -702,12 +670,14 @@ bool lk::eval::interpret( node_t *root,
 				{
 					result.empty_vector();
 					list_t *p = dynamic_cast<list_t*>( n->left );
-					while(p && ok)
+					if ( p )
 					{
-						vardata_t v;
-						ok = ok && interpret(p->item, cur_env, v, flags, ctl_id );
-						result.vec()->push_back( v.deref() );
-						p = p->next;
+						for( size_t i=0;i<p->items.size();i++ )
+						{
+							vardata_t v;
+							ok = ok && interpret(p->items[i], cur_env, v, flags, ctl_id );
+							result.vec()->push_back( v.deref() );
+						}
 					}
 				}
 				return ok && ctl_id==CTL_NONE;
@@ -715,28 +685,29 @@ bool lk::eval::interpret( node_t *root,
 				{
 					result.empty_hash();
 					list_t *p = dynamic_cast<list_t*>( n->left );
-					while (p && ok)
+					if( p )
 					{
-						expr_t *assign = dynamic_cast<expr_t*>(p->item);
-						if (assign && assign->oper == expr_t::ASSIGN)
+						for( size_t i=0;i<p->items.size();i++ )
 						{
-							vardata_t vkey, vval;
-							ok = ok && interpret(assign->left, cur_env, vkey, flags, ctl_id)
-								 && interpret(assign->right, cur_env, vval, flags, ctl_id);
-
-							if (ok)
+							expr_t *assign = dynamic_cast<expr_t*>(p->items[i]);
+							if (assign && assign->oper == expr_t::ASSIGN)
 							{
-								lk_string key = vkey.as_string();
-								varhash_t *h = result.hash();
-								varhash_t::iterator it = h->find( key );
-								if (it != h->end())
-									(*it).second->copy( vval.deref() );
-								else
-									(*h)[key] = new vardata_t( vval.deref() );
+								vardata_t vkey, vval;
+								ok = ok && interpret(assign->left, cur_env, vkey, flags, ctl_id)
+									 && interpret(assign->right, cur_env, vval, flags, ctl_id);
+
+								if (ok)
+								{
+									lk_string key = vkey.as_string();
+									varhash_t *h = result.hash();
+									varhash_t::iterator it = h->find( key );
+									if (it != h->end())
+										(*it).second->copy( vval.deref() );
+									else
+										(*h)[key] = new vardata_t( vval.deref() );
+								}
 							}
 						}
-
-						p = p->next;
 					}
 				}
 				return ok && ctl_id == CTL_NONE;
@@ -745,23 +716,15 @@ bool lk::eval::interpret( node_t *root,
 				vardata_t switchval;
 				switchval.assign( -1.0 );
 				if (!interpret(n->left, cur_env, switchval, flags, ctl_id)) return false;
-
-				int index = switchval.as_integer();
-				int i = 0;
 				list_t *p = dynamic_cast<list_t*>( n->right );
-				while( i < index && p != 0 )
-				{
-					p = p->next;
-					i++;
-				}
-
-				if ( i != index || p == 0 )
+				size_t index = switchval.as_unsigned();
+				if ( !p || index >= p->items.size() )
 				{
 					m_errors.push_back( make_error(n, "invalid switch statement index of %d", index));
 					return false;
 				}
 
-				if (!interpret( p->item, cur_env, result, flags, ctl_id)) return false;
+				if (!interpret( p->items[index], cur_env, result, flags, ctl_id)) return false;
 
 				return ok;
 			}
