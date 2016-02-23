@@ -325,11 +325,12 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 	{
 		if ( n->init && !pfgen_stmt( n->init, flags ) ) return false;
 
-		// labels for beginning and end of loop
+		// labels for beginning, advancement, and outside end of loop
 		lk_string Lb = new_label();
+		lk_string Lc = new_label();
 		lk_string Le = new_label();
 			
-		m_continueAddr.push_back( Lb );
+		m_continueAddr.push_back( Lc );
 		m_breakAddr.push_back( Le );
 
 		place_label( Lb ) ;
@@ -340,6 +341,7 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			
 		pfgen_stmt( n->block, flags );
 
+		place_label( Lc );
 		if ( n->adv && !pfgen_stmt( n->adv, flags ) ) return false;
 
 		emit( n->srcpos(), J, Lb );
@@ -723,14 +725,15 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 
 		case ctlstmt_t::BREAK:
 			if ( m_breakAddr.size() == 0 )
-				return false;
+				return error( "cannot break from outside a loop" );
 
 			emit( n->srcpos(), J, m_breakAddr.back() );
 			break;
 
 		case ctlstmt_t::CONTINUE:
 			if ( m_continueAddr.size() == 0 )
-				return false;
+				return error( "cannot continue from outside a loop" );
+
 			emit( n->srcpos(), J, m_continueAddr.back() );
 			break;
 
