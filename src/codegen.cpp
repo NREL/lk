@@ -91,7 +91,7 @@ void code_gen::textout( lk_string &assembly, lk_string &bytecode )
 				}
 				else if ( ip.op == PSH )
 				{
-					static const int MAXWIDTH = 24;
+					static const size_t MAXWIDTH = 24;
 					lk_string nnl( m_constData[ip.arg].as_string() );
 					if ( nnl.size() > MAXWIDTH )
 					{
