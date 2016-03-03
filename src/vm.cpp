@@ -529,11 +529,11 @@ bool vm::run( ExecMode mode )
 				break;
 			case NOT:
 				CHECK_FOR_ARGS( 1 );
-				rhs_deref.assign( ((int)rhs_deref.num()) ? 0 : 1 );
+				rhs->assign( ((int)rhs_deref.num()) ? 0.0 : 1.0 );
 				break;
 			case NEG:
 				CHECK_FOR_ARGS( 1 );
-				rhs_deref.assign( 0.0 - rhs_deref.num() );
+				rhs->assign( 0.0 - rhs_deref.num() );
 				break;
 			case MAT:
 				CHECK_FOR_ARGS( 2 );
