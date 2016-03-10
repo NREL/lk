@@ -802,6 +802,16 @@ int vm::setbrk( int line )
 	return -1;
 }
 
+std::vector<int> vm::getbrk()
+{
+	std::vector<int> list;
+	for( size_t i=0;i<debuginfo.size()&&i<brkpt.size();i++ )
+		if ( brkpt[i] )
+			list.push_back( debuginfo[i].stmt );
+
+	return list;
+}
+
 void vm::clrbrk()
 {
 	for( size_t i=0;i<brkpt.size();i++ )

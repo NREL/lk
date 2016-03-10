@@ -74,6 +74,7 @@ public:
 
 	void clrbrk();
 	int setbrk( int line );
+	std::vector<int> getbrk();
 
 	size_t get_ip() { return ip; }
 	frame **get_frames( size_t *nfrm );
