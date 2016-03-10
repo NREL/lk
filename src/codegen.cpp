@@ -217,6 +217,8 @@ int code_gen::emit( srcpos_t pos, Opcode o, const lk_string &L )
 
 bool code_gen::initialize_const_vec( lk::list_t *v, vardata_t &vvec )
 {
+	if ( !v ) return true; // empty vector
+
 	for( std::vector<node_t*>::iterator it = v->items.begin();
 		it != v->items.end();
 		++it )
@@ -255,6 +257,8 @@ bool code_gen::initialize_const_vec( lk::list_t *v, vardata_t &vvec )
 
 bool code_gen::initialize_const_hash( lk::list_t *v, vardata_t &vhash )
 {
+	if ( !v ) return true;
+
 	for( std::vector<node_t*>::iterator it = v->items.begin();
 		it != v->items.end();
 		++it )
