@@ -73,8 +73,8 @@ public:
 	virtual bool on_run( const srcpos_t &spos);
 
 	void clrbrk();
-	int setbrk( int line );
-	std::vector<int> getbrk();
+	int setbrk( int line, const lk_string &file );
+	std::vector<srcpos_t> getbrk();
 
 	size_t get_ip() { return ip; }
 	frame **get_frames( size_t *nfrm );

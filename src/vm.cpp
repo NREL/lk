@@ -784,14 +784,17 @@ bool vm::error( const char *fmt, ... )
 	return false;
 }
 
-int vm::setbrk( int line )
+int vm::setbrk( int line, const lk_string &file )
 {
 	for( size_t i=0;i<debuginfo.size()&&i<brkpt.size();i++ )
 	{
-		if ( debuginfo[i].line >= line )
+		if ( debuginfo[i].file == file 
+			&& debuginfo[i].line >= line )
 		{
 			// snap the breakpoint to the beginning of the statement
-			while( i > 0 && debuginfo[i-1].stmt == debuginfo[i].stmt )
+			while( i > 0 
+				&& debuginfo[i-1].file == debuginfo[i].file
+				&& debuginfo[i-1].stmt == debuginfo[i].stmt )
 				i--;
 			
 			brkpt[i] = true;
@@ -802,12 +805,12 @@ int vm::setbrk( int line )
 	return -1;
 }
 
-std::vector<int> vm::getbrk()
+std::vector<srcpos_t> vm::getbrk()
 {
-	std::vector<int> list;
+	std::vector<srcpos_t> list;
 	for( size_t i=0;i<debuginfo.size()&&i<brkpt.size();i++ )
 		if ( brkpt[i] )
-			list.push_back( debuginfo[i].stmt );
+			list.push_back( debuginfo[i] );
 
 	return list;
 }

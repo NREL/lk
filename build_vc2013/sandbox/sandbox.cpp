@@ -430,14 +430,14 @@ public:
 			int ln = atoi( m_ibrk->GetValue().c_str() );
 			if ( ln > 0 )
 			{
-				ln = vm.setbrk( ln );
+				ln = vm.setbrk( ln, "main" );
 				m_ibrk->ChangeValue( wxString::Format("%d", ln) );
 			}
 			wxStopWatch sw;
 			vm.run( lk::vm::DEBUG);
 			if( ln > 0 )
 			{
-				ln = vm.setbrk( ln+1 );
+				ln = vm.setbrk( ln+1, "main" );
 				m_ibrk->ChangeValue( wxString::Format("%d", ln) );
 			}
 
@@ -459,7 +459,7 @@ public:
 		case ID_EVAL:
 			{
 				lk::input_string input( m_code->GetValue() );
-				lk::parser parse( input );
+				lk::parser parse( input, "main" );
 				if ( lk::node_t *node = parse.script() )
 				{
 					if ( parse.error_count() == 0 )
