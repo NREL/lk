@@ -29,6 +29,7 @@ OpCodeEntry op_table[] = {
 	{ NUL, "nul" }, // impl
 	{ DUP, "dup", }, // impl
 	{ ARG, "arg" }, // impl
+	{ SWI, "swi" }, // impl
 	{ J, "j" }, // impl
 	{ JF, "jf" }, // impl
 	{ JT, "jt" }, // impl
@@ -368,6 +369,23 @@ bool vm::run( ExecMode mode )
 					x->assign( &stack[idx] );
 					F.env.assign( identifiers[arg], x );
 					F.iarg++;
+				}
+				break;
+
+			case SWI:
+				{
+					CHECK_FOR_ARGS( 1 );
+					size_t index = rhs_deref.as_unsigned();					
+					size_t noptions = arg;
+					
+					if ( index >= noptions )
+						return error("switch statement index %d out of bounds: only %d options", (int) index, (int)(noptions));
+
+					// advance instruction pointer to the correct jump based on the index number
+					next_ip = ip+1+index;
+					
+					// don't need the switch index on the stack any more
+					sp--;
 				}
 				break;
 

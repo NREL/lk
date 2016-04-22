@@ -106,7 +106,7 @@ void code_gen::textout( lk_string &assembly, lk_string &bytecode )
 				{
 					assembly += m_idList[ip.arg];
 				}
-				else if ( ip.op == TCALL || ip.op == CALL || ip.op == VEC || ip.op == HASH )
+				else if ( ip.op == TCALL || ip.op == CALL || ip.op == VEC || ip.op == HASH || ip.op == SWI )
 				{
 					sprintf(buf, "(%d)", ip.arg );
 					assembly += buf;
@@ -648,30 +648,26 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 		{
 			lk_string Le( new_label() );
 			std::vector<lk_string> labels;
+			
 			list_t *p = dynamic_cast<list_t*>( n->right );
+
+			pfgen( n->left, F_NONE );
+			emit( n->srcpos(), SWI,  p ? (int) p->items.size() : 0 );
+
 			if ( p )
 			{
 				for( size_t i=0;i<p->items.size();i++ )
-					labels.push_back( new_label() );
-				
-				for( size_t i=0;i<p->items.size();i++ )
 				{
-					pfgen( n->left, F_NONE );
-					emit( n->srcpos(), PSH,  const_value(i) );
-					emit( n->srcpos(), EQ );
-					emit( n->srcpos(), JT, labels[i] );
+					labels.push_back( new_label() );
+					emit( n->srcpos(), J, labels.back() );
 				}
-			}
-			
-			emit( n->srcpos(), J, Le );
 				
-			if( p )
-			{	
 				for( size_t i=0;i<p->items.size();i++ )
 				{
 					place_label( labels[i] );
 					pfgen( p->items[i], F_NONE );
-					emit( p->items[i] ? p->items[i]->srcpos() : n->srcpos(), J, Le );
+					if ( i < p->items.size()-1 )
+						emit( p->items[i] ? p->items[i]->srcpos() : n->srcpos(), J, Le );
 				}
 			}
 
