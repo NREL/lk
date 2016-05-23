@@ -1,7 +1,7 @@
 VPATH = ../src
 CC = gcc
 CXX = g++
-CFLAGS = -I../include -fPIC -Wall -O2 -DLK_USE_WXWIDGETS `wx-config-3 --cflags`
+CFLAGS = -I../include -fPIC -Wall -std=c++0x -O2 -DLK_USE_WXWIDGETS `wx-config-3 --cflags`
 CXXFLAGS = $(CFLAGS)
 
 LIBNAME = lkosxwx3
