@@ -948,7 +948,20 @@ lk::node_t *lk::parser::primary()
 			{
 				if ( !head ) head = new list_t( startpos );
 
-				head->items.push_back( assignment() );
+				if( token() != lk::lexer::IDENTIFIER && token() != lk::lexer::LITERAL )
+				{
+					error( "invalid key syntax in table initializer" );
+					m_haltFlag = true;
+					return 0;
+				}
+
+				lk_string key( lex.text() );
+				skip();
+				match( lk::lexer::OP_ASSIGN );
+
+				head->items.push_back( new lk::expr_t( srcpos(), lk::expr_t::ASSIGN, 
+					new lk::literal_t( srcpos(), key ),
+					ternary() ) );
 
 				if ( token() != lk::lexer::SEP_RCURLY )
 					if (!match( lk::lexer::SEP_COMMA ))
