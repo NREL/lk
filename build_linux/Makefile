@@ -2,9 +2,10 @@ VPATH = ../src
 CC = gcc
 CXX = g++
 CFLAGS = -I../include -fPIC -Wall -O2 -DLK_USE_WXWIDGETS `wx-config-3 --cflags`
-CXXFLAGS= -std=c++11 $(CFLAGS)
-OBJCXXFLAGS=-stdlib=libc++ -std=c++11
-LDFLAGS=-stdlib=libc++
+CXXFLAGS = -std=c++0x $(CFLAGS)
+#CXXFLAGS= -std=c++11 $(CFLAGS)
+#OBJCXXFLAGS=-stdlib=libc++ -std=c++11
+#LDFLAGS=-stdlib=libc++
 
 LIBNAME = lkuxwx3
 TARGET = ../$(LIBNAME).a
