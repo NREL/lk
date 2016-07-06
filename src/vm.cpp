@@ -781,10 +781,9 @@ bool vm::run( ExecMode mode )
 		
 		srcpos_t spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
 
-		return error("runtime exception at %s %d{%d}: %s", 
+		return error("runtime exception at %s %d: %s", 
 			spos.line < 0 ? "ip" : "line",
 			spos.line < 0 ? (int)ip : (int)spos.line, 
-			spos.stmt < 0 ? (int)ip : (int)spos.stmt, 
 			exc.what() );
 	}
 
@@ -793,12 +792,18 @@ bool vm::run( ExecMode mode )
 	
 bool vm::error( const char *fmt, ... )
 {
+	const srcpos_t &spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
+	
 	char buf[512];
+	sprintf( buf, "[%d] ", spos.stmt );
+	errStr = buf;
+
 	va_list args;
 	va_start( args, fmt );
 	vsprintf( buf, fmt, args );
 	va_end( args );
-	errStr = buf;	
+	errStr += buf;	
+
 	return false;
 }
 
