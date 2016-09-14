@@ -23,6 +23,7 @@
 #include <wx/html/htmlwin.h>
 #include <wx/choicdlg.h>
 #include <wx/filename.h>
+#include <wx/progdlg.h>
 
 static wxWindow *GetCurrentTopLevelWindow()
 {
@@ -174,6 +175,62 @@ static void _wx_yesno( lk::invoke_t &cxt )
 {
 	LK_DOC("yesno", "Shows a message box with yes and no buttons.  The function returns true when yes is clicked, false otherwise.", "(string:message, [array:window position [x,y] or geometry [x,y,w,h]]):boolean");
 	run_message_box( cxt, wxYES_NO, "Query" );
+}
+
+static void _wx_progressbar( lk::invoke_t &cxt )
+{
+static wxProgressDialog *s_dlg = 0;
+
+	LK_DOC( "progressbar", "Shows a progress bar dialog.  Call this function multiple times to update the progress value.  Options: message, title, value, max, cancelbutton:t/f, time:t/f. Call it with no parameters to close an existing progress dialog.  Returns true if cancel button was pressed.", "(table:options):boolean" );
+
+	if ( cxt.arg_count() == 0 )
+	{
+		if ( s_dlg ) {
+			wxDELETE( s_dlg );
+			s_dlg = 0;
+		}
+	}
+	else
+	{
+		int max = 100;
+		int val = 0;
+		wxString title("Progress"), message("Please wait...");
+		bool cancelbutton = false;
+		bool showtime = false;
+
+		lk::vardata_t &opt = cxt.arg(0);
+		if ( lk::vardata_t *x = opt.lookup( "message" ) )
+			message = x->as_string();
+		if ( lk::vardata_t *x = opt.lookup( "title" ) )
+			title = x->as_string();
+		if ( lk::vardata_t *x = opt.lookup( "cancelbutton" ) )
+			cancelbutton = x->as_boolean();
+		if ( lk::vardata_t *x = opt.lookup( "time" ) )
+			showtime = x->as_boolean();
+		if ( lk::vardata_t *x = opt.lookup( "value" ) )
+			val = x->as_integer();
+		if ( lk::vardata_t *x = opt.lookup( "max" ) )
+			max = x->as_integer();
+
+		if ( s_dlg )
+		{
+			s_dlg->Update( val, message );	
+			wxSafeYield( s_dlg );	
+		}
+		else
+		{
+			long style = wxPD_SMOOTH|wxPD_APP_MODAL;
+			if ( cancelbutton ) style |= wxPD_CAN_ABORT;
+			if ( showtime ) style |= wxPD_ELAPSED_TIME;
+
+			s_dlg = new wxProgressDialog( title, message, max, GetCurrentTopLevelWindow(), style );
+			s_dlg->Show();
+			wxSafeYield( s_dlg );
+		}
+
+		cxt.result().assign( s_dlg->WasCancelled() ? 1.0 : 0.0 );
+
+	}
 }
 
 static void _wx_in(  lk::invoke_t &cxt )
@@ -470,6 +527,7 @@ lk::fcall_t* lk::stdlib_wxui()
 	static const lk::fcall_t vec[] = {
 		_wx_msgbox,
 		_wx_in,
+		_wx_progressbar,
 		_wx_choose_from_list,
 		_wx_html_dialog,
 		_wx_yesno,
