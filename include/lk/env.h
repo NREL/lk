@@ -157,8 +157,14 @@ namespace lk {
 	
 	class objref_t
 	{
+	private:
+		friend class env_t;
+		env_t *m_env;
+
 	public:
-		virtual ~objref_t() {  }
+		objref_t() { m_env = 0; };
+		virtual ~objref_t() { }
+		env_t *get_env() { return m_env; }
 		virtual lk_string type_name() = 0;
 	};
 	

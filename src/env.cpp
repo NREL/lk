@@ -924,6 +924,8 @@ size_t lk::env_t::insert_object( objref_t *o )
 {
 	if ( env_t *g = global() )
 	{
+		o->m_env = g;
+
 		int iempty = -1;
 		for( size_t i=0;i<g->m_objTable.size();i++ )
 		{

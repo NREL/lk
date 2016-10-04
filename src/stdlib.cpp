@@ -177,23 +177,47 @@ static void _wx_yesno( lk::invoke_t &cxt )
 	run_message_box( cxt, wxYES_NO, "Query" );
 }
 
+class MyProgressDialog : public wxProgressDialog
+{
+	lk::objref_t *m_ref;
+public:
+	MyProgressDialog( lk::objref_t *ref, const wxString &title, const wxString &message, int max, wxWindow *parent, long style )
+		: wxProgressDialog( title, message, max, parent, style )
+	{
+		m_ref = ref;
+	}
+
+	void ClearRef() { m_ref = 0; }
+
+	virtual ~MyProgressDialog() {
+		// destroy and de-register the object from the environment
+		// if the dialog box is destroyed because the parent window is closed
+		// or for some other reason, and the reference is no longer valid
+		if ( m_ref ) m_ref->get_env()->destroy_object( m_ref );
+	}
+	
+};
+
+class prgdlg_t : public lk::objref_t
+{
+public:
+	MyProgressDialog *m_dlg;
+	prgdlg_t() { m_dlg = 0; }
+	virtual ~prgdlg_t() { if ( m_dlg ){ m_dlg->ClearRef(); m_dlg->Destroy(); } }
+	virtual lk_string type_name() { return "progressbar"; }
+};
+
 static void _wx_progressbar( lk::invoke_t &cxt )
 {
-static wxProgressDialog *s_dlg = 0;
+	LK_DOC( "progressbar", "Shows a progress bar dialog.  "
+		"Call this function with a table of options (message,title,cancelbutton:t/f,time:t/f,max) to create a new dialog, and the reference is returned.  "
+		"Call this function with a reference and a table of options (message,value) to update the progress.  "
+		"Call this function with a reference only to destroy an existing dialog.  "
+		"Returns true if cancel button was pressed for an update call, or obj-ref when creating a new dialog.", "([obj-ref], table:options):[boolean or obj-ref]" );
 
-	LK_DOC( "progressbar", "Shows a progress bar dialog.  Call this function multiple times to update the progress value.  Options: message, title, value, max, cancelbutton:t/f, time:t/f. Call it with no parameters to close an existing progress dialog.  Returns true if cancel button was pressed.", "(table:options):boolean" );
-
-	if ( cxt.arg_count() == 0 )
-	{
-		if ( s_dlg ) {
-			wxDELETE( s_dlg );
-			s_dlg = 0;
-		}
-	}
-	else
+	if ( cxt.arg_count() == 1 && cxt.arg(0).type() == lk::vardata_t::HASH )
 	{
 		int max = 100;
-		int val = 0;
 		wxString title("Progress"), message("Please wait...");
 		bool cancelbutton = false;
 		bool showtime = false;
@@ -207,29 +231,44 @@ static wxProgressDialog *s_dlg = 0;
 			cancelbutton = x->as_boolean();
 		if ( lk::vardata_t *x = opt.lookup( "time" ) )
 			showtime = x->as_boolean();
-		if ( lk::vardata_t *x = opt.lookup( "value" ) )
-			val = x->as_integer();
 		if ( lk::vardata_t *x = opt.lookup( "max" ) )
 			max = x->as_integer();
 
-		if ( s_dlg )
+		long style = wxPD_SMOOTH|wxPD_APP_MODAL;
+		if ( cancelbutton ) style |= wxPD_CAN_ABORT;
+		if ( showtime ) style |= wxPD_ELAPSED_TIME;
+
+		prgdlg_t *ref = new prgdlg_t;
+		ref->m_dlg = new MyProgressDialog( ref, title, message, max, GetCurrentTopLevelWindow(), style );		
+		ref->m_dlg->Show();
+		size_t iref = cxt.env()->insert_object( ref );
+		cxt.result().assign( (double)iref );
+	}
+	else if ( cxt.arg_count() == 1 && cxt.arg(0).type() == lk::vardata_t::NUMBER )
+	{
+		if ( prgdlg_t *ref = dynamic_cast<prgdlg_t*>( cxt.env()->query_object( cxt.arg(0).as_unsigned() ) ) )
 		{
-			s_dlg->Update( val, message );	
-			wxSafeYield( s_dlg );	
+			ref->m_dlg->ClearRef();
+			ref->m_dlg->Destroy();
+			cxt.env()->destroy_object( ref );
 		}
-		else
+	}
+	else if ( cxt.arg_count() == 2 )
+	{
+		if ( prgdlg_t *ref = dynamic_cast<prgdlg_t*>( cxt.env()->query_object( cxt.arg(0).as_unsigned() ) ) )
 		{
-			long style = wxPD_SMOOTH|wxPD_APP_MODAL;
-			if ( cancelbutton ) style |= wxPD_CAN_ABORT;
-			if ( showtime ) style |= wxPD_ELAPSED_TIME;
+			wxString message;
+			int value = -9999;
+			lk::vardata_t &opt = cxt.arg(1);
+			if ( lk::vardata_t *x = opt.lookup( "message" ) )
+				message = x->as_string();
+			if ( lk::vardata_t *x = opt.lookup( "value" ) )
+				value = x->as_integer();
 
-			s_dlg = new wxProgressDialog( title, message, max, GetCurrentTopLevelWindow(), style );
-			s_dlg->Show();
-			wxSafeYield( s_dlg );
+			ref->m_dlg->Update( value, message );	
+			wxSafeYield( ref->m_dlg );
+			cxt.result().assign( ref->m_dlg->WasCancelled() ? 1.0 : 0.0 );
 		}
-
-		cxt.result().assign( s_dlg->WasCancelled() ? 1.0 : 0.0 );
-
 	}
 }
 
