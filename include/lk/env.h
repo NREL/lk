@@ -155,6 +155,7 @@ namespace lk {
 
 	};
 	
+	class env_t;
 	class objref_t
 	{
 	private:
@@ -168,7 +169,6 @@ namespace lk {
 		virtual lk_string type_name() = 0;
 	};
 	
-	class env_t;
 	class invoke_t;
 
 	typedef void (*fcall_t)( lk::invoke_t& );
