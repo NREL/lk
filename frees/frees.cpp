@@ -16,12 +16,12 @@
 #include <limits>
 #include <numeric>
 
-#include "../lk_absyn.h"
-#include "../lk_env.h"
-#include "../lk_eval.h"
-#include "../lk_parse.h"
-#include "../lk_lex.h"
-#include "../lk_stdlib.h"
+#include <lk/absyn.h>
+#include <lk/env.h>
+#include <lk/eval.h>
+#include <lk/parse.h>
+#include <lk/lex.h>
+#include <lk/stdlib.h>
 
 #include "jacobian.h"
 #include "search.h"
@@ -67,7 +67,7 @@ namespace lk {
 		public:
 			lk_string name;
 			std::vector< lk::node_t* > args;
-			funccall_t(int line, const lk_string &n) : node_t(line), name(n) {  }
+			funccall_t( srcpos_t sp, const lk_string &n) : node_t(sp), name(n) {  }
 			virtual ~funccall_t() { for (size_t i=0;i<args.size();i++) delete args[i]; }
 		};
 
@@ -80,6 +80,7 @@ namespace lk {
 		std::vector< lk::node_t* > m_eqnList;
 		std::vector< lk_string > m_varList;
 		
+		srcpos_t srcpos() { return srcpos_t(  "", lex.line(), lex.line(), 0 ); }
 		int line() { return lex.line(); }
 		int error_count() { return m_errorList.size(); }
 		lk_string error(int idx);
@@ -223,7 +224,7 @@ namespace lk {
 					if (lhs == 0)
 					{
 						if (e->left) delete e->left;
-						e->left = new lk::constant_t( e->line(), a );
+						e->left = new lk::constant_t( e->srcpos(), a );
 					}
 					else if (e->left != lhs )
 						throw evalexception( "internal reduce error on lhs side of expr");
@@ -231,7 +232,7 @@ namespace lk {
 					if (rhs == 0)
 					{
 						if (e->right) delete e->right;
-						e->right = new lk::constant_t( e->line(), b );
+						e->right = new lk::constant_t( e->srcpos(), b );
 					}
 					else if (e->right != rhs )
 						throw evalexception( "internal reduce error on rhs side of expr");
@@ -289,7 +290,7 @@ namespace lk {
 					throw evalexception("undefined function: " + f->name );
 
 				lk::vardata_t zz;
-				lk::invoke_t ivk( f->name, &env, zz, fobj->user_data );
+				lk::invoke_t ivk( &env, zz, fobj->user_data );
 				std::vector< lk::node_t* > reduced_args;
 				std::vector< double > arg_vals;
 				bool all_reduced = true;
@@ -580,7 +581,7 @@ namespace lk {
 					throw evalexception( "undefined function: " + f->name );
 
 				lk::vardata_t zz;
-				lk::invoke_t ivk( f->name, &t, zz, fobj->user_data );
+				lk::invoke_t ivk( &t, zz, fobj->user_data );
 				for (size_t i=0;i<f->args.size();i++)
 				{
 					lk::vardata_t arg;
@@ -656,7 +657,7 @@ namespace lk {
 					break;
 				}
 
-				lk::expr_t *expr = new lk::expr_t(0, lk::expr_t::MINUS,  lhs, rhs );
+				lk::expr_t *expr = new lk::expr_t( srcpos(), lk::expr_t::MINUS,  lhs, rhs );
 				m_eqnList.push_back( expr );
 
 				match( lk::lexer::SEP_SEMI );
@@ -688,7 +689,7 @@ namespace lk {
 				node_t *left = n;
 				node_t *right = multiplicative();
 		
-				n = new lk::expr_t( line(), oper, left, right );		
+				n = new lk::expr_t( srcpos(), oper, left, right );		
 			}
 	
 			return n;
@@ -710,7 +711,7 @@ namespace lk {
 				node_t *left = n;
 				node_t *right = exponential();
 		
-				n = new lk::expr_t( line(), oper, left, right );		
+				n = new lk::expr_t( srcpos(), oper, left, right );		
 			}
 	
 			return n;
@@ -725,7 +726,7 @@ namespace lk {
 			if ( token(lk::lexer::OP_EXP) )
 			{
 				skip();
-				n = new expr_t( line(), expr_t::EXP, n, exponential() );
+				n = new expr_t( srcpos(), expr_t::EXP, n, exponential() );
 			}
 	
 			return n;
@@ -739,7 +740,7 @@ namespace lk {
 			{
 			case lk::lexer::OP_MINUS:
 				skip();
-				return new lk::expr_t( line(), expr_t::NEG, unary(), 0 );
+				return new lk::expr_t( srcpos(), expr_t::NEG, unary(), 0 );
 			default:
 				return primary();
 			}
@@ -758,7 +759,7 @@ namespace lk {
 				match(lk::lexer::SEP_RPAREN);
 				return n;
 			case lk::lexer::NUMBER:
-				n = new lk::constant_t( line(), lex.value() );
+				n = new lk::constant_t( srcpos(), lex.value() );
 				skip();
 				return n;
 			case lk::lexer::IDENTIFIER:
@@ -767,7 +768,7 @@ namespace lk {
 					skip();
 					if ( token( lk::lexer::SEP_LPAREN ) )
 					{
-						funccall_t *f =  new funccall_t( line(), name);
+						funccall_t *f =  new funccall_t( srcpos(), name);
 						skip();
 
 						while( token() != lk::lexer::INVALID
@@ -783,7 +784,7 @@ namespace lk {
 						return f;
 					}
 					else						
-						return new lk::iden_t( line(), name, false, false, false );
+						return new lk::iden_t( srcpos(), name, false, false, false );
 				}
 				break;
 			default:
