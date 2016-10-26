@@ -23,7 +23,7 @@ namespace lk {
 	lk_string html_doc( fcall_t f );
 
 	lk_string json_write( const lk::vardata_t &x );
-	bool json_read( const lk_string &json, lk::vardata_t &x );
+	bool json_read( const lk_string &json, lk::vardata_t &x, lk_string *err = 0 );
 
 
 	std::vector< lk_string > dir_list( const lk_string &dir, const lk_string &extlist, bool ret_dirs=false );

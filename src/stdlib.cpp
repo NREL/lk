@@ -1143,6 +1143,289 @@ static void _stable_sort( lk::invoke_t &cxt )
 	}
 }
 
+
+
+
+class lkJSONwriterBase {
+	int level;
+public:
+	lkJSONwriterBase()
+		: level(0)
+	{
+	}
+	
+	virtual void out( const lk_string &s ) = 0;
+
+	void indent()
+	{
+		for( int i=0;i<level;i++ )
+			out( "  " );
+	}
+
+	bool write( const lk::vardata_t &x )
+	{
+		switch( x.type() )
+		{
+		case lk::vardata_t::REFERENCE:
+			write( x.deref() );
+			break;
+
+		case lk::vardata_t::NUMBER:
+		{
+			out( lk::format( "%lg", x.num() ) );
+			break;
+		}
+
+		case lk::vardata_t::STRING:
+			out( "\"" + x.str() + "\"" );
+			break;
+
+		case lk::vardata_t::VECTOR:
+			out( "[ " );
+			level++;
+			for( int i=0;i<x.length();i++ )
+			{
+				write( *x.index(i) );
+				if ( i < x.length()-1 )
+					out( ", " );
+			}
+			level--;
+			out( " ]" );
+			break;
+
+		case lk::vardata_t::HASH:
+		{
+			indent();
+			out( "{\n" );
+			level++;
+
+			size_t i=0, n=x.hash()->size();
+			for( lk::varhash_t::const_iterator it = x.hash()->begin();
+				it != x.hash()->end();
+				++it )
+			{
+				
+				indent();
+				out( "\"" + it->first + "\" : " );
+				write( *it->second );
+				if ( i++ < n-1 )
+					out( ",\n" );
+				else
+					out( "\n" );
+			}
+
+			level--;
+			indent();
+			out( "}" );
+		}
+			break;
+
+		case lk::vardata_t::FUNCTION:
+		case lk::vardata_t::EXTFUNC:
+		case lk::vardata_t::INTFUNC:
+			out( "\"<function>\"" );
+			break;
+		case lk::vardata_t::NULLVAL:
+		default:
+			out( "null" );
+		}
+
+		return true;
+	}
+};
+
+class lkJSONwriterString : public lkJSONwriterBase
+{
+	lk_string json;
+public:
+	lkJSONwriterString( ) : lkJSONwriterBase( )	{  }
+	virtual void out( const lk_string &s ) { json += s; }
+	lk_string &jsonstr() { return json; }
+};
+
+class lkJSONwriterFile : public lkJSONwriterBase
+{
+	FILE *fp;
+public:
+	lkJSONwriterFile( FILE *f )	: lkJSONwriterBase( ), fp(f)	{  }
+	virtual void out( const lk_string &s ) { fputs( s.c_str(), fp ); }
+};
+
+
+#include <lk/lex.h>
+
+class lkJSONreader
+{
+	lk::input_string is;
+	lk::lexer lex;
+	lk_string error;
+	int tok;
+public:
+	lkJSONreader( const lk_string &json )
+		: is(json), lex(is)
+	{
+		tok = lex.next();
+	}
+	
+	void skip() {
+		tok = lex.next();
+	}
+
+	lk_string err() { return error; }
+
+	bool match( int t ) {
+		if ( t == tok )
+		{
+			tok = lex.next();
+			return true;
+		}
+		else
+		{
+			if ( error.size() == 0 )
+				error = "expected '" + lk_string(lex.tokstr(t)) + "' but found '" + lex.text() + "' (" + lk_string(lex.tokstr(tok)) + ")";
+			return false;
+		}
+	}
+
+	bool parse_value( lk::vardata_t &x ) {
+		if ( tok == lk::lexer::NUMBER )
+		{
+			x.assign( lex.value() );
+			skip();
+			return true;
+		}
+		else if ( tok == lk::lexer::OP_MINUS || tok == lk::lexer::OP_PLUS )
+		{
+			double pm = (tok==lk::lexer::OP_MINUS) ? -1.0 : 1.0;
+			skip();
+			if ( tok != lk::lexer::NUMBER )
+			{
+				if ( error.size() == 0 )
+					error = "expected number after + or - prefix, but found: '" + lex.text() + "' (" + lk_string(lex.tokstr(tok)) + ")";
+
+				return false;
+			}
+
+			x.assign( lex.value() * pm );
+			skip();
+			return true;
+		}
+		else if ( tok == lk::lexer::LITERAL )
+		{
+			x.assign( lex.text() );
+			skip();
+			return true;
+		}
+		else if ( tok == lk::lexer::IDENTIFIER
+			&& lk::lower_case(lex.text()) == "null" )
+		{
+			x.nullify();
+			skip();
+			return true;
+		}
+		else
+		{
+			if (error.size() == 0 )
+				error = "expected number, literal, or null, but found: '" + lex.text() + "' (" + lk_string(lex.tokstr(tok)) + ")";
+			return false;
+		}
+	}
+	bool parse_array( lk::vardata_t &x ) {
+		match( lk::lexer::SEP_LBRACK );
+
+		x.empty_vector();
+		while( tok != lk::lexer::INVALID
+			&& tok != lk::lexer::END
+			&& tok != lk::lexer::SEP_RBRACK )
+		{
+			lk::vardata_t item;
+			if ( !parse(item) )
+				return false;
+
+			x.vec()->push_back( item );
+
+			if ( tok == lk::lexer::SEP_COMMA )
+				skip();
+			else
+				break;
+		}
+
+		return match( lk::lexer::SEP_RBRACK );
+	}
+	bool parse_table( lk::vardata_t &x ) {
+		match( lk::lexer::SEP_LCURLY );
+
+		x.empty_hash();
+		while( tok != lk::lexer::INVALID
+			&& tok != lk::lexer::END
+			&& tok != lk::lexer::SEP_RCURLY )
+		{
+
+			if ( tok != lk::lexer::LITERAL )
+				return false;
+
+			lk_string key( lex.text() );
+			skip();
+
+			match( lk::lexer::SEP_COLON );
+
+			if ( !parse( x.hash_item(key) ) )
+				return false;
+			
+			if ( tok == lk::lexer::SEP_COMMA )
+				skip();
+			else
+				break;
+		}
+		return match( lk::lexer::SEP_RCURLY );
+	}
+
+	bool parse( lk::vardata_t &x )
+	{
+		if ( tok == lk::lexer::SEP_LBRACK )
+			return parse_array( x );
+		else if ( tok == lk::lexer::SEP_LCURLY )
+			return parse_table( x );
+		else
+			return parse_value( x );
+	}
+};
+
+lk_string lk::json_write( const lk::vardata_t &x )
+{
+	lkJSONwriterString wr;
+	wr.write( x );
+	return wr.jsonstr();
+
+}
+
+
+static void _json_file( lk::invoke_t &cxt )
+{
+	LK_DOC( "json_file", "Read or write data stored in a JSON file.", "(string:file name, variant):boolean or (string:file name):variant" );
+
+	lk_string file( cxt.arg(0).as_string() );
+	if ( cxt.arg_count() == 1 )
+	{
+		lk_string err;
+		if ( !lk::json_read( lk::read_file( file ), cxt.result(), &err ) )
+			cxt.result().assign( "<json-error> " + err );
+	}
+	else
+	{
+		if ( FILE *fp = fopen( file.c_str(), "w" ) )
+		{
+			lkJSONwriterFile wr( fp );
+			cxt.result().assign( wr.write( cxt.arg(1) ) ? 1.0 : 0.0 );
+			fclose( fp );
+		}
+		else
+			cxt.result().assign( 0.0 );
+	}
+}
+
+
+
 static void _json_write( lk::invoke_t &cxt )
 {
 	LK_DOC( "json_write", "Convert a variable to a JSON string representation.", "(variant):string" );
@@ -1153,8 +1436,9 @@ static void _json_read( lk::invoke_t &cxt )
 {
 	LK_DOC( "json_read", "Convert a JSON string to a variable.", "(string):variant" );
 	
-	if ( !lk::json_read( cxt.arg(0).as_string(), cxt.result() ) )
-		cxt.result().assign( "<json error>" );
+	lk_string err;
+	if ( !lk::json_read( cxt.arg(0).as_string(), cxt.result(), &err ) )
+		cxt.result().assign( "<json-error> " + err );
 }
 
 static void _sprintf( lk::invoke_t &cxt )
@@ -1842,6 +2126,8 @@ lk::fcall_t* lk::stdlib_basic()
 		_ostype,
 		_stable_sort,
 		_json_write,
+		_json_read,
+		_json_file,
 		0 };
 
 	return (fcall_t*)vec;
@@ -2928,237 +3214,12 @@ static lk_string format_sig(const lk_string &s)
 	return fmt;
 }
 
-
-class lkJSONwriter {
-	lk_string json;
-	int level;
-public:
-	lkJSONwriter( const lk::vardata_t &root )
-		: level(0)
-	{
-		write( root );
-	}
-	
-	void out( const lk_string &s )
-	{
-		json += s;
-	}
-
-	void indent()
-	{
-		for( int i=0;i<level;i++ )
-			out( "  " );
-	}
-
-	void write( const lk::vardata_t &x )
-	{
-		/*
-		
-		static const unsigned char NULLVAL = 1;
-		static const unsigned char REFERENCE = 2;
-		static const unsigned char NUMBER = 3;
-		static const unsigned char STRING = 4;
-		static const unsigned char VECTOR = 5;
-		static const unsigned char HASH = 6;
-		static const unsigned char FUNCTION = 7;
-		static const unsigned char EXTFUNC = 8;
-		static const unsigned char INTFUNC = 9;
-		*/
-
-		switch( x.type() )
-		{
-		case lk::vardata_t::REFERENCE:
-			write( x.deref() );
-			break;
-
-		case lk::vardata_t::NUMBER:
-		{
-			out( lk::format( "%lg", x.num() ) );
-			break;
-		}
-
-		case lk::vardata_t::STRING:
-			out( "\"" + x.str() + "\"" );
-			break;
-
-		case lk::vardata_t::VECTOR:
-			out( "[ " );
-			level++;
-			for( int i=0;i<x.length();i++ )
-			{
-				write( *x.index(i) );
-				if ( i < x.length()-1 )
-					out( ", " );
-			}
-			level--;
-			out( " ]" );
-			break;
-
-		case lk::vardata_t::HASH:
-		{
-			indent();
-			out( "{\n" );
-			level++;
-
-			size_t i=0, n=x.hash()->size();
-			for( lk::varhash_t::const_iterator it = x.hash()->begin();
-				it != x.hash()->end();
-				++it )
-			{
-				
-				indent();
-				out( "\"" + it->first + "\" : " );
-				write( *it->second );
-				if ( i++ < n-1 )
-					out( ",\n" );
-				else
-					out( "\n" );
-			}
-
-			level--;
-			indent();
-			out( "}" );
-		}
-			break;
-
-		case lk::vardata_t::FUNCTION:
-		case lk::vardata_t::EXTFUNC:
-		case lk::vardata_t::INTFUNC:
-			out( "<function>" );
-			break;
-		case lk::vardata_t::NULLVAL:
-		default:
-			out( "null" );
-		}
-	}
-
-	lk_string &jsonstr() { return json; }
-};
-
-lk_string lk::json_write( const lk::vardata_t &x )
-{
-	lkJSONwriter wr( x );
-	return wr.jsonstr();
-
-}
-
-#include <lk/lex.h>
-
-class lkJSONreader
-{
-	lk::input_string is;
-	lk::lexer lex;
-	int tok;
-public:
-	lkJSONreader( const lk_string &json )
-		: is(json), lex(is)
-	{
-		tok = lex.next();
-	}
-	
-	void skip() {
-		tok = lex.next();
-	}
-
-	bool match( int t ) {
-		if ( t == tok )
-		{
-			tok = lex.next();
-			return true;
-		}
-		else
-			return false;
-	}
-
-	bool parse_value( lk::vardata_t &x ) {
-		if ( tok == lk::lexer::NUMBER )
-		{
-			x.assign( lex.value() );
-			skip();
-			return true;
-		}
-		else if ( tok == lk::lexer::LITERAL )
-		{
-			x.assign( lex.text() );
-			skip();
-			return true;
-		}
-		else if ( tok == lk::lexer::IDENTIFIER
-			&& lk::lower_case(lex.text()) == "null" )
-		{
-			x.nullify();
-			skip();
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	bool parse_array( lk::vardata_t &x ) {
-		match( lk::lexer::SEP_LBRACK );
-
-		x.empty_vector();
-		while( tok != lk::lexer::INVALID
-			&& tok != lk::lexer::END
-			&& tok != lk::lexer::SEP_RBRACK )
-		{
-			lk::vardata_t item;
-			if ( !parse(item) )
-				return false;
-
-			x.vec()->push_back( item );
-
-			if ( tok == lk::lexer::SEP_COMMA )
-				skip();
-			else
-				break;
-		}
-
-		return match( lk::lexer::SEP_RBRACK );
-	}
-	bool parse_table( lk::vardata_t &x ) {
-		match( lk::lexer::SEP_LCURLY );
-
-		x.empty_hash();
-		while( tok != lk::lexer::INVALID
-			&& tok != lk::lexer::END
-			&& tok != lk::lexer::SEP_RCURLY )
-		{
-
-			if ( tok != lk::lexer::LITERAL )
-				return false;
-
-			lk_string key( lex.text() );
-
-			match( lk::lexer::SEP_COLON );
-
-			if ( !parse( x.hash_item(key) ) )
-				return false;
-			
-			if ( tok == lk::lexer::SEP_COMMA )
-				skip();
-			else
-				break;
-		}
-		return match( lk::lexer::SEP_RCURLY );
-	}
-
-	bool parse( lk::vardata_t &x )
-	{
-		if ( tok == lk::lexer::SEP_LBRACK )
-			return parse_array( x );
-		else if ( tok == lk::lexer::SEP_LCURLY )
-			return parse_table( x );
-		else
-			return parse_value( x );
-	}
-};
-
-bool lk::json_read( const lk_string &json, lk::vardata_t &x )
+bool lk::json_read( const lk_string &json, lk::vardata_t &x, lk_string *err )
 {
 	lkJSONreader rd( json );
-	return rd.parse( x );
+	bool ok = rd.parse( x );
+	if ( err ) *err = rd.err();
+	return ok;
 }
 
 lk_string lk::html_doc( const lk_string &title, fcall_t *lib )
