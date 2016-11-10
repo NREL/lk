@@ -1323,6 +1323,12 @@ public:
 			skip();
 			return true;
 		}
+		else if ( tok == lk::lexer::IDENTIFIER )
+		{
+			x.assign( lex.text() );
+			skip();
+			return true;
+		}
 		else
 		{
 			if (error.size() == 0 )

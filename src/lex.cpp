@@ -370,6 +370,7 @@ int lk::lexer::next()
 				case 'r':  m_buf += '\r'; p++; break;
 				case 't':  m_buf += '\t'; p++; break;
 				case '\\': m_buf += '\\'; p++; break;
+				case '/': m_buf += '/'; p++; break; // allow \/ in json strings
 				case 'u':
 #ifdef LK_UNICODE
 					{
