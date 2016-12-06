@@ -14,6 +14,7 @@ using std::unordered_map;
 #if defined(LK_USE_WXWIDGETS)
 #include <wx/string.h>
 #include <wx/hashmap.h>
+#include <wx/intl.h>
 
 #if wxCHECK_VERSION(2,9,0)
 typedef wxUniChar lk_char;
@@ -37,8 +38,13 @@ typedef std::equal_to<std::string> lk_string_equal;
 
 #endif
 
+#define lk_tr(s) lk::get_translation(s)
+
 namespace lk
 {
+	lk_string get_translation( const lk_string & );
+	void set_translation_function( lk_string (*f)(const lk_string&) );
+
 	lk_char lower_char( lk_char c );
 	lk_char upper_char( lk_char c );
 	bool convert_integer( const lk_string &str, int *x );

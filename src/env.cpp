@@ -48,7 +48,7 @@ void lk::vardata_t::assert_modify() throw( error_t )
 	if ( flagval( CONSTVAL )
 		&& flagval( ASSIGNED ) )
 	{
-		throw error_t("cannot modify a constant value");
+		throw error_t( lk_tr("cannot modify a constant value") );
 	}
 
 	set_flag( ASSIGNED );
@@ -220,7 +220,7 @@ bool lk::vardata_t::copy( vardata_t &rhs ) throw( error_t )
 		nullify();
 		set_type( REFERENCE );
 		if ( rhs.m_u.p == this )
-			throw error_t("internal error: copying self-referential reference" );
+			throw error_t( lk_tr("internal error: copying self-referential reference") );
 		m_u.p = rhs.m_u.p;
 		return true;
 	case NUMBER:
@@ -505,7 +505,7 @@ void lk::vardata_t::assign( vardata_t *ref ) throw( error_t )
 	nullify();
 	set_type( REFERENCE );
 	if ( ref == this )
-		throw error_t( "internal error: assigning self-referential reference");
+		throw error_t( lk_tr("internal error: assigning self-referential reference") );
 	m_u.p = ref;
 }
 
@@ -546,13 +546,13 @@ void lk::vardata_t::resize( size_t n ) throw( error_t )
 
 double lk::vardata_t::num() const throw(error_t) 
 {
-	if ( type() != NUMBER ) throw error_t("access violation to non-numeric data");
+	if ( type() != NUMBER ) throw error_t( lk_tr("access violation: expected numeric, but found") + " " + typestr() );
 	return m_u.v;
 }
 
 lk_string lk::vardata_t::str() const throw(error_t)
 {
-	if ( type() != STRING ) throw error_t("access violation to non-string data");
+	if ( type() != STRING ) throw error_t( lk_tr("access violation: expected string, but found") + " " + typestr() );
 	return *reinterpret_cast<lk_string*>(m_u.p);
 }
 
@@ -566,7 +566,7 @@ lk::vardata_t *lk::vardata_t::ref() const
 
 std::vector<lk::vardata_t> *lk::vardata_t::vec() const throw(error_t)
 {
-	if (type() != VECTOR) throw error_t("access violation to non-array data");
+	if (type() != VECTOR) throw error_t( lk_tr("access violation: expected array, but found ") + " " + typestr() );
 	return reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
 }
 
@@ -601,25 +601,25 @@ size_t lk::vardata_t::length() const
 
 lk::expr_t *lk::vardata_t::func() const throw(error_t)
 {
-	if (type() != FUNCTION) throw error_t("access violation to non-function data");
+	if (type() != FUNCTION) throw error_t( lk_tr("access violation: expected code expression pointer, but found") + " " + typestr() );
 	return reinterpret_cast< expr_t* >(m_u.p);
 }
 
 lk::fcallinfo_t *lk::vardata_t::fcall() const throw(error_t)
 {
-	if (type() != EXTFUNC) throw error_t("access violation to non-function data");
+	if (type() != EXTFUNC) throw error_t( lk_tr("access violation: expected external function pointer, but found") + " " + typestr() );
 	return reinterpret_cast< fcallinfo_t* >(m_u.p);
 }
 
 size_t lk::vardata_t::faddr() const throw(error_t)
 {
-	if (type() != INTFUNC) throw error_t("access violation to non-function data");
+	if (type() != INTFUNC) throw error_t( lk_tr("access violation: expected internal function pointer, but found") + " " + typestr() );
 	return reinterpret_cast< size_t >(m_u.p);
 }
 
 lk::varhash_t *lk::vardata_t::hash() const throw(error_t)
 {
-	if ( type() != HASH ) throw error_t("access violation to non-hash data");
+	if ( type() != HASH ) throw error_t( lk_tr("access violation: expected hash table, but found") + " " + typestr() );
 	return reinterpret_cast< varhash_t* > (m_u.p);
 }
 
@@ -693,16 +693,16 @@ lk::vardata_t &lk::vardata_t::hash_item( const lk_string &key ) throw(error_t)
 
 lk::vardata_t *lk::vardata_t::index(size_t idx) const throw(error_t)
 {
-	if (type() != VECTOR) throw error_t("access violation to non-array data");
+	if (type() != VECTOR) throw error_t( lk_tr("access violation: expected array for indexing, but found") + " " + typestr() );
 	register std::vector<vardata_t> &m = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
-	if (idx >= m.size()) throw error_t("array index out of bounds: %d (len: %d)", (int)idx, (int)m.size());
+	if (idx >= m.size()) throw error_t( lk_tr("array index out of bounds at %d (length: %d)"), (int)idx, (int)m.size());
 
 	return &m[idx];
 }
 
 lk::vardata_t *lk::vardata_t::lookup( const lk_string &key ) const throw(error_t)
 {
-	if (type() != HASH) throw error_t("access violation to non-hash data");
+	if (type() != HASH) throw error_t( lk_tr("access violation: expected hash table, but found") + " " + typestr() );
 	register varhash_t &h = *reinterpret_cast< varhash_t* >(m_u.p);
 	varhash_t::iterator it = h.find( key );
 	if ( it != h.end() )
@@ -984,7 +984,7 @@ lk::objref_t *lk::env_t::query_object( size_t ref )
 void lk::env_t::call( const lk_string &name, std::vector< vardata_t > &args, vardata_t &result ) throw( lk::error_t )
 {
 	vardata_t *f = lookup(name, true);
-	if (!f)	throw lk::error_t("could not locate function name in environment: " + name );
+	if (!f)	throw lk::error_t( lk_tr("could not locate function name in environment: ") + name );
 
 	if ( expr_t *def = dynamic_cast<expr_t*>( f->deref().func() ))
 	{
@@ -998,7 +998,7 @@ void lk::env_t::call( const lk_string &name, std::vector< vardata_t > &args, var
 
 		int nargs_given = args.size();
 		if (nargs_given < nargs_expected)
-			throw error_t( "too few arguments provided in env::call internal method to function: " + name );
+			throw error_t( lk_tr("too few arguments provided in env::call internal method to function: ") + name );
 
 		vardata_t *__args = new vardata_t;
 		__args->empty_vector();
@@ -1019,10 +1019,10 @@ void lk::env_t::call( const lk_string &name, std::vector< vardata_t > &args, var
 
 		lk::eval ev( block, &frame );
 		if ( !ev.run() )
-			throw error_t("error inside function call invoked from env::call");
+			throw error_t( lk_tr("error inside function call invoked from env::call") );
 	}
 	else
-		throw error_t("function call fail: could not locate internal pointer to " + name);
+		throw error_t( lk_tr("function call fail: could not locate internal pointer to ") + name);
 }
 
 bool lk::env_t::load_library( const lk_string &path )
@@ -1042,21 +1042,21 @@ bool lk::env_t::load_library( const lk_string &path )
 	if ( verfunc == 0 )
 	{
 		dll_close( pdll );
-		throw error_t("could not locate symbol 'lk_extension_api_version'\n");
+		throw error_t( lk_tr("could not locate symbol") + " 'lk_extension_api_version'\n");
 	}
 
 	int ver = verfunc();
 	if (ver != LK_EXTENSION_API_VERSION)
 	{
 		dll_close( pdll );
-		throw error_t("invalid extension version: %d (engine api: %d)\n", ver, LK_EXTENSION_API_VERSION);
+		throw error_t( lk_tr("invalid extension version: %d (engine api: %d)\n"), ver, LK_EXTENSION_API_VERSION);
 	}
 
 	lk_invokable *(*listfunc)() = (lk_invokable*(*)())dll_sym( pdll, "lk_function_list" );
 	if (listfunc == 0)
 	{
 		dll_close( pdll );
-		throw error_t("could not locate symbol 'lk_function_list'\n");
+		throw error_t( lk_tr("could not locate symbol") + " 'lk_function_list'\n");
 	}
 
 

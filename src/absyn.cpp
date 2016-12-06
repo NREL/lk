@@ -20,7 +20,21 @@ bool lk::operator==(const srcpos_t &a, const srcpos_t &b)
 		&& a.file == b.file;
 }
 
+static lk_string lk_tr_default( const lk_string &s ) { return s; }
+static lk_string (*lk_tr_func)( const lk_string &) = lk_tr_default;
+
+void lk::set_translation_function( lk_string (*f)(const lk_string&) )
+{
+	lk_tr_func = f;
+}
+
 #if defined(LK_USE_WXWIDGETS)
+
+lk_string lk::get_translation( const lk_string &s )
+{
+	if ( lk_tr_func == 0 || lk_tr_func == lk_tr_default ) return wxGetTranslation( s );
+	else return lk_tr_func( s );
+}
 
 lk_string lk::to_string( lk_char c )
 {
@@ -263,6 +277,6 @@ void lk::pretty_print( lk_string &str, node_t *root, int level )
 	}
 	else
 	{
-		str += "<!unknown node type!>";
+		str += "<!" + lk_tr("unknown node type") + "!>";
 	}
 }

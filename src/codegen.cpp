@@ -584,7 +584,7 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 			if ( iden_t *iden = dynamic_cast<iden_t*>( n->left ) )
 				emit( n->srcpos(), TYP, place_identifier( iden->name ) );
 			else
-				return error( "invalid typeof expression, identifier required" );
+				return error( lk_tr("invalid 'typeof' expression, identifier required") );
 			break;
 		case expr_t::INITVEC:
 		{
@@ -725,14 +725,14 @@ bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
 
 		case ctlstmt_t::BREAK:
 			if ( m_breakAddr.size() == 0 )
-				return error( "cannot break from outside a loop" );
+				return error( lk_tr("cannot break from outside a loop") );
 
 			emit( n->srcpos(), J, m_breakAddr.back() );
 			break;
 
 		case ctlstmt_t::CONTINUE:
 			if ( m_continueAddr.size() == 0 )
-				return error( "cannot continue from outside a loop" );
+				return error( lk_tr("cannot continue from outside a loop") );
 
 			emit( n->srcpos(), J, m_continueAddr.back() );
 			break;

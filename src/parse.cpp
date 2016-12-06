@@ -47,13 +47,13 @@ bool lk::parser::match( const char *s )
 {
 	if ( m_tokType == lk::lexer::END )
 	{
-		error("reached end of input, but expected '%s'", s);
+		error( lk_tr("reached end of input, but expected" ) + " '" + s + "'" );
 		return false;
 	}
 	
 	if ( lex.text() != s )
 	{
-		error("expected '%s' but found '%s'", s, (const char*)lex.text().c_str());
+		error( lk_tr("expected") + " '" + s + "' " + lk_tr("but found") + " '" + lex.text() );
 		return false;
 	}
 	
@@ -65,17 +65,17 @@ bool lk::parser::match(int t)
 {
 	if (m_tokType == lk::lexer::END )
 	{
-		error("reached end of input, but expected token '%s'", 
-			lk::lexer::tokstr(t));
+		error( lk_tr("reached end of input, but expected token") + " '" + lk::lexer::tokstr(t) + "'");
 		return false;
 	}
 	
 	if ( m_tokType != t)
 	{
-		error("expected '%s' but found '%s' %s", 
-			lk::lexer::tokstr(t), 
-			lk::lexer::tokstr(m_tokType),
-			(const char*)lex.text().c_str());
+		error( lk_tr("expected") 
+			+ " '" + lk::lexer::tokstr(t) + "' " 
+			+ lk_tr("but found") 
+			+ " '" + lk::lexer::tokstr(m_tokType) + "' " 
+			+ lex.text() );
 		return false;
 	}
 	
@@ -94,7 +94,7 @@ void lk::parser::skip()
 	m_tokType = lex.next();
 	
 	if (m_tokType == lk::lexer::INVALID)
-		error("invalid sequence in input: %s", (const char*)lex.error().c_str());
+		error( lk_tr("invalid sequence in input:") + lex.error() );
 }
 
 void lk::parser::error( const char *fmt, ... )
@@ -197,7 +197,7 @@ lk::node_t *lk::parser::statement()
 		// syntactic sugar for 'const my_function = define(...) {  };'
 		// function my_function(...) {  }
 		if ( token() != lexer::IDENTIFIER )
-			error("function name missing");
+			error( lk_tr("function name missing") );
 		
 		srcpos_t pos = srcpos();
 
@@ -263,7 +263,7 @@ lk::node_t *lk::parser::statement()
 		skip();
 		if ( token() != lk::lexer::LITERAL )
 		{
-			error("literal required after import statement");
+			error( lk_tr("literal required after import statement") );
 			skip();
 			if ( token() == lk::lexer::SEP_SEMI )
 				skip();
@@ -303,7 +303,7 @@ lk::node_t *lk::parser::statement()
 		{
 			if (m_importNameList[k] == expanded_path)
 			{
-				error("circular import of %s impossible", (const char*)file.c_str());
+				error( lk_tr("circular import of %s impossible"), (const char*)file.c_str());
 				m_haltFlag = true;
 				return 0;
 			}
@@ -327,7 +327,7 @@ lk::node_t *lk::parser::statement()
 				|| parse.token() != lk::lexer::END
 				|| tree == 0 )
 			{
-				error("parse errors in import '%s':", (const char*)file.c_str());
+				error( lk_tr("parse errors in import '%s':"), (const char*)file.c_str());
 				
 				int i=0;
 				while ( i < parse.error_count() )
@@ -344,7 +344,7 @@ lk::node_t *lk::parser::statement()
 		}
 		else
 		{
-			error("import '%s' could not be located", (const char*)file.c_str());
+			error( lk_tr("import '%s' could not be located"), (const char*)file.c_str());
 			return 0;
 		}
 	}
@@ -357,7 +357,7 @@ lk::node_t *lk::parser::statement()
 	
 	if ( stmt == 0 )
 	{
-		error("empty program statement encountered");
+		error( lk_tr("empty program statement encountered") );
 		return 0;
 	}
 
@@ -404,12 +404,12 @@ lk::node_t *lk::parser::enumerate()
 				else if ( lex.value() > cur_value )
 					cur_value = lex.value();
 				else
-					error("values in enumeration must increase");
+					error( lk_tr("values in enumeration must increase") );
 
 				skip();
 			}
 			else
-				error("enumerate statements can only contain numeric assignments");
+				error( lk_tr("enumerate statements can only contain numeric assignments") );
 
 		}
 
@@ -426,7 +426,7 @@ lk::node_t *lk::parser::enumerate()
 				m_haltFlag = true;
 	}
 
-	if ( !head ) error("enumeration must have one or more identifiers");
+	if ( !head ) error( lk_tr("enumeration must have one or more identifiers") );
 
 	match( lk::lexer::SEP_RCURLY );
 
@@ -525,7 +525,7 @@ lk::node_t *lk::parser::loop()
 	}
 	else
 	{
-		error("invalid looping construct");
+		error( lk_tr("invalid looping construct") );
 		m_haltFlag = true;
 	}
 
@@ -679,7 +679,7 @@ lk::node_t *lk::parser::relational()
 		case lk::lexer::OP_GT: oper = expr_t::GT; break;
 		case lk::lexer::OP_GE: oper = expr_t::GE; break;
 		default:
-			error("invalid relational operator: %s", lk::lexer::tokstr( token() ) );
+			error( lk_tr("invalid relational operator: %s"), lk::lexer::tokstr( token() ) );
 		}
 		
 		skip();
@@ -794,7 +794,7 @@ lk::node_t *lk::parser::unary()
 			}
 			else
 			{
-				error( "expected identifier in typeof(...) expression" );
+				error( lk_tr("expected identifier in typeof(...) expression") );
 				return 0;
 			}
 			match( lk::lexer::SEP_RPAREN );
@@ -874,7 +874,7 @@ lk::node_t *lk::parser::postfix()
 			
 			if ( !token( lk::lexer::IDENTIFIER ) )
 			{
-				error("expected method-function name after dereference operator ->");
+				error( lk_tr("expected method-function name after dereference operator ->") );
 				skip();
 			}			
 
@@ -950,7 +950,7 @@ lk::node_t *lk::parser::primary()
 
 				if( token() != lk::lexer::IDENTIFIER && token() != lk::lexer::LITERAL )
 				{
-					error( "invalid key syntax in table initializer" );
+					error( lk_tr("invalid key syntax in table initializer") );
 					m_haltFlag = true;
 					return 0;
 				}
@@ -1035,7 +1035,7 @@ lk::node_t *lk::parser::primary()
 		}
 		return n;
 	default:
-		error("invalid expression beginning with '%s'", lk::lexer::tokstr(token()));
+		error( lk_tr("invalid expression beginning with") + " '" + lk::lexer::tokstr(token()) + "'" );
 		m_haltFlag = true;
 		return 0;
 	}

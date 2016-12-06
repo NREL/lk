@@ -126,12 +126,12 @@ void vm::load( const std::vector<unsigned int> &code,
 	
 bool vm::special_set( const lk_string &name, vardata_t &val )
 {
-	throw error_t( "no defined mechanism to set special variable '" + name + "'" );
+	throw error_t( lk_tr("no defined mechanism to set special variable") + " '" + name + "'" );
 }
 
 bool vm::special_get( const lk_string &name, vardata_t &val )
 {
-	throw error_t( "no defined mechanism to get special variable '" + name + "'" );
+	throw error_t( lk_tr("no defined mechanism to get special variable") + " '" + name + "'" );
 }
 
 void vm::initialize( lk::env_t *env )
@@ -158,14 +158,14 @@ void vm::initialize( lk::env_t *env )
 }
 
 
-#define CHECK_FOR_ARGS(n) if ( sp < (int)(n) ) return error("stack [sp=%d] error, %d arguments required", sp, n );
-#define CHECK_OVERFLOW() if ( sp >= (int)stack.size() ) return error("stack overflow [sp=%d]", stack.size())
-#define CHECK_CONSTANT() if ( arg >= constants.size() ) return error( "invalid constant value address: %d\n", arg )
-#define CHECK_IDENTIFIER() if ( arg >= identifiers.size() ) return error( "invalid identifier address: %d\n", arg )
+#define CHECK_FOR_ARGS(n) if ( sp < (int)(n) ) return error( lk_tr("stack [sp=%d] error, %d arguments required"), sp, n );
+#define CHECK_OVERFLOW() if ( sp >= (int)stack.size() ) return error( lk_tr("stack overflow [sp=%d]"), stack.size())
+#define CHECK_CONSTANT() if ( arg >= constants.size() ) return error( lk_tr("invalid constant value address: %d\n"), arg )
+#define CHECK_IDENTIFIER() if ( arg >= identifiers.size() ) return error( lk_tr("invalid identifier address: %d\n"), arg )
 
 bool vm::run( ExecMode mode )
 {
-	if( frames.size() == 0 ) return error("vm not initialized"); // must initialize first.
+	if( frames.size() == 0 ) return error( lk_tr("vm not initialized") ); // must initialize first.
 
 	vardata_t nullval;
 	size_t nexecuted = 0;
@@ -212,11 +212,11 @@ bool vm::run( ExecMode mode )
 			// constant is a power of two: so use bitwise operator for better performance
 			// see https://en.wikipedia.org/wiki/Modulo_operation#Performance_issues 
 			if ( (nexecuted & 7) && !on_run( spos ) )
-				return error( "halted by user after %d ops", nexecuted );
+				return error(  lk_tr("halted by user after %d ops"), nexecuted );
 
 			next_ip = ip+1;
 			
-			if ( sp < 0 ) throw error_t( "stack corruption" );
+			if ( sp < 0 ) throw error_t( lk_tr("stack corruption") );
 
 			rhs = ( sp >= 1 ) ? &stack[sp-1] : NULL;
 			lhs = ( sp >= 2 ) ? &stack[sp-2] : NULL;
@@ -275,7 +275,7 @@ bool vm::run( ExecMode mode )
 					}
 				}
 				else
-					return error("referencing unassigned variable: %s\n", (const char*)identifiers[arg].c_str() );
+					return error( lk_tr("referencing unassigned variable:") + identifiers[arg] + "\n" );
 
 				break;
 			}
@@ -297,7 +297,7 @@ bool vm::run( ExecMode mode )
 					try {
 						if ( fci->f ) (*(fci->f))( cxt );
 						else if ( fci->f_ext ) lk::external_call( fci->f_ext, cxt );
-						else cxt.error( "invalid internal reference to function" );
+						else cxt.error( lk_tr("invalid internal reference to function") );
 
 						sp -= (arg+1); // leave return value on stack (even if null)
 					}
@@ -351,7 +351,7 @@ bool vm::run( ExecMode mode )
 					next_ip = rhs_deref.faddr(); 
 				}
 				else
-					return error("invalid function access");
+					return error( lk_tr("invalid function access") );
 			}
 				break;
 
@@ -360,7 +360,7 @@ bool vm::run( ExecMode mode )
 				{
 					frame &F = *frames.back();
 					if ( F.iarg >= F.nargs )
-						return error("too few arguments passed to function");
+						return error( lk_tr("too few arguments passed to function") );
 
 					size_t offset = F.thiscall ? 2 : 1;
 					size_t idx = F.fp - F.nargs - offset + F.iarg;
@@ -379,7 +379,7 @@ bool vm::run( ExecMode mode )
 					size_t noptions = arg;
 					
 					if ( index >= noptions )
-						return error("switch statement index %d out of bounds: only %d options", (int) index, (int)(noptions));
+						return error( lk_tr("switch statement index %d out of bounds: only %d options"), (int) index, (int)(noptions));
 
 					// advance instruction pointer to the correct jump based on the index number
 					next_ip = ip+1+index;
@@ -570,7 +570,7 @@ bool vm::run( ExecMode mode )
 						vv->erase( vv->begin() + idx );
 				}
 				else
-					return error( "-@ requires a hash or vector" );
+					return error( lk_tr("-@ requires a hash or vector") );
 
 				sp--;
 				break;
@@ -600,7 +600,7 @@ bool vm::run( ExecMode mode )
 					result.assign( pos!=lk_string::npos ? (int)pos : -1.0 );
 				}
 				else
-					return error("?@ requires a hash, vector, or string");
+					return error( lk_tr("?@ requires a hash, vector, or string") );
 				
 				sp--;
 				break;
@@ -609,14 +609,14 @@ bool vm::run( ExecMode mode )
 				CHECK_OVERFLOW();
 				CHECK_IDENTIFIER();
 				if ( !special_get( identifiers[arg], stack[sp++] ) )
-					return error("failed to read external value '%s'", (const char*)identifiers[arg].c_str() );
+					return error( lk_tr("failed to read external value") + " '" + identifiers[arg] + "'" );
 				break;
 
 			case SET:
 				CHECK_FOR_ARGS( 1 );
 				CHECK_IDENTIFIER();
 				if ( !special_set( identifiers[arg], rhs_deref ) )
-					return error("failed to write external value '%s'", (const char*)identifiers[arg].c_str() );
+					return error( lk_tr("failed to write external value") + " '" + identifiers[arg] + "'" );
 				sp--;
 				break;
 			case SZ:
@@ -640,7 +640,7 @@ bool vm::run( ExecMode mode )
 					rhs->assign( count );
 				}
 				else
-					return error( "operand to sizeof must be a array, string, or table type");
+					return error( lk_tr("operand to sizeof must be a array, string, or table type") );
 
 				break;
 			case KEYS:
@@ -662,7 +662,7 @@ bool vm::run( ExecMode mode )
 					rhs->copy( keys );
 				}
 				else
-					return error( "operand to @ (keysof) must be a table");
+					return error( lk_tr("operand to @ (keysof) must be a table") );
 
 				break;
 			case WR:
@@ -697,7 +697,7 @@ bool vm::run( ExecMode mode )
 					if ( F.thiscall ) ncleanup++;
 
 					if ( sp <= ncleanup ) 
-						return error("stack corruption upon function return (sp=%d, nc=%d)", (int)sp, (int)ncleanup);
+						return error( lk_tr("stack corruption upon function return") + " (sp=%d, nc=%d)", (int)sp, (int)ncleanup);
 					sp -= ncleanup;
 					stack[sp-1].copy( result->deref() );
 					next_ip = F.retaddr;
@@ -769,7 +769,7 @@ bool vm::run( ExecMode mode )
 			}
 					
 			default:
-				return error( "invalid instruction (0x%02X)", (unsigned int)op );
+				return error( lk_tr("invalid instruction") + " (0x%02X)", (unsigned int)op );
 			};
 
 			ip = next_ip;
@@ -781,8 +781,8 @@ bool vm::run( ExecMode mode )
 		
 		srcpos_t spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
 
-		return error("runtime exception at %s %d: %s", 
-			spos.line < 0 ? "ip" : "line",
+		return error(lk_tr("runtime exception at") + " %s %d: %s", 
+			spos.line < 0 ? "ip" : (const char*)lk_string(lk_tr("line")).c_str(),
 			spos.line < 0 ? (int)ip : (int)spos.line, 
 			exc.what() );
 	}

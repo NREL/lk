@@ -242,7 +242,7 @@ int lk::lexer::next()
 				p++;
 			else
 			{
-				m_error = "expected '}' to close special identifier";
+				m_error = lk_tr("expected '}' to close special identifier");
 				return INVALID;
 			}
 
@@ -250,7 +250,7 @@ int lk::lexer::next()
 		}
 		else
 		{
-			m_error = "expected '{' to follow $ when starting a special identifier";
+			m_error = lk_tr("expected '{' to follow $ when starting a special identifier");
 			return INVALID;
 		}
 	}
@@ -392,7 +392,7 @@ int lk::lexer::next()
 					}
 					break;
 #else
-					m_error = lk_string("unicode character constant encountered while parsing with an ansi string build of LK.");
+					m_error = lk_tr("unicode character constant encountered while parsing with an ansi string build of LK.");
 					return INVALID;
 #endif
 				default:
@@ -400,7 +400,7 @@ int lk::lexer::next()
 					p++; // skip escape sequence
 					while (*p && *p != qclose) p++; // skip to end of string literal despite error
 					
-					m_error = lk_string("invalid escape sequence \\") + cerr;
+					m_error = lk_tr("invalid escape sequence") + "\\" + cerr;
 					return INVALID;
 				}
 			}
@@ -408,7 +408,7 @@ int lk::lexer::next()
 			{
 				while (*p && *p != qclose) p++; // skip to end of string literal despite error
 				
-				m_error = "newline found within string literal";
+				m_error = lk_tr("newline found within string literal");
 				return INVALID;
 			}
 			else
@@ -422,7 +422,7 @@ int lk::lexer::next()
 		return LITERAL;
 	}
 
-	m_error = lk_string("token beginning with '");
+	m_error = lk_tr("token beginning with") + " '";
 	m_error += *p;
 	m_error += "'  ascii: ";
 	char buf[16];

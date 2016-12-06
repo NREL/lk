@@ -54,12 +54,12 @@ bool lk::eval::run()
 		
 bool lk::eval::special_set( const lk_string &name, vardata_t &val )
 {
-	throw error_t( "no defined mechanism to set special variable '" + name + "'" );
+	throw error_t( lk_tr("no defined mechanism to set special variable") + " '" + name + "'" );
 }
 
 bool lk::eval::special_get( const lk_string &name, vardata_t &val )
 {
-	throw error_t( "no defined mechanism to get special variable '" + name + "'" );
+	throw error_t( lk_tr("no defined mechanism to get special variable") + " '" + name + "'" );
 }
 
 static void do_plus_eq( lk::vardata_t &l, lk::vardata_t &r )
@@ -117,7 +117,7 @@ bool lk::eval::interpret( node_t *root,
 			ok=interpret(n->items[i], cur_env, result, flags, ctl_id);
 			if ( !ok )
 			{
-				m_errors.push_back( make_error(n, "eval error in statement list\n" ));
+				m_errors.push_back( make_error(n, lk_tr("eval error in statement list") + "\n" ));
 				return false;
 			}
 		}
@@ -243,7 +243,8 @@ bool lk::eval::interpret( node_t *root,
 				}
 				else
 				{
-					m_errors.push_back( make_error( n, "-@ operator requires a hash or vector left hand side" ) );
+					m_errors.push_back( make_error( n, "-@ " + 
+						lk_tr( "operator requires a hash or vector left hand side") ) );
 					return false;
 				}
 
@@ -372,7 +373,8 @@ bool lk::eval::interpret( node_t *root,
 				}
 				else 
 				{
-					m_errors.push_back( make_error(n, "left hand side to find operator ?@ must be a hash, vector, or string") );
+					m_errors.push_back( make_error(n, 
+						lk_tr("left hand side to find operator ?@ must be a hash, vector, or string") ) );
 					return false;
 				}
 				return ok;
@@ -385,7 +387,8 @@ bool lk::eval::interpret( node_t *root,
 
 					if (!(flags&ENV_MUTABLE) && arr.type() != vardata_t::VECTOR)
 					{
-						m_errors.push_back( make_error( n->left, "cannot index non array data in non mutable context"  ) );
+						m_errors.push_back( make_error( n->left, 
+							lk_tr("cannot index non array data in non mutable context")  ) );
 						return false;
 					}
 
@@ -469,7 +472,7 @@ bool lk::eval::interpret( node_t *root,
 									{
 										m_errors.push_back( 
 											make_error( argvals, 
-												"failed to evaluate function call argument %d to '", (int) iarg) + iden->name + "()'\n" );
+												lk_tr("failed to evaluate function call argument %d to") + " '", (int) iarg) + iden->name + "()'\n" );
 										return false;
 									}
 								}
@@ -478,7 +481,7 @@ bool lk::eval::interpret( node_t *root,
 							try {
 								if ( fi->f ) (*(fi->f))( cxt );
 								else if ( fi->f_ext ) lk::external_call( fi->f_ext, cxt );
-								else cxt.error( "invalid internal reference to function callback " + iden->name );
+								else cxt.error( lk_tr("invalid internal reference to function callback") + " " + iden->name );
 							}
 							catch( std::exception &e )
 							{
@@ -486,7 +489,7 @@ bool lk::eval::interpret( node_t *root,
 							}
 
 							if (cxt.has_error())
-								m_errors.push_back( make_error( iden, "error in call to '") + iden->name + "()': " + cxt.error() );
+								m_errors.push_back( make_error( iden, lk_tr("error in call to") + " '") + iden->name + "()': " + cxt.error() );
 							
 							// do a deep copy of internalized references
 							result.deep_localize();
@@ -499,7 +502,7 @@ bool lk::eval::interpret( node_t *root,
 					expr_t *define = dynamic_cast<expr_t*>( l.deref().func() );
 					if (!define)
 					{
-						m_errors.push_back( make_error(n, "error in function call: malformed define\n") );
+						m_errors.push_back( make_error(n, lk_tr("error in function call: malformed 'define'") + "\n") );
 						return false;
 					}
 
@@ -522,7 +525,7 @@ bool lk::eval::interpret( node_t *root,
 					if (nargs_given < nargs_expected)
 					{
 						m_errors.push_back( make_error(n, 
-							"too few arguments provided to function call: %d expected, %d given\n",
+							lk_tr("too few arguments provided to function call: %d expected, %d given") + "\n",
 							nargs_expected, nargs_given) );
 						return false;
 					}
@@ -538,15 +541,14 @@ bool lk::eval::interpret( node_t *root,
 						if (!interpret(thisexpr->left, cur_env, thisobj, flags, c))
 						{
 							m_errors.push_back( make_error(cur_expr,
-														 "failed to evaluate 'this' parameter 0 for THISCALL -> method"));
+								lk_tr("failed to evaluate 'this' parameter 0 for THISCALL -> method") ));
 							return false;
 						}
 
 						if (thisobj.type() != vardata_t::REFERENCE)
 						{
 							m_errors.push_back( make_error(cur_expr,
-														 "'this' parameter did not evaluate to a reference, rather %s!",
-														 thisobj.typestr()));
+								lk_tr("'this' parameter did not evaluate to a reference, rather:") + thisobj.typestr() ));
 							return false;
 						}
 
@@ -568,7 +570,8 @@ bool lk::eval::interpret( node_t *root,
 							unsigned int c = CTL_NONE;
 							if (!interpret(argvals->items[argindex], cur_env, v, flags, c))
 							{
-								m_errors.push_back( make_error( argvals->items[argindex], "failed to initialize function call argument\n" ) );
+								m_errors.push_back( make_error( argvals->items[argindex], 
+									lk_tr("failed to initialize function call argument") + "\n" ) );
 								return false;
 							}
 
@@ -584,7 +587,7 @@ bool lk::eval::interpret( node_t *root,
 					// now evaluate the function block in the new environment
 					if (!interpret( block, &frame, result, flags, ctl_id ))
 					{
-						m_errors.push_back( make_error( block, "error inside function call\n" ));
+						m_errors.push_back( make_error( block, lk_tr("error inside function call") + "\n" ));
 						return false;
 					}
 					
@@ -627,7 +630,8 @@ bool lk::eval::interpret( node_t *root,
 				}
 				else
 				{
-					m_errors.push_back( make_error(n, "operand to # (sizeof) must be a array, string, or table type\n"));
+					m_errors.push_back( make_error(n, 
+						lk_tr("operand to # ('sizeof') must be a array, string, or table type") + "\n"));
 					return false;
 				}
 				break;
@@ -649,7 +653,7 @@ bool lk::eval::interpret( node_t *root,
 				}
 				else
 				{
-					m_errors.push_back( make_error(n, "operand to @ (keysof) must be a table") );
+					m_errors.push_back( make_error(n, lk_tr("operand to @ (keysof) must be a table")) );
 					return false;
 				}
 				break;
@@ -662,7 +666,7 @@ bool lk::eval::interpret( node_t *root,
 				}
 				else
 				{
-					m_errors.push_back( make_error(n, "argument to typeof(...) must be an identifier" ) );
+					m_errors.push_back( make_error(n, lk_tr("argument to typeof(...) must be an identifier") ) );
 					return false;
 				}
 				break;
@@ -720,7 +724,7 @@ bool lk::eval::interpret( node_t *root,
 				size_t index = switchval.as_unsigned();
 				if ( !p || index >= p->items.size() )
 				{
-					m_errors.push_back( make_error(n, "invalid switch statement index of %d", index));
+					m_errors.push_back( make_error(n, lk_tr("invalid switch statement index of %d"), index));
 					return false;
 				}
 
@@ -732,7 +736,8 @@ bool lk::eval::interpret( node_t *root,
 				break;
 			}
 		} catch ( lk::error_t &e ) {
-			m_errors.push_back( make_error(n, "!error: %s\n", (const char*)e.text.c_str()));
+			m_errors.push_back( make_error(n, lk_tr("error") + 
+				": %s\n", (const char*)e.text.c_str()));
 			return false;
 		}
 	}
@@ -765,7 +770,7 @@ bool lk::eval::interpret( node_t *root,
 				break;
 			}
 		} catch ( lk::error_t &e ) {
-			m_errors.push_back( make_error(n, "!error: %s\n", (const char*)e.text.c_str()));
+			m_errors.push_back( make_error(n, lk_tr("error") + ": %s\n", (const char*)e.text.c_str()));
 			return false;
 		}
 	}
@@ -780,14 +785,16 @@ bool lk::eval::interpret( node_t *root,
 		{
 			if (n->constval)
 			{
-				m_errors.push_back( make_error(n, "overriding previous non-const identifier with const-ness not allowed: %s\n", (const char*)n->name.c_str() ));
+				m_errors.push_back( make_error(n, 
+					lk_tr("overriding previous non-const identifier with const-ness not allowed:") + n->name + "\n" ));
 				result.nullify();
 				return false;
 			}
 
 			if (n->globalval)
 			{
-				m_errors.push_back( make_error(n, "overriding previous non-global identifier with global-ness not allowed: %s\n", (const char*)n->name.c_str() ));
+				m_errors.push_back( make_error(n, 
+					lk_tr("overriding previous non-global identifier with global-ness not allowed:") + n->name + "\n" ));
 				result.nullify();
 				return false;
 			}
@@ -827,7 +834,8 @@ bool lk::eval::interpret( node_t *root,
 		}
 		else
 		{
-			m_errors.push_back( make_error( n, "reference to unassigned variable: %s\n", (const char*)n->name.c_str() ));
+			m_errors.push_back( make_error( n, 
+				lk_tr("reference to unassigned variable:") + n->name + "\n" ));
 			result.nullify();
 			return false;
 		}
