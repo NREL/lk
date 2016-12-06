@@ -1125,7 +1125,7 @@ class vardata_compare
 public:
 	bool operator() ( const lk::vardata_t &lhs, const lk::vardata_t &rhs )
 	{
-		if (lhs.type() == lk::vardata_t::NULLVAL && rhs.type() == lk::vardata_t::NUMBER)
+		if (lhs.type() == lk::vardata_t::NUMBER && rhs.type() == lk::vardata_t::NUMBER)
 			return lhs.num() < rhs.num();
 		else
 			return lhs.as_string() < rhs.as_string();
