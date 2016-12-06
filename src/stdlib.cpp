@@ -1127,6 +1127,12 @@ public:
 	{
 		if (lhs.type() == lk::vardata_t::NUMBER && rhs.type() == lk::vardata_t::NUMBER)
 			return lhs.num() < rhs.num();
+        else if (
+                lhs.type() == lk::vardata_t::VECTOR && rhs.type() == lk::vardata_t::VECTOR 
+                    &&
+		        lhs.vec()->at(0).type() == lk::vardata_t::NUMBER && rhs.vec()->at(0).type() == lk::vardata_t::NUMBER
+                )
+            return lhs.vec()->at(0).num() < rhs.vec()->at(0).num();
 		else
 			return lhs.as_string() < rhs.as_string();
 	}
