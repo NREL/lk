@@ -1123,28 +1123,41 @@ static void _ostype( lk::invoke_t &cxt )
 class vardata_compare
 {
 public:
+    int sort_column;
+
+    vardata_compare()
+    {
+        sort_column = 0;     //initialize
+    };
+
 	bool operator() ( const lk::vardata_t &lhs, const lk::vardata_t &rhs )
 	{
 		if (lhs.type() == lk::vardata_t::NUMBER && rhs.type() == lk::vardata_t::NUMBER)
 			return lhs.num() < rhs.num();
-        else if (
-                lhs.type() == lk::vardata_t::VECTOR && rhs.type() == lk::vardata_t::VECTOR 
-                    &&
-		        lhs.vec()->at(0).type() == lk::vardata_t::NUMBER && rhs.vec()->at(0).type() == lk::vardata_t::NUMBER
-                )
-            return lhs.vec()->at(0).num() < rhs.vec()->at(0).num();
-		else
-			return lhs.as_string() < rhs.as_string();
+        else if (lhs.type() == lk::vardata_t::VECTOR && rhs.type() == lk::vardata_t::VECTOR)
+        {
+            if(lhs.vec()->size() > sort_column && rhs.vec()->size() > sort_column)  //both vectors must have sufficient entries, otherwise use default string comparison below
+                if(lhs.vec()->at(sort_column).type() == lk::vardata_t::NUMBER && rhs.vec()->at(sort_column).type() == lk::vardata_t::NUMBER)
+                    return lhs.vec()->at(sort_column).num() < rhs.vec()->at(sort_column).num();  //numeric comparison if both numeric
+                else
+                    return lhs.vec()->at(sort_column).as_string() < rhs.vec()->at(sort_column).as_string();     //otherwise string comparison
+        }
+				
+        //default is string comparison
+        return lhs.as_string() < rhs.as_string();
 	}
 };
 static void _stable_sort( lk::invoke_t &cxt )
 {
-	LK_DOC("stable_sort", "Sort an array of numbers or strings in place while preserving relative ordering of elements.", "(array):none");
+	LK_DOC("stable_sort", "Sort an array of numbers or strings in place while preserving relative ordering of elements.", "(array, [integer:sort column index]):none");
 	
 	lk::vardata_t &x = cxt.arg(0);
 	if (x.type() == lk::vardata_t::VECTOR )
 	{
 		vardata_compare cc;
+        if( cxt.arg_count() > 1 )
+            cc.sort_column = cxt.arg(1).as_integer();
+
 		std::stable_sort( x.vec()->begin(), x.vec()->end(), cc );
 	}
 }
