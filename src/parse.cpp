@@ -100,29 +100,33 @@ void lk::parser::skip()
 void lk::parser::error( const char *fmt, ... )
 {
 	char buf[512];
+	va_list list;
+	va_start( list, fmt );
+	#if defined(_WIN32)&&defined(_MSC_VER)
+		_vsnprintf( buf, 480, fmt, list );
+	#else
+		vsnprintf( buf, 480, fmt, list );
+	#endif
+	
+	va_end( list );
+
+	lk_string s(buf);
+	error( s );
+}
+
+void lk::parser::error( const lk_string &s )
+{
+	char buf[512];
 	
 	if ( !m_name.empty() )
 		sprintf(buf, "[%s] %d: ", (const char*)m_name.c_str(), m_lastLine );
 	else
 		sprintf(buf, "%d: ", m_lastLine);
 	
-	char *p = buf + strlen(buf);
-
-	va_list list;
-	va_start( list, fmt );	
-	
-	#if defined(_WIN32)&&defined(_MSC_VER)
-		_vsnprintf( p, 480, fmt, list );
-	#else
-		vsnprintf( p, 480, fmt, list );
-	#endif
-	
 	errinfo e;
-	e.text = buf;
+	e.text = lk_string(buf) + s;
 	e.line = m_lastLine;
 	m_errorList.push_back( e );
-
-	va_end( list );
 }
 
 lk::node_t *lk::parser::script()
@@ -303,7 +307,7 @@ lk::node_t *lk::parser::statement()
 		{
 			if (m_importNameList[k] == expanded_path)
 			{
-				error( lk_tr("circular import of %s impossible"), (const char*)file.c_str());
+				error( lk_tr("invalid circular import of: ") + file );
 				m_haltFlag = true;
 				return 0;
 			}
@@ -327,7 +331,7 @@ lk::node_t *lk::parser::statement()
 				|| parse.token() != lk::lexer::END
 				|| tree == 0 )
 			{
-				error( lk_tr("parse errors in import '%s':"), (const char*)file.c_str());
+				error( lk_tr("parse errors in import: " + file ));
 				
 				int i=0;
 				while ( i < parse.error_count() )
@@ -344,7 +348,7 @@ lk::node_t *lk::parser::statement()
 		}
 		else
 		{
-			error( lk_tr("import '%s' could not be located"), (const char*)file.c_str());
+			error( lk_tr("could not locate: ") + file ) ;
 			return 0;
 		}
 	}
@@ -679,7 +683,7 @@ lk::node_t *lk::parser::relational()
 		case lk::lexer::OP_GT: oper = expr_t::GT; break;
 		case lk::lexer::OP_GE: oper = expr_t::GE; break;
 		default:
-			error( lk_tr("invalid relational operator: %s"), lk::lexer::tokstr( token() ) );
+			error( lk_tr("invalid relational operator: ") + lk::lexer::tokstr( token() ) );
 		}
 		
 		skip();

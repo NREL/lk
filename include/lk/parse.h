@@ -53,6 +53,7 @@ namespace lk
 		list_t *identifierlist( int septok, int endtok );
 
 	
+		void error( const lk_string &s );
 		void error( const char *fmt, ... );
 		
 		lexer lex;				

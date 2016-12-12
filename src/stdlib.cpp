@@ -1136,11 +1136,17 @@ public:
 			return lhs.num() < rhs.num();
         else if (lhs.type() == lk::vardata_t::VECTOR && rhs.type() == lk::vardata_t::VECTOR)
         {
-            if(lhs.vec()->size() > sort_column && rhs.vec()->size() > sort_column)  //both vectors must have sufficient entries, otherwise use default string comparison below
-                if(lhs.vec()->at(sort_column).type() == lk::vardata_t::NUMBER && rhs.vec()->at(sort_column).type() == lk::vardata_t::NUMBER)
-                    return lhs.vec()->at(sort_column).num() < rhs.vec()->at(sort_column).num();  //numeric comparison if both numeric
-                else
-                    return lhs.vec()->at(sort_column).as_string() < rhs.vec()->at(sort_column).as_string();     //otherwise string comparison
+		if(lhs.vec()->size() > sort_column && rhs.vec()->size() > sort_column)  //both vectors must have sufficient entries, otherwise use default string comparison below
+		{
+                	if(lhs.vec()->at(sort_column).type() == lk::vardata_t::NUMBER && rhs.vec()->at(sort_column).type() == lk::vardata_t::NUMBER)
+                	{
+			    	return lhs.vec()->at(sort_column).num() < rhs.vec()->at(sort_column).num();  //numeric comparison if both numeric
+			}
+                	else
+			{
+	                    	return lhs.vec()->at(sort_column).as_string() < rhs.vec()->at(sort_column).as_string();     //otherwise string comparison
+			}
+		}
         }
 				
         //default is string comparison

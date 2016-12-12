@@ -107,7 +107,7 @@ lk_string lk::vardata_t::as_string() const
 		return *reinterpret_cast< lk_string* >(m_u.p);
 	case VECTOR:
 		{
-			register std::vector<vardata_t> &v = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
+			std::vector<vardata_t> &v = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
 
 			lk_string s( "[ " );
 			for ( size_t i=0;i<v.size();i++ )
@@ -123,7 +123,7 @@ lk_string lk::vardata_t::as_string() const
 		}
 	case HASH:
 		{
-			register varhash_t &h = *reinterpret_cast< varhash_t* >(m_u.p);
+			varhash_t &h = *reinterpret_cast< varhash_t* >(m_u.p);
 			lk_string s("{ ");
 
 			for ( varhash_t::iterator it = h.begin(); it != h.end(); ++it )
@@ -232,7 +232,7 @@ bool lk::vardata_t::copy( vardata_t &rhs ) throw( error_t )
 	case VECTOR:
 		{
 			resize( rhs.length() );
-			register std::vector<vardata_t> &v = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
+			std::vector<vardata_t> &v = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
 			std::vector<vardata_t> *rv = rhs.vec();
 			for (size_t i=0;i<v.size();i++)
 				v[i].copy( (*rv)[i] );
@@ -694,8 +694,8 @@ lk::vardata_t &lk::vardata_t::hash_item( const lk_string &key ) throw(error_t)
 lk::vardata_t *lk::vardata_t::index(size_t idx) const throw(error_t)
 {
 	if (type() != VECTOR) throw error_t( lk_tr("access violation: expected array for indexing, but found") + " " + typestr() );
-	register std::vector<vardata_t> &m = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
-	if (idx >= m.size()) throw error_t( lk_tr("array index out of bounds at %d (length: %d)"), (int)idx, (int)m.size());
+	std::vector<vardata_t> &m = *reinterpret_cast< std::vector<vardata_t>* >(m_u.p);
+	if (idx >= m.size()) throw error_t( (const char*)lk_tr("array index out of bounds at %d (length: %d)").c_str(), (int)idx, (int)m.size());
 
 	return &m[idx];
 }
@@ -703,7 +703,7 @@ lk::vardata_t *lk::vardata_t::index(size_t idx) const throw(error_t)
 lk::vardata_t *lk::vardata_t::lookup( const lk_string &key ) const throw(error_t)
 {
 	if (type() != HASH) throw error_t( lk_tr("access violation: expected hash table, but found") + " " + typestr() );
-	register varhash_t &h = *reinterpret_cast< varhash_t* >(m_u.p);
+	varhash_t &h = *reinterpret_cast< varhash_t* >(m_u.p);
 	varhash_t::iterator it = h.find( key );
 	if ( it != h.end() )
 		return (*it).second;
@@ -1049,7 +1049,7 @@ bool lk::env_t::load_library( const lk_string &path )
 	if (ver != LK_EXTENSION_API_VERSION)
 	{
 		dll_close( pdll );
-		throw error_t( lk_tr("invalid extension version: %d (engine api: %d)\n"), ver, LK_EXTENSION_API_VERSION);
+		throw error_t( (const char*)lk_tr("invalid extension version: %d (engine api: %d)\n").c_str(), ver, LK_EXTENSION_API_VERSION);
 	}
 
 	lk_invokable *(*listfunc)() = (lk_invokable*(*)())dll_sym( pdll, "lk_function_list" );

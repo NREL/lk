@@ -27,11 +27,12 @@ namespace lk {
 	{
 	public:
 		error_t() : text("general data exception") {  }
-		error_t( const lk_string &fmt, ...) {
+		error_t( const lk_string &s ) : text(s) {  }
+		error_t( const char *fmt, ...) {
 			char buf[512];
 			va_list args;
 			va_start( args, fmt );
-			vsnprintf( buf, 511, (const char*)fmt.c_str(), args );
+			vsnprintf( buf, 511, fmt, args );
 			va_end( args );
 			text = buf;
 		}

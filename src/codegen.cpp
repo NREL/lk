@@ -6,6 +6,12 @@
 
 namespace lk {
 
+bool code_gen::error( const lk_string &s )
+{
+	m_errStr = s;
+	return false;
+}
+
 bool code_gen::error( const char *fmt, ... )
 {
 	char buf[512];

@@ -158,10 +158,10 @@ void vm::initialize( lk::env_t *env )
 }
 
 
-#define CHECK_FOR_ARGS(n) if ( sp < (int)(n) ) return error( lk_tr("stack [sp=%d] error, %d arguments required"), sp, n );
-#define CHECK_OVERFLOW() if ( sp >= (int)stack.size() ) return error( lk_tr("stack overflow [sp=%d]"), stack.size())
-#define CHECK_CONSTANT() if ( arg >= constants.size() ) return error( lk_tr("invalid constant value address: %d\n"), arg )
-#define CHECK_IDENTIFIER() if ( arg >= identifiers.size() ) return error( lk_tr("invalid identifier address: %d\n"), arg )
+#define CHECK_FOR_ARGS(n) if ( sp < (int)(n) ) return error( (const char*)lk_tr("stack [sp=%d] error, %d arguments required").c_str(), sp, n );
+#define CHECK_OVERFLOW() if ( sp >= (int)stack.size() ) return error( (const char*)lk_tr("stack overflow [sp=%d]").c_str(), stack.size())
+#define CHECK_CONSTANT() if ( arg >= constants.size() ) return error( (const char*)lk_tr("invalid constant value address: %d\n").c_str(), arg )
+#define CHECK_IDENTIFIER() if ( arg >= identifiers.size() ) return error( (const char*)lk_tr("invalid identifier address: %d\n").c_str(), arg )
 
 bool vm::run( ExecMode mode )
 {
@@ -212,7 +212,7 @@ bool vm::run( ExecMode mode )
 			// constant is a power of two: so use bitwise operator for better performance
 			// see https://en.wikipedia.org/wiki/Modulo_operation#Performance_issues 
 			if ( (nexecuted & 7) && !on_run( spos ) )
-				return error(  lk_tr("halted by user after %d ops"), nexecuted );
+				return error(  (const char*)lk_tr("halted by user after %d ops").c_str(), nexecuted );
 
 			next_ip = ip+1;
 			
@@ -379,7 +379,7 @@ bool vm::run( ExecMode mode )
 					size_t noptions = arg;
 					
 					if ( index >= noptions )
-						return error( lk_tr("switch statement index %d out of bounds: only %d options"), (int) index, (int)(noptions));
+						return error( (const char*)lk_tr("switch statement index %d out of bounds: only %d options").c_str(), (int) index, (int)(noptions));
 
 					// advance instruction pointer to the correct jump based on the index number
 					next_ip = ip+1+index;
@@ -697,7 +697,7 @@ bool vm::run( ExecMode mode )
 					if ( F.thiscall ) ncleanup++;
 
 					if ( sp <= ncleanup ) 
-						return error( lk_tr("stack corruption upon function return") + " (sp=%d, nc=%d)", (int)sp, (int)ncleanup);
+						return error( (const char*)lk_string(lk_tr("stack corruption upon function return") + " (sp=%d, nc=%d)").c_str(), (int)sp, (int)ncleanup);
 					sp -= ncleanup;
 					stack[sp-1].copy( result->deref() );
 					next_ip = F.retaddr;
@@ -769,7 +769,7 @@ bool vm::run( ExecMode mode )
 			}
 					
 			default:
-				return error( lk_tr("invalid instruction") + " (0x%02X)", (unsigned int)op );
+				return error( (const char*)lk_string(lk_tr("invalid instruction") + " (0x%02X)").c_str(), (unsigned int)op );
 			};
 
 			ip = next_ip;
@@ -781,7 +781,7 @@ bool vm::run( ExecMode mode )
 		
 		srcpos_t spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
 
-		return error(lk_tr("runtime exception at") + " %s %d: %s", 
+		return error( (const char*)lk_string(lk_tr("runtime exception at") + " %s %d: %s").c_str(), 
 			spos.line < 0 ? "ip" : (const char*)lk_string(lk_tr("line")).c_str(),
 			spos.line < 0 ? (int)ip : (int)spos.line, 
 			exc.what() );

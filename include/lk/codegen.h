@@ -68,6 +68,7 @@ private:
 	lk_string m_errStr;
 
 	bool error( const char *fmt, ... );
+	bool error( const lk_string &s );
 
 	int place_identifier( const lk_string &id );
 	int place_const( vardata_t &d );
