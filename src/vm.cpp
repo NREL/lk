@@ -275,7 +275,7 @@ bool vm::run( ExecMode mode )
 					}
 				}
 				else
-					return error( lk_tr("referencing unassigned variable:") + identifiers[arg] + "\n" );
+					return error( (const char*)lk_string(lk_tr("referencing unassigned variable:") + identifiers[arg] + "\n").c_str() );
 
 				break;
 			}
@@ -351,7 +351,7 @@ bool vm::run( ExecMode mode )
 					next_ip = rhs_deref.faddr(); 
 				}
 				else
-					return error( lk_tr("invalid function access") );
+					return error( lk_tr("invalid function access").c_str() );
 			}
 				break;
 
@@ -360,7 +360,7 @@ bool vm::run( ExecMode mode )
 				{
 					frame &F = *frames.back();
 					if ( F.iarg >= F.nargs )
-						return error( lk_tr("too few arguments passed to function") );
+						return error( lk_tr("too few arguments passed to function").c_str() );
 
 					size_t offset = F.thiscall ? 2 : 1;
 					size_t idx = F.fp - F.nargs - offset + F.iarg;
@@ -570,7 +570,7 @@ bool vm::run( ExecMode mode )
 						vv->erase( vv->begin() + idx );
 				}
 				else
-					return error( lk_tr("-@ requires a hash or vector") );
+					return error( lk_tr("-@ requires a hash or vector").c_str() );
 
 				sp--;
 				break;
@@ -600,7 +600,7 @@ bool vm::run( ExecMode mode )
 					result.assign( pos!=lk_string::npos ? (int)pos : -1.0 );
 				}
 				else
-					return error( lk_tr("?@ requires a hash, vector, or string") );
+					return error( lk_tr("?@ requires a hash, vector, or string").c_str() );
 				
 				sp--;
 				break;
@@ -609,14 +609,14 @@ bool vm::run( ExecMode mode )
 				CHECK_OVERFLOW();
 				CHECK_IDENTIFIER();
 				if ( !special_get( identifiers[arg], stack[sp++] ) )
-					return error( lk_tr("failed to read external value") + " '" + identifiers[arg] + "'" );
+					return error( (const char*)lk_string(lk_tr("failed to read external value") + " '" + identifiers[arg] + "'").c_str() );
 				break;
 
 			case SET:
 				CHECK_FOR_ARGS( 1 );
 				CHECK_IDENTIFIER();
 				if ( !special_set( identifiers[arg], rhs_deref ) )
-					return error( lk_tr("failed to write external value") + " '" + identifiers[arg] + "'" );
+					return error( (const char*)lk_string(lk_tr("failed to write external value") + " '" + identifiers[arg] + "'" ).c_str() );
 				sp--;
 				break;
 			case SZ:
@@ -640,7 +640,7 @@ bool vm::run( ExecMode mode )
 					rhs->assign( count );
 				}
 				else
-					return error( lk_tr("operand to sizeof must be a array, string, or table type") );
+					return error( lk_tr("operand to sizeof must be a array, string, or table type").c_str() );
 
 				break;
 			case KEYS:
@@ -662,7 +662,7 @@ bool vm::run( ExecMode mode )
 					rhs->copy( keys );
 				}
 				else
-					return error( lk_tr("operand to @ (keysof) must be a table") );
+					return error( lk_tr("operand to @ (keysof) must be a table").c_str() );
 
 				break;
 			case WR:
