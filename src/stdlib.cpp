@@ -1123,7 +1123,7 @@ static void _ostype( lk::invoke_t &cxt )
 class vardata_compare
 {
 public:
-    int sort_column;
+    size_t sort_column;
 
     vardata_compare()
     {
@@ -1134,20 +1134,16 @@ public:
 	{
 		if (lhs.type() == lk::vardata_t::NUMBER && rhs.type() == lk::vardata_t::NUMBER)
 			return lhs.num() < rhs.num();
-        else if (lhs.type() == lk::vardata_t::VECTOR && rhs.type() == lk::vardata_t::VECTOR)
-        {
-		if(lhs.vec()->size() > sort_column && rhs.vec()->size() > sort_column)  //both vectors must have sufficient entries, otherwise use default string comparison below
+		else if (lhs.type() == lk::vardata_t::VECTOR && rhs.type() == lk::vardata_t::VECTOR)
 		{
-                	if(lhs.vec()->at(sort_column).type() == lk::vardata_t::NUMBER && rhs.vec()->at(sort_column).type() == lk::vardata_t::NUMBER)
-                	{
-			    	return lhs.vec()->at(sort_column).num() < rhs.vec()->at(sort_column).num();  //numeric comparison if both numeric
-			}
-                	else
+			if(lhs.vec()->size() > sort_column && rhs.vec()->size() > sort_column)  //both vectors must have sufficient entries, otherwise use default string comparison below
 			{
-	                    	return lhs.vec()->at(sort_column).as_string() < rhs.vec()->at(sort_column).as_string();     //otherwise string comparison
+				if(lhs.vec()->at(sort_column).type() == lk::vardata_t::NUMBER && rhs.vec()->at(sort_column).type() == lk::vardata_t::NUMBER)
+					return lhs.vec()->at(sort_column).num() < rhs.vec()->at(sort_column).num();  //numeric comparison if both numeric
+				else
+					return lhs.vec()->at(sort_column).as_string() < rhs.vec()->at(sort_column).as_string();     //otherwise string comparison
 			}
 		}
-        }
 				
         //default is string comparison
         return lhs.as_string() < rhs.as_string();
@@ -1208,10 +1204,10 @@ public:
 		case lk::vardata_t::VECTOR:
 			out( "[ " );
 			level++;
-			for( int i=0;i<x.length();i++ )
+			for( int i=0;i<(int)x.length();i++ )
 			{
 				write( *x.index(i) );
-				if ( i < x.length()-1 )
+				if ( i < (int)x.length()-1 )
 					out( ", " );
 			}
 			level--;

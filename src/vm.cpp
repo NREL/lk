@@ -165,7 +165,7 @@ void vm::initialize( lk::env_t *env )
 
 bool vm::run( ExecMode mode )
 {
-	if( frames.size() == 0 ) return error( lk_tr("vm not initialized") ); // must initialize first.
+	if( frames.size() == 0 ) return error( (const char*)lk_tr("vm not initialized").c_str() ); // must initialize first.
 
 	vardata_t nullval;
 	size_t nexecuted = 0;

@@ -50,8 +50,7 @@ private:
 
 	void free_frames();
 	bool error( const char *fmt, ... );
-	bool error( const lk_string &s );
-
+	
 #ifdef OP_PROFILE
 	size_t opcount[__MaxOp];
 	void clear_opcount();
