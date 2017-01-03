@@ -6,13 +6,13 @@
 
 namespace lk {
 
-bool code_gen::error( const lk_string &s )
+bool codegen::error( const lk_string &s )
 {
 	m_errStr = s;
 	return false;
 }
 
-bool code_gen::error( const char *fmt, ... )
+bool codegen::error( const char *fmt, ... )
 {
 	char buf[512];
 	va_list args;
@@ -27,36 +27,33 @@ bool code_gen::error( const char *fmt, ... )
 #define F_NONE 0x00
 #define F_MUTABLE 0x01
 
-code_gen::code_gen() {
+codegen::codegen() {
 	m_labelCounter = 1;
 }
 	
-size_t code_gen::bytecode( std::vector<unsigned int> &bc, 
-	std::vector<vardata_t> &constData, 
-	std::vector<lk_string> &idList,
-	std::vector<srcpos_t> &debugInfo )
+size_t codegen::get( bytecode &bc )
 {
 	if ( m_asm.size() == 0 ) return 0;
 
-	bc.resize( m_asm.size(), 0 );
-	debugInfo.resize( m_asm.size(), srcpos_t() );
+	bc.program.resize( m_asm.size(), 0 );
+	bc.debuginfo.resize( m_asm.size(), srcpos_t() );
 
 	for( size_t i=0;i<m_asm.size();i++ )
 	{
 		instr &ip = m_asm[i];
 		if ( ip.label ) m_asm[i].arg = m_labelAddr[ *ip.label ];
-		bc[i] = (((unsigned int)ip.op)&0x000000FF) | (((unsigned int)ip.arg)<<8);
-		debugInfo[i] = m_asm[i].pos;
+		bc.program[i] = (((unsigned int)ip.op)&0x000000FF) | (((unsigned int)ip.arg)<<8);
+		bc.debuginfo[i] = m_asm[i].pos;
 	}
 
-	constData = m_constData;
-	idList = m_idList;
+	bc.constants = m_constData;
+	bc.identifiers = m_idList;
 
 	return m_asm.size();
 }
 
 
-void code_gen::textout( lk_string &assembly, lk_string &bytecode )
+void codegen::textout( lk_string &assembly, lk_string &bytecode )
 {
 	char buf[128];		
 		
@@ -136,7 +133,7 @@ void code_gen::textout( lk_string &assembly, lk_string &bytecode )
 		bytecode += ".id " + m_idList[i] + "\n";
 }
 
-bool code_gen::emitasm( lk::node_t *root )
+bool codegen::generate( lk::node_t *root )
 {
 	m_idList.clear();
 	m_constData.clear();
@@ -149,7 +146,7 @@ bool code_gen::emitasm( lk::node_t *root )
 	return pfgen(root, F_NONE );
 }
 
-int code_gen::place_identifier( const lk_string &id )
+int codegen::place_identifier( const lk_string &id )
 {
 	for( size_t i=0;i<m_idList.size();i++ )
 		if ( m_idList[i] == id )
@@ -159,7 +156,7 @@ int code_gen::place_identifier( const lk_string &id )
 	return m_idList.size() - 1;
 }
 
-int code_gen::place_const( vardata_t &d )
+int codegen::place_const( vardata_t &d )
 {
 	if ( d.type() == vardata_t::HASH && d.hash()->size() == 2 )
 		printf("stop here" );
@@ -172,32 +169,32 @@ int code_gen::place_const( vardata_t &d )
 	return (int)m_constData.size()-1;
 }
 
-int code_gen::const_value( double value )
+int codegen::const_value( double value )
 {
 	vardata_t x;
 	x.assign( value );
 	return place_const( x );
 }
-int code_gen::const_literal( const lk_string &lit )
+int codegen::const_literal( const lk_string &lit )
 {
 	vardata_t x;
 	x.assign( lit );
 	return place_const( x );
 }
 
-lk_string code_gen::new_label()
+lk_string codegen::new_label()
 {
 	char buf[128];
 	sprintf(buf, "L%d", m_labelCounter++);
 	return lk_string(buf);
 }
 
-void code_gen::place_label( const lk_string &s )
+void codegen::place_label( const lk_string &s )
 {
 	m_labelAddr[ s ] = (int)m_asm.size();
 }
 
-int code_gen::emit( srcpos_t pos, Opcode o, int arg )
+int codegen::emit( srcpos_t pos, Opcode o, int arg )
 {
 	// copy previous line's position if parser doesn't know the statement line,
 	// such as when generating if-elseif-else structures for the 'J' instruction
@@ -209,7 +206,7 @@ int code_gen::emit( srcpos_t pos, Opcode o, int arg )
 	return m_asm.size();
 }
 
-int code_gen::emit( srcpos_t pos, Opcode o, const lk_string &L )
+int codegen::emit( srcpos_t pos, Opcode o, const lk_string &L )
 {
 	// copy previous line's position if parser doesn't know the statement line,
 	// such as when generating if-elseif-else structures for the 'J' instruction
@@ -221,7 +218,7 @@ int code_gen::emit( srcpos_t pos, Opcode o, const lk_string &L )
 	return m_asm.size();
 }
 
-bool code_gen::initialize_const_vec( lk::list_t *v, vardata_t &vvec )
+bool codegen::initialize_const_vec( lk::list_t *v, vardata_t &vvec )
 {
 	if ( !v ) return true; // empty vector
 
@@ -261,7 +258,7 @@ bool code_gen::initialize_const_vec( lk::list_t *v, vardata_t &vvec )
 	return true;
 }
 
-bool code_gen::initialize_const_hash( lk::list_t *v, vardata_t &vhash )
+bool codegen::initialize_const_hash( lk::list_t *v, vardata_t &vhash )
 {
 	if ( !v ) return true;
 
@@ -311,7 +308,7 @@ bool code_gen::initialize_const_hash( lk::list_t *v, vardata_t &vhash )
 	return true;
 }
 
-bool code_gen::pfgen_stmt( lk::node_t *root, unsigned int flags )
+bool codegen::pfgen_stmt( lk::node_t *root, unsigned int flags )
 {
 	bool ok = pfgen( root, flags );
 	// expressions always leave their value on the stack, so clean it up
@@ -319,7 +316,7 @@ bool code_gen::pfgen_stmt( lk::node_t *root, unsigned int flags )
 	return ok;
 }
 
-bool code_gen::pfgen( lk::node_t *root, unsigned int flags )
+bool codegen::pfgen( lk::node_t *root, unsigned int flags )
 {
 	if ( !root ) return true;
 

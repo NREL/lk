@@ -5,20 +5,16 @@
 #include <lk/vm.h>
 
 namespace lk {
-
-class code_gen
+	
+class codegen
 {
 public:
-	code_gen();
+	codegen();
 	
 	lk_string error() { return m_errStr; }
 	
-	bool emitasm( lk::node_t *root );
-
-	size_t bytecode( std::vector<unsigned int> &bc, 
-		std::vector<vardata_t> &constData, 
-		std::vector<lk_string> &idList,
-		std::vector<srcpos_t> &debugInfo );
+	bool generate( lk::node_t *root );
+	size_t get( bytecode &b );
 
 	void textout( lk_string &assembly, lk_string &bytecode );
 

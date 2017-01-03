@@ -46,11 +46,8 @@ class VMTestFrame : public wxFrame
 	wxTextCtrl *m_parse, *m_bytecode, *m_output, *m_error, *m_debug, *m_ibrk;
 	wxListBox *m_asm;
 	lk::vm vm;
+	lk::bytecode bc;
 
-	std::vector<unsigned int> program;
-	std::vector<lk::vardata_t> constants;
-	std::vector<lk_string> identifiers;
-	std::vector<lk::srcpos_t> debuginfo;
 public:
 	void ResetRunEnv()
 	{
@@ -284,9 +281,9 @@ public:
 		if ( ip  <  iasmsz )
 			m_asm->SetSelection( ip );
 
-		if ( ip < debuginfo.size() )
+		if ( ip < bc.debuginfo.size() )
 		{
-			int line = debuginfo[ip].stmt;
+			int line = bc.debuginfo[ip].stmt;
 			if ( line > 0 && line <= m_code->GetNumberOfLines() )
 			{
 				int ifirst = m_code->GetFirstVisibleLine();
@@ -347,10 +344,10 @@ public:
 			if ( parse.error_count() == 0 )
 			{
 				lk::pretty_print( output, node, 0 );
-				lk::code_gen cg;
-				if ( cg.emitasm( node ) ) {
+				lk::codegen cg;
+				if ( cg.generate( node ) ) {
 					cg.textout( assembly, bytecode_text );
-					cg.bytecode( program, constants, identifiers, debuginfo );
+					cg.get( bc );
 				}
 				else assembly = "error in assembly generation";
 			}
@@ -406,10 +403,10 @@ public:
 			break;
 		case ID_LOAD:
 			ResetRunEnv();
-			vm.load( program, constants, identifiers, debuginfo );
+			vm.load( &bc );
 			m_debug->ChangeValue(
 				wxString::Format("vm loaded %d instructions, %d constants, %d identifiers.\n",
-					(int) program.size(), (int)constants.size(), (int)identifiers.size() ) );
+					(int) bc.program.size(), (int)bc.constants.size(), (int)bc.identifiers.size() ) );
 			m_output->Clear();
 			vm.initialize(m_runEnv);
 			UpdateVMView();

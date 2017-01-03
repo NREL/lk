@@ -65,6 +65,7 @@ void vm::clear_opcount() {
 
 vm::vm( size_t ssize )
 {
+	bc = 0;
 	ip = sp = 0;
 	stack.resize( ssize, vardata_t() );
 	frames.reserve( 16 );
@@ -111,16 +112,9 @@ vardata_t *vm::get_stack( size_t *psp ) {
 	return &stack[0];
 }
 
-void vm::load( const std::vector<unsigned int> &code,
-	const std::vector<vardata_t> &cnstvals,
-	const std::vector<lk_string> &ids,
-	const std::vector<lk::srcpos_t> &dbginf)
+void vm::load( bytecode *b )
 {
-	program = code;
-	constants = cnstvals;
-	identifiers = ids;
-	debuginfo = dbginf;
-	
+	bc = b;	
 	free_frames();
 }
 	
@@ -134,7 +128,7 @@ bool vm::special_get( const lk_string &name, vardata_t &val )
 	throw error_t( lk_tr("no defined mechanism to get special variable") + " '" + name + "'" );
 }
 
-void vm::initialize( lk::env_t *env )
+bool vm::initialize( lk::env_t *env )
 {
 #ifdef OP_PROFILE
 	clear_opcount();
@@ -143,33 +137,41 @@ void vm::initialize( lk::env_t *env )
 	free_frames();
 	errStr.clear();
 
+	if ( !bc )
+	{
+		errStr = lk_tr("no bytecode loaded");
+		return false;
+	}
+
 	ip = sp = 0;
 	for( size_t i=0;i<stack.size();i++ )
 		stack[i].nullify();
 		
 	frames.push_back( new frame( env, 0, 0, 0 ) );
 	
-	brkpt.resize( program.size(), false );
+	brkpt.resize( bc->program.size(), false );
 	
 	// initialize to no valid break position
 	lastbrk.line = -1;
 	lastbrk.stmt = -1;
 	lastbrk.file.clear();
+	return true;
 }
 
 
 #define CHECK_FOR_ARGS(n) if ( sp < (int)(n) ) return error( (const char*)lk_tr("stack [sp=%d] error, %d arguments required").c_str(), sp, n );
 #define CHECK_OVERFLOW() if ( sp >= (int)stack.size() ) return error( (const char*)lk_tr("stack overflow [sp=%d]").c_str(), stack.size())
-#define CHECK_CONSTANT() if ( arg >= constants.size() ) return error( (const char*)lk_tr("invalid constant value address: %d\n").c_str(), arg )
-#define CHECK_IDENTIFIER() if ( arg >= identifiers.size() ) return error( (const char*)lk_tr("invalid identifier address: %d\n").c_str(), arg )
+#define CHECK_CONSTANT() if ( arg >= bc->constants.size() ) return error( (const char*)lk_tr("invalid constant value address: %d\n").c_str(), arg )
+#define CHECK_IDENTIFIER() if ( arg >= bc->identifiers.size() ) return error( (const char*)lk_tr("invalid identifier address: %d\n").c_str(), arg )
 
 bool vm::run( ExecMode mode )
 {
+	if ( !bc || bc->program.size() == 0 ) return error( (const char*)lk_tr("no bytecode loaded").c_str() );
 	if( frames.size() == 0 ) return error( (const char*)lk_tr("vm not initialized").c_str() ); // must initialize first.
 
 	vardata_t nullval;
 	size_t nexecuted = 0;
-	const size_t code_size = program.size();
+	const size_t code_size = bc->program.size();
 	size_t next_ip = code_size;
 	vardata_t *lhs, *rhs;
 
@@ -177,22 +179,22 @@ bool vm::run( ExecMode mode )
 	env_t &globals = frames.front()->env; 	
 	
 	// initialize the last code point for debugging
-	if ( ip < debuginfo.size() )
-		lastbrk = debuginfo[ip];
+	if ( ip < bc->debuginfo.size() )
+		lastbrk = bc->debuginfo[ip];
 	
 	try {
 		while ( ip < code_size )
 		{
-			Opcode op = (Opcode)(unsigned char)program[ip];
-			size_t arg = ( program[ip] >> 8 );
+			Opcode op = (Opcode)(unsigned char)bc->program[ip];
+			size_t arg = ( bc->program[ip] >> 8 );
 
 #ifdef OP_PROFILE
 			opcount[op]++;
 #endif
 
-			if ( mode != NORMAL && ip < debuginfo.size() && ip < brkpt.size() )
+			if ( mode != NORMAL && ip < bc->debuginfo.size() && ip < brkpt.size() )
 			{				
-				const srcpos_t &di = debuginfo[ip];
+				const srcpos_t &di = bc->debuginfo[ip];
 				if ( mode == DEBUG )
 				{
 					if ( brkpt[ip] && (nexecuted > 0 || ip == 0)  )
@@ -206,7 +208,7 @@ bool vm::run( ExecMode mode )
 				}
 			}
 
-			const srcpos_t &spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
+			const srcpos_t &spos = (ip<bc->debuginfo.size()) ? bc->debuginfo[ip] : srcpos_t::npos;
 
 			// expression & (constant-1) is equivalent to expression % constant where 
 			// constant is a power of two: so use bitwise operator for better performance
@@ -236,11 +238,11 @@ bool vm::run( ExecMode mode )
 				CHECK_OVERFLOW();
 				CHECK_IDENTIFIER();
 
-				if ( fcallinfo_t *fci = F.env.lookup_func( identifiers[arg] ) )
+				if ( fcallinfo_t *fci = F.env.lookup_func( bc->identifiers[arg] ) )
 				{
 					stack[sp++].assign_fcall( fci );
 				}
-				else if ( vardata_t *x = F.env.lookup( identifiers[arg], op == RREF ) )
+				else if ( vardata_t *x = F.env.lookup( bc->identifiers[arg], op == RREF ) )
 				{
 					stack[sp++].assign( x );
 				}
@@ -250,7 +252,7 @@ bool vm::run( ExecMode mode )
 					// is in the global frame and was created as a global variable
 					// if so, then place it on the stack.  globals are editable from
 					// any context if they were flagged as such when created
-					vardata_t *x = globals.lookup( identifiers[arg], false );
+					vardata_t *x = globals.lookup( bc->identifiers[arg], false );
 					if ( x && x->flagval( vardata_t::GLOBALVAL ) )
 						stack[sp++].assign( x );
 					else
@@ -267,15 +269,16 @@ bool vm::run( ExecMode mode )
 							x->set_flag( vardata_t::GLOBALVAL );
 					
 						// now insert record
-						if ( op == LGREF ) globals.assign( identifiers[arg], x ); // global frame
-						else F.env.assign( identifiers[arg], x ); // local frame
+						if ( op == LGREF ) globals.assign( bc->identifiers[arg], x ); // global frame
+						else F.env.assign( bc->identifiers[arg], x ); // local frame
 
 						
 						stack[sp++].assign( x );
 					}
 				}
 				else
-					return error( (const char*)lk_string(lk_tr("referencing unassigned variable:") + identifiers[arg] + "\n").c_str() );
+					return error( (const char*)lk_string(
+						lk_tr("referencing unassigned variable:") + bc->identifiers[arg] + "\n").c_str() );
 
 				break;
 			}
@@ -321,10 +324,10 @@ bool vm::run( ExecMode mode )
 						F.env.assign( "this", new vardata_t( stack[sp-2] ) );
 						F.thiscall = true;
 						
-						if ( ip > 2 && PSH == (Opcode)(unsigned char)program[ip-2] )
+						if ( ip > 2 && PSH == (Opcode)(unsigned char)bc->program[ip-2] )
 						{
-							size_t arg = ( program[ip-2] >> 8 );
-							F.id = "->" + constants[arg].as_string();
+							size_t arg = ( bc->program[ip-2] >> 8 );
+							F.id = "->" + bc->constants[arg].as_string();
 						}
 						else if ( lhs != 0 )
 						{
@@ -334,10 +337,10 @@ bool vm::run( ExecMode mode )
 					}
 					else
 					{
-						if ( ip > 1 && RREF == (Opcode)(unsigned char)program[ip-1] )
+						if ( ip > 1 && RREF == (Opcode)(unsigned char)bc->program[ip-1] )
 						{
-							size_t arg = ( program[ip-1] >> 8 );
-							F.id = identifiers[arg];
+							size_t arg = ( bc->program[ip-1] >> 8 );
+							F.id = bc->identifiers[arg];
 						}
 						else
 							F.id = "???";
@@ -367,7 +370,7 @@ bool vm::run( ExecMode mode )
 
 					vardata_t *x = new vardata_t;
 					x->assign( &stack[idx] );
-					F.env.assign( identifiers[arg], x );
+					F.env.assign( bc->identifiers[arg], x );
 					F.iarg++;
 				}
 				break;
@@ -392,7 +395,7 @@ bool vm::run( ExecMode mode )
 			case PSH:
 				CHECK_OVERFLOW();
 				CHECK_CONSTANT();
-				stack[sp++].copy( constants[arg] );
+				stack[sp++].copy( bc->constants[arg] );
 				break;
 			case POP:
 				sp--;
@@ -608,15 +611,15 @@ bool vm::run( ExecMode mode )
 			case GET:
 				CHECK_OVERFLOW();
 				CHECK_IDENTIFIER();
-				if ( !special_get( identifiers[arg], stack[sp++] ) )
-					return error( (const char*)lk_string(lk_tr("failed to read external value") + " '" + identifiers[arg] + "'").c_str() );
+				if ( !special_get( bc->identifiers[arg], stack[sp++] ) )
+					return error( (const char*)lk_string(lk_tr("failed to read external value") + " '" + bc->identifiers[arg] + "'").c_str() );
 				break;
 
 			case SET:
 				CHECK_FOR_ARGS( 1 );
 				CHECK_IDENTIFIER();
-				if ( !special_set( identifiers[arg], rhs_deref ) )
-					return error( (const char*)lk_string(lk_tr("failed to write external value") + " '" + identifiers[arg] + "'" ).c_str() );
+				if ( !special_set( bc->identifiers[arg], rhs_deref ) )
+					return error( (const char*)lk_string(lk_tr("failed to write external value") + " '" + bc->identifiers[arg] + "'" ).c_str() );
 				sp--;
 				break;
 			case SZ:
@@ -675,7 +678,7 @@ bool vm::run( ExecMode mode )
 				CHECK_OVERFLOW();
 				CHECK_IDENTIFIER();
 
-				if ( vardata_t *x = frames.back()->env.lookup( identifiers[arg], true ) )
+				if ( vardata_t *x = frames.back()->env.lookup( bc->identifiers[arg], true ) )
 					stack[sp++].assign( x->typestr() );
 				else
 					stack[sp++].assign( "unknown" );
@@ -779,7 +782,7 @@ bool vm::run( ExecMode mode )
 		}
 	} catch( std::exception &exc ) {
 		
-		srcpos_t spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
+		srcpos_t spos = (ip<bc->debuginfo.size()) ? bc->debuginfo[ip] : srcpos_t::npos;
 
 		return error( (const char*)lk_string(lk_tr("runtime exception at") + " %s %d: %s").c_str(), 
 			spos.line < 0 ? "ip" : (const char*)lk_string(lk_tr("line")).c_str(),
@@ -792,7 +795,7 @@ bool vm::run( ExecMode mode )
 	
 bool vm::error( const char *fmt, ... )
 {
-	const srcpos_t &spos = (ip<debuginfo.size()) ? debuginfo[ip] : srcpos_t::npos;
+	const srcpos_t &spos = (bc && ip<bc->debuginfo.size()) ? bc->debuginfo[ip] : srcpos_t::npos;
 	
 	char buf[512];
 	sprintf( buf, "[%d] ", spos.stmt );
@@ -809,19 +812,21 @@ bool vm::error( const char *fmt, ... )
 
 int vm::setbrk( int line, const lk_string &file )
 {
-	for( size_t i=0;i<debuginfo.size()&&i<brkpt.size();i++ )
+	if (!bc ) return -1;
+
+	for( size_t i=0;i<bc->debuginfo.size()&&i<brkpt.size();i++ )
 	{
-		if ( debuginfo[i].file == file 
-			&& debuginfo[i].line >= line )
+		if ( bc->debuginfo[i].file == file 
+			&& bc->debuginfo[i].line >= line )
 		{
 			// snap the breakpoint to the beginning of the statement
 			while( i > 0 
-				&& debuginfo[i-1].file == debuginfo[i].file
-				&& debuginfo[i-1].stmt == debuginfo[i].stmt )
+				&& bc->debuginfo[i-1].file == bc->debuginfo[i].file
+				&& bc->debuginfo[i-1].stmt == bc->debuginfo[i].stmt )
 				i--;
 			
 			brkpt[i] = true;
-			return debuginfo[i].stmt; 
+			return bc->debuginfo[i].stmt; 
 		}
 	}
 
@@ -831,9 +836,13 @@ int vm::setbrk( int line, const lk_string &file )
 std::vector<srcpos_t> vm::getbrk()
 {
 	std::vector<srcpos_t> list;
-	for( size_t i=0;i<debuginfo.size()&&i<brkpt.size();i++ )
-		if ( brkpt[i] )
-			list.push_back( debuginfo[i] );
+
+	if ( bc )
+	{
+		for( size_t i=0;i<bc->debuginfo.size()&&i<brkpt.size();i++ )
+			if ( brkpt[i] )
+				list.push_back( bc->debuginfo[i] );
+	}
 
 	return list;
 }

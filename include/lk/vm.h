@@ -10,9 +10,17 @@ enum Opcode {
 	ADD, SUB, MUL, DIV, LT, GT, LE, GE, NE, EQ, INC, DEC, OR, AND, NOT, NEG, EXP, PSH, POP, DUP, NUL, ARG, SWI,
 	J, JF, JT, IDX, KEY, MAT, WAT, SET, GET, WR, RREF, LREF, LCREF, LGREF, FREF, CALL, TCALL, RET, END, SZ, KEYS, TYP, VEC, HASH,
 	__MaxOp };
-
 struct OpCodeEntry { Opcode op; const char *name; };
 extern OpCodeEntry op_table[];
+
+
+struct bytecode
+{
+	std::vector<unsigned int> program;
+	std::vector<vardata_t> constants;
+	std::vector<lk_string> identifiers;
+	std::vector<srcpos_t> debuginfo;
+};
 
 #define OP_PROFILE 1 
 
@@ -38,10 +46,15 @@ private:
 	size_t ip;
 	int sp; // use int so that values can go negative and errors easier to catch rather than wrapping around to a large number
 	std::vector< vardata_t > stack;
+
+	bytecode *bc;
+	/*
 	std::vector< unsigned int > program;
 	std::vector< vardata_t > constants;
 	std::vector< lk_string > identifiers;
 	std::vector< srcpos_t > debuginfo;
+	*/
+
 	std::vector< frame* > frames;
 	std::vector< bool > brkpt;
 
@@ -67,7 +80,7 @@ public:
 	vm( size_t ssize = 4096 );
 	virtual ~vm();
 	
-	void initialize( lk::env_t *env );
+	bool initialize( lk::env_t *env );
 	bool run( ExecMode mode = NORMAL );
 	lk_string error() { return errStr; }
 	virtual bool on_run( const srcpos_t &spos);
@@ -80,15 +93,8 @@ public:
 	frame **get_frames( size_t *nfrm );
 	vardata_t *get_stack( size_t *psp );
 
-	const std::vector<unsigned int> &get_program() { return program; }
-	const std::vector<vardata_t> &get_constants() { return constants; }
-	const std::vector<lk_string> &get_identifiers() { return identifiers; }
-	const std::vector<srcpos_t> &get_debuginfo() { return debuginfo; }
-
-	void load( const std::vector<unsigned int> &code,
-		const std::vector<vardata_t> &cnstvals,
-		const std::vector<lk_string> &ids,
-		const std::vector<lk::srcpos_t> &dbginf);
+	void load( bytecode *b );
+	bytecode *get_bytecode() { return bc; }
 
 	virtual bool special_set( const lk_string &name, vardata_t &val );
 	virtual bool special_get( const lk_string &name, vardata_t &val );
