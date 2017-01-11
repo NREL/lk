@@ -669,10 +669,24 @@ bool vm::run( ExecMode mode )
 
 				break;
 			case WR:
+			{
 				CHECK_FOR_ARGS( 2 );
-				rhs_deref.copy( lhs_deref );
+				// copy the value into a temporary first in case 
+				// the reference being assigned will erase the value
+				//   e.g.    x = [ 1, 2, 3 ];  x = x[1];
+				
+				// note:  this should be optimized by delaying 
+				// deletion of the old value data object (string, vector or hash)
+				// until after the copy is complete...
+				lk::vardata_t temp; 
+				temp.copy( lhs_deref ); 
+				rhs_deref.copy( temp );
+
+				// refresh the reference on the stack to the newly assigned value
+				stack[sp-2].assign( rhs ); 
 				sp--;
 				break;
+			}
 
 			case TYP:
 				CHECK_OVERFLOW();
@@ -789,7 +803,7 @@ bool vm::run( ExecMode mode )
 			spos.line < 0 ? (int)ip : (int)spos.line, 
 			exc.what() );
 	}
-
+	
 	return true;
 }
 	
