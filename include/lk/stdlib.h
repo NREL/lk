@@ -8,13 +8,14 @@ namespace lk {
 	/* these stdlib_xxxx() functions
 		return an array of fcall_t references.
 		the end of the list is denoted by a null fcall_t */
+	fcall_t* stdlib_basic();
+	fcall_t* stdlib_sysio();
+	fcall_t* stdlib_string();
+	fcall_t* stdlib_math();
 #ifdef LK_USE_WXWIDGETS
 	fcall_t* stdlib_wxui();
 #endif
 
-	fcall_t* stdlib_basic();
-	fcall_t* stdlib_string();
-	fcall_t* stdlib_math();
 
 	bool tex_doc( const lk_string &file,
 				  const lk_string &title,

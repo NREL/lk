@@ -2125,15 +2125,30 @@ lk::fcall_t* lk::stdlib_basic()
 		_to_bool,
 		_to_string,
 		_alloc,
+		_path_only,
+		_file_only,
+		_ext_only,
+		_extensions,
+		_ostype,
+		_stable_sort,
+		_json_write,
+		_json_read,
+		0 };
+
+
+	return (fcall_t*)vec;
+}
+
+
+lk::fcall_t* lk::stdlib_sysio()
+{
+	static const lk::fcall_t vec[] = {
 		_dir_list,
 		_file_exists,
 		_dir_exists,
 		_rename_file,
 		_remove_file,
 		_mkdir,
-		_path_only,
-		_file_only,
-		_ext_only,
 		_cwd,
 		_system,
 		_write_text_file,
@@ -2149,13 +2164,9 @@ lk::fcall_t* lk::stdlib_basic()
 		_read,
 		_write,
 		_load_extension,
-		_extensions,
-		_ostype,
-		_stable_sort,
-		_json_write,
-		_json_read,
 		_json_file,
 		0 };
+
 
 	return (fcall_t*)vec;
 }

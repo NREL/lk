@@ -56,6 +56,7 @@ public:
 		m_runEnv->register_func( output_cb, this );
 		m_runEnv->register_func( rand_cb );
 		m_runEnv->register_funcs( lk::stdlib_basic() );
+		m_runEnv->register_funcs( lk::stdlib_sysio() );
 		m_runEnv->register_funcs( lk::stdlib_math() );
 		m_runEnv->register_funcs( lk::stdlib_string() );
 		m_runEnv->register_funcs( lk::stdlib_wxui() );
