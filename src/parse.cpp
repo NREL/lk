@@ -102,11 +102,11 @@ void lk::parser::error( const char *fmt, ... )
 	char buf[512];
 	va_list list;
 	va_start( list, fmt );
-	#if defined(_WIN32)&&defined(_MSC_VER)
-		_vsnprintf( buf, 480, fmt, list );
-	#else
-		vsnprintf( buf, 480, fmt, list );
-	#endif
+#ifdef _WIN32
+	_vsnprintf( buf, 480, fmt, list );
+#else
+	vsnprintf( buf, 480, fmt, list );
+#endif
 	
 	va_end( list );
 

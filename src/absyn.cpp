@@ -85,6 +85,12 @@ bool lk::convert_double(const lk_string &str, double *x)
 
 #else
 
+	
+lk_string lk::get_translation( const lk_string &s )
+{
+	return lk_tr_func( s );
+}
+
 lk_string lk::to_string( lk_char c )
 {
 	char buf[2] = { c, 0 };

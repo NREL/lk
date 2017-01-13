@@ -1,18 +1,19 @@
-#include "../lk_absyn.cpp"
-#include "../lk_env.cpp"
-#include "../lk_eval.cpp"
-#include "../lk_parse.cpp"
-#include "../lk_lex.cpp"
-#include "../lk_stdlib.cpp"
-#include "../lk_invoke.cpp"
+#include <lk/absyn.h>
+#include <lk/env.h>
+#include <lk/parse.h>
+#include <lk/stdlib.h>
 
 int main(int argc, char *argv[])
 {
 	lk_string html;
 	
-	printf("generating lk_sys.tex...\n");
-	lk::tex_doc( "lk_sys.tex", "Standard System Functions", lk::stdlib_basic() );
-	html += lk::html_doc( "Standard System Functions", lk::stdlib_basic() );
+	printf("generating lk_basic.tex...\n");
+	lk::tex_doc( "lk_basic.tex", "General Functions", lk::stdlib_basic() );
+	html += lk::html_doc( "General Functions", lk::stdlib_basic() );
+	
+	printf("generating lk_sysio.tex...\n");
+	lk::tex_doc( "lk_sysio.tex", "System Functions", lk::stdlib_sysio() );
+	html += lk::html_doc( "System Functions", lk::stdlib_sysio() );
 	
 	printf("generating lk_string.tex...\n");
 	lk::tex_doc( "lk_str.tex", "String Functions", lk::stdlib_string() );

@@ -6,7 +6,7 @@ CFLAGS = -std=gnu++11 -I../include -Wall -O2 -g
 CXXFLAGS = $(CFLAGS)
 
 OBJECTS = \
-	lkcmdline.o \
+	make_stdlib_docs.o \
 	absyn.o \
 	codegen.o \
 	env.o \
@@ -19,8 +19,8 @@ OBJECTS = \
 
 
 
-lk.exe: $(OBJECTS)
-	g++  -o $@ $^ -std=gnu++11
+lkdocs.exe: $(OBJECTS)
+	g++   -o $@ $^ -std=gnu++11
 
 clean:
-	rm lk.exe
+	rm $(OBJECTS) lkdocs.exe

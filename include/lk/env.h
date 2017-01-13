@@ -32,7 +32,11 @@ namespace lk {
 			char buf[512];
 			va_list args;
 			va_start( args, fmt );
+#ifdef _WIN32
+			_vsnprintf( buf, 511, fmt, args );
+#else
 			vsnprintf( buf, 511, fmt, args );
+#endif
 			va_end( args );
 			text = buf;
 		}

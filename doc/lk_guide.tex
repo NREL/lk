@@ -23,7 +23,7 @@
 \maketitle
 \vspace{3in}
 \begin{abstract}
-The LK (Language Kit) language is a simple but powerful scripting language that is designed to be small, fast, and easily embedded in other applications.  It allows users to extend the built-in functionality of programs, and provides a cross-platform standard library of function calls.  The core LK engine, including lexical analyzer, parser, compiler, and virtual machine comprises roughly 7000 lines of ISO-standard C++ code, and is only dependent on the Standard C++ Library (STL), making it extremely tight and portable to various platforms.  LK also provides a C language API for writing extensions that can be dynamically loaded at runtime.
+The LK language is a simple but powerful scripting language that is designed to be small, fast, and easily embedded in other applications.  It allows users to extend the built-in functionality of programs, and provides a cross-platform standard library of function calls.  The core LK engine, including lexical analyzer, parser, compiler, and virtual machine comprises roughly 7000 lines of ISO-standard C++ code, and is only dependent on the Standard C++ Library (STL), making it extremely tight and portable to various platforms.  LK also provides a C language API for writing extensions that can be dynamically loaded at runtime.
 
 \textbf{Note:} LK can utilize standard 8-bit ASCII strings via the built-in \texttt{std::string} class, or can be configured to utilize an \texttt{std::string}-compliant string class from an external library.  In this way, Unicode text can be supported natively.  For example, direct integration and linkage with the wxWidgets C++ GUI library string class is provided as an option.
 \end{abstract} 
@@ -783,6 +783,15 @@ outln( wordlen ); // prints { dog=3 frog=2 cat=5 antelope=4 }
 
 Note the order of the printout of the key-value pairs in the example above.  Unlike an array whose elements are stored sequentially in memory, tables store data in an unordered set.  As a result, once a key=value pair is added to a table, there is no specification of order of the pair relative to the other key=value pairs already in the table.
 
+A ``lazy'' declaration syntax is also allowed, in which the keys are not put in quotes.  This syntax is generally quicker to type into the computer.  Example:
+
+\begin{verbatim}
+wordlen = { antelope=4, dog=3, cat=5, frog=2 };
+\end{verbatim}
+
+
+
+
 \subsection{Processing Tables}
 
 It is often necessary to know how many key=value pairs are in a table, and to know what all the keys are.  In many situations, you may have to perform an operation on every key=value pair in a table, but you do not know in advance what the keys are or how many there are.  LK provides two operators \# and @ for this purpose.
@@ -1424,7 +1433,9 @@ The dynamic extension library will be unloaded when the script finishes.
 
 The standard library documented here outlines built-in functions that are likely to be available in any implementation of the LK scripting language.  The input/output functions referenced in this manual (\texttt{in(), out(), outln()}) are not part of the standard library because the LK host environment defines how these functions are manifested.  It is assumed, however, that most host environments will include these ``standard'' I/O functions as well.
 
-\input{lk_sys.tex}
+\input{lk_basic.tex}
+
+\input{lk_sysio.tex}
 
 \input{lk_str.tex}
 

@@ -17,11 +17,11 @@ static lk_string make_error( lk::node_t *n, const char *fmt, ...)
 	va_list list;
 	va_start( list, fmt );	
 	
-	#if defined(_WIN32)&&defined(_MSC_VER)
-		_vsnprintf( p, 480, fmt, list );
-	#else
-		vsnprintf( p, 480, fmt, list );
-	#endif
+#ifdef _WIN32
+	_vsnprintf( p, 480, fmt, list );
+#else
+	vsnprintf( p, 480, fmt, list );
+#endif
 	
 	va_end( list );
 

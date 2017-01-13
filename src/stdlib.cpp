@@ -8,9 +8,9 @@
 #include <climits>
 #include <math.h>
 #include <float.h>
+#include <string.h>
 
 #include <lk/stdlib.h>
-
 
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643
@@ -593,8 +593,6 @@ lk::fcall_t* lk::stdlib_wxui()
 #include <direct.h>
 #include <windows.h>
 
-#define lk_isnan ::_isnan
-
 // DIR,dirent for win32 taken May 2011
 // Copyright Kevlin Henney, 1997, 2003. All rights reserved.
 // http://www.two-sdg.demon.co.uk/curbralan/code/dirent/dirent.h
@@ -612,22 +610,18 @@ void          rewinddir(DIR *);
 #include <sys/stat.h>
 #include <dirent.h>
 
-static inline bool lk_isnan( double d )
-{
-	volatile double val = d;
-	return (val != val);
-}
+
 #endif
 
 #include <sys/types.h>
 
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 /* taken from wxMSW-2.9.1/include/wx/defs.h - appropriate for Win32/Win64 */
 //#define va_copy(d, s) ((d)=(s))
 #define snprintf _snprintf
 #define strcasecmp _stricmp
-#define strdup _strdup
+//#define strdup _strdup
 #endif
 
 
@@ -2008,7 +2002,7 @@ static void _mnan( lk::invoke_t &cxt )
 static void _misnan( lk::invoke_t &cxt )
 {
 	LK_DOC("isnan", "Returns true if the argument is NaN.", "(number):boolean");
-	cxt.result().assign( lk_isnan( cxt.arg(0).as_number() ) );
+	cxt.result().assign( std::isnan( cxt.arg(0).as_number() ) );
 }
 
 static void _mmod( lk::invoke_t &cxt )
@@ -2425,7 +2419,7 @@ bool lk::dir_exists( const char *path )
 	// Windows fails to find directory named "c:\dir\" even if "c:\dir" exists,
 	// so remove all trailing backslashes from the path - but don't do this for
 	// the paths "d:\" (which are different from "d:") nor for just "\"
-	char *wpath = strdup( path );
+	char *wpath = _strdup( path );
 	if (!wpath) return false;
 
 	int pos = strlen(wpath)-1;
@@ -2890,7 +2884,7 @@ lk_string lk::format_vl( const lk_string &fmt, const std::vector< vardata_t* > &
 
 					*tp = '\0'; // end format string
 
-					::snprintf(temp, TEMPLEN, tempfmt, arg_double);
+					snprintf(temp, TEMPLEN, tempfmt, arg_double);
 
 					i=0;
 					if (with_comma)
@@ -2933,10 +2927,10 @@ lk_string lk::format_vl( const lk_string &fmt, const std::vector< vardata_t* > &
 					double arg_double = args[argidx++]->as_number();
 					if (*p == ',')
 					{
-						::snprintf(temp, TEMPLEN, "%lf", arg_double);
-						if (strchr(temp,'e')!=NULL) ::snprintf(temp, TEMPLEN, "%d", (int)arg_double);
+						snprintf(temp, TEMPLEN, "%lf", arg_double);
+						if (strchr(temp,'e')!=NULL) snprintf(temp, TEMPLEN, "%d", (int)arg_double);
 					}
-					else ::snprintf(temp, TEMPLEN, "%.2lf",  arg_double);
+					else snprintf(temp, TEMPLEN, "%.2lf",  arg_double);
 					decpt = strchr(temp, '.');
 					if (!decpt) ndigit = strlen(temp);
 					else ndigit = (int)(decpt-temp);

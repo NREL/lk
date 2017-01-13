@@ -83,18 +83,14 @@ int main(int argc, char *argv[])
 
 	if ( use_vm )
 	{
-		lk::code_gen C;
-		if ( C.emitasm( tree.get() ) )
+		lk::codegen C;
+		if ( C.generate( tree.get() ) )
 		{
-			std::vector<unsigned int> code;
-			std::vector<lk::vardata_t> data;
-			std::vector<lk_string> id;
-			std::vector<lk::srcpos_t> dbg;		
-
-			C.bytecode( code, data, id, dbg );
+			lk::bytecode bc;
+			C.get( bc );
 			
 			lk::vm V;
-			V.load( code, data, id, dbg );
+			V.load( &bc );
 			V.initialize( &env );
 			if ( !V.run() )
 			{
