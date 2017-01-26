@@ -273,6 +273,18 @@ int lk::lexer::next()
 		while( isdigit(*p) || *p == '.')
 		{
 			m_buf += *p;
+
+			if ( *p == '.' && p.peek() == '#' )
+			{
+				p++; // skip .
+				p++; // skip #
+				while( isalpha(*p) )
+					p++; // skip QNAN characters
+
+				m_val = std::numeric_limits<double>::quiet_NaN();
+				return NUMBER;
+			}
+
 			p++;
 		}
 		
