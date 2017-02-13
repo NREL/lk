@@ -17,6 +17,7 @@ OBJECTS = \
 	invoke.o \
 	lex.o \
 	parse.o \
+	sqlite3.o \
 	stdlib.o
 
 $(TARGET) : $(OBJECTS)

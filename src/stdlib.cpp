@@ -12,6 +12,8 @@
 
 #include <lk/stdlib.h>
 
+#include "sqlite3.h"
+
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643
 #endif
@@ -2133,6 +2135,148 @@ lk::fcall_t* lk::stdlib_basic()
 	return (fcall_t*)vec;
 }
 
+static bool sql_initialized = false;
+#define SQLITE3_VERIFY_INIT if (!sql_initialized ) { sqlite3_initialize(); sql_initialized = true; }
+
+
+class sqlite3_obj_ref : public lk::objref_t
+{
+public:
+	sqlite3 *db;
+	sqlite3_obj_ref() { db = 0; }
+	sqlite3_obj_ref( sqlite3 *_db ) : db(_db) { }
+	virtual ~sqlite3_obj_ref() { if ( db ){ sqlite3_close(db); db=0; } }
+	virtual lk_string type_name() { return "sqlite3"; }
+};
+
+#define GET_SQLITE3(obj, iarg) sqlite3_obj_ref *obj = dynamic_cast<sqlite3_obj_ref*>( cxt.env()->query_object( cxt.arg(iarg).as_unsigned() ) )
+
+void _sql_open( lk::invoke_t &cxt )
+{
+	LK_DOC( "sql_open", "Open a SQLITE3 database file.", "(string:file):sql-obj-ref" );
+	SQLITE3_VERIFY_INIT;
+	sqlite3 *db = 0;
+	int result = sqlite3_open( (const char*)cxt.arg(0).as_string().c_str(), &db );
+
+	if ( SQLITE_OK != result )
+	{
+		sqlite3_close( db );
+		cxt.result().nullify();
+	}
+
+	size_t objref = cxt.env()->insert_object( new sqlite3_obj_ref(db) );
+	cxt.result().assign( (double)objref );
+}
+
+void _sql_close( lk::invoke_t &cxt )
+{
+	LK_DOC( "sql_close", "Close a SQLITE3 database file.", "(sql-obj-ref:db):none" );
+	SQLITE3_VERIFY_INIT;
+	if ( GET_SQLITE3(obj, 0) )
+	{
+		if ( obj->db )
+		{
+			sqlite3_close( obj->db );
+			obj->db = 0;
+		}
+
+		cxt.env()->destroy_object( obj );
+	}
+}
+
+void _sql_exec( lk::invoke_t &cxt )
+{
+	LK_DOC( "sql_exec", "Execute a SQL command on a SQLITE3 database and possibly return any data.", "(sql-obj-ref:db, string:command):variant" );
+	SQLITE3_VERIFY_INIT;
+
+	if ( GET_SQLITE3( obj, 0 ) )
+	{
+		if ( !obj->db ) return;
+
+		sqlite3_stmt *stmt = 0;
+		if ( SQLITE_OK != sqlite3_prepare( obj->db, (const char*)cxt.arg(1).as_string().c_str(), -1, &stmt, NULL ) )
+		{
+			sqlite3_finalize( stmt );
+			return; // return null to indicate statement error
+		}
+
+		lk::vardata_t &R = cxt.result(); // return value;
+		R.empty_vector();
+		
+		while( sqlite3_step( stmt ) == SQLITE_ROW )
+		{
+			int ncol = sqlite3_column_count( stmt );
+
+			R.vec()->push_back( lk::vardata_t() );
+			lk::vardata_t &row = R.vec()->back();
+			row.empty_vector();
+			row.vec()->reserve( ncol );
+
+			for( int i=0;i<ncol;i++ )
+			{
+				int type = sqlite3_column_type( stmt, i );
+				switch( type )
+				{
+				case SQLITE_INTEGER:
+					row.vec_append( (double)sqlite3_column_int( stmt, i ) );
+					break;
+
+				case SQLITE_FLOAT:
+					row.vec_append( (double)sqlite3_column_double( stmt, i ) );
+					break;
+
+				case SQLITE_TEXT:
+					row.vec_append( lk_string( sqlite3_column_text( stmt, i ) ) );
+					break;
+
+				case SQLITE_BLOB:
+					{
+						const unsigned char *blob = (const unsigned char*)sqlite3_column_blob( stmt, i );
+						int len = sqlite3_column_bytes( stmt, i );
+
+						lk_string hexstr;
+						// convert to hex chars
+						for( int i=0;i<len;i++ )
+						{
+							char buf[16];
+							sprintf( buf, "%02X", blob[i] );
+							hexstr += buf;
+						}
+
+						row.vec_append( hexstr );
+					}
+					break;
+
+				case SQLITE_NULL:
+					{
+						lk::vardata_t nv;
+						nv.nullify();
+						row.vec()->push_back( nv );
+					}
+					break;
+				};
+			} // value column loop
+
+		} // sqlite3_step()
+
+		sqlite3_finalize( stmt );
+	}
+
+}
+
+void _sql_error( lk::invoke_t &cxt ) 
+{
+	LK_DOC( "sql_error", "Returns any error messages from the SQLITE3 engine", "(sql-obj-ref:db):string" );
+		SQLITE3_VERIFY_INIT;
+
+	if ( GET_SQLITE3( obj, 0 ) )
+	{
+		if ( !obj->db ) return;
+		cxt.result().assign( lk_string(sqlite3_errmsg( obj->db )) );
+	}
+}
+
+
 
 lk::fcall_t* lk::stdlib_sysio()
 {
@@ -2159,6 +2303,10 @@ lk::fcall_t* lk::stdlib_sysio()
 		_write,
 		_load_extension,
 		_json_file,
+		_sql_open,
+		_sql_close,
+		_sql_exec,
+		_sql_error,
 		0 };
 
 

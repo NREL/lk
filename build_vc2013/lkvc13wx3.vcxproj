@@ -161,6 +161,7 @@
     <ClCompile Include="..\src\invoke.cpp" />
     <ClCompile Include="..\src\lex.cpp" />
     <ClCompile Include="..\src\parse.cpp" />
+    <ClCompile Include="..\src\sqlite3.c" />
     <ClCompile Include="..\src\stdlib.cpp" />
     <ClCompile Include="..\src\vm.cpp" />
   </ItemGroup>
@@ -174,6 +175,7 @@
     <ClInclude Include="..\include\lk\parse.h" />
     <ClInclude Include="..\include\lk\stdlib.h" />
     <ClInclude Include="..\include\lk\vm.h" />
+    <ClInclude Include="..\src\sqlite3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -693,7 +693,7 @@ bool vm::run( ExecMode mode )
 				CHECK_IDENTIFIER();
 
 				if ( vardata_t *x = frames.back()->env.lookup( bc->identifiers[arg], true ) )
-					stack[sp++].assign( x->typestr() );
+					stack[sp++].assign( x->deref().typestr() );
 				else
 					stack[sp++].assign( "unknown" );
 				break;

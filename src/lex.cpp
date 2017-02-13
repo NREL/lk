@@ -365,72 +365,79 @@ int lk::lexer::next()
 	// scan literal strings
 	if ( *p == '"' || *p == '\'' )
 	{
-		char qclose = *p;
+		while (*p == '"' || *p == '\'' )
+		{ // allow multiple literals to be concatenated together
 
-		p++;
+			char qclose = *p;
+
+			p++;
 		
-		while ( *p && *p != qclose )
-		{
-			if ( *p == '\\' && p.peek() != 0 )
+			while ( *p && *p != qclose )
 			{
-				char cerr=0;
-				switch (p.peek())
+				if ( *p == '\\' && p.peek() != 0 )
 				{
-				case '"':  m_buf += '"';  p++; break;
-				case '\'': m_buf += '\''; p++; break;
-				case 'n':  m_buf += '\n'; p++; break;
-				case 'r':  m_buf += '\r'; p++; break;
-				case 't':  m_buf += '\t'; p++; break;
-				case '\\': m_buf += '\\'; p++; break;
-				case '/': m_buf += '/'; p++; break; // allow \/ in json strings
-				case 'u':
-#ifdef LK_UNICODE
+					char cerr=0;
+					switch (p.peek())
 					{
-						p++; // skip the slash
-						p++; // skip the 'u'
-						std::string buf;
-						// read four digits
-						for ( size_t k=0; *p && k<4;k++ )
+					case '"':  m_buf += '"';  p++; break;
+					case '\'': m_buf += '\''; p++; break;
+					case 'n':  m_buf += '\n'; p++; break;
+					case 'r':  m_buf += '\r'; p++; break;
+					case 't':  m_buf += '\t'; p++; break;
+					case '\\': m_buf += '\\'; p++; break;
+					case '/': m_buf += '/'; p++; break; // allow \/ in json strings
+					case 'u':
+#ifdef LK_UNICODE
 						{
-							buf += *p;
-							if ( k < 3 ) p++; // leave the last one on the end string
+							p++; // skip the slash
+							p++; // skip the 'u'
+							std::string buf;
+							// read four digits
+							for ( size_t k=0; *p && k<4;k++ )
+							{
+								buf += *p;
+								if ( k < 3 ) p++; // leave the last one on the end string
+							}
+							// convert unicode char constant to string
+							unsigned int uch = 0;
+							sscanf( buf.c_str(), "%x", &uch );
+							//m_buf += lk_string::Format("{u:%x,'%s' {", uch, buf.c_str()) + lk_char(uch) + lk_string("}}");
+							if ( uch != 0 )
+								m_buf += lk_char(uch);
 						}
-						// convert unicode char constant to string
-						unsigned int uch = 0;
-						sscanf( buf.c_str(), "%x", &uch );
-						//m_buf += lk_string::Format("{u:%x,'%s' {", uch, buf.c_str()) + lk_char(uch) + lk_string("}}");
-						if ( uch != 0 )
-							m_buf += lk_char(uch);
-					}
-					break;
+						break;
 #else
-					m_error = lk_tr("unicode character constant encountered while parsing with an ansi string build of LK.");
-					return INVALID;
+						m_error = lk_tr("unicode character constant encountered while parsing with an ansi string build of LK.");
+						return INVALID;
 #endif
-				default:
-					cerr = *p;
-					p++; // skip escape sequence
-					while (*p && *p != qclose) p++; // skip to end of string literal despite error
+					default:
+						cerr = *p;
+						p++; // skip escape sequence
+						while (*p && *p != qclose) p++; // skip to end of string literal despite error
 					
-					m_error = lk_tr("invalid escape sequence") + "\\" + cerr;
+						m_error = lk_tr("invalid escape sequence") + "\\" + cerr;
+						return INVALID;
+					}
+				}
+				else if (*p == '\n')
+				{
+					while (*p && *p != qclose) p++; // skip to end of string literal despite error
+				
+					m_error = lk_tr("newline found within string literal");
 					return INVALID;
 				}
-			}
-			else if (*p == '\n')
-			{
-				while (*p && *p != qclose) p++; // skip to end of string literal despite error
-				
-				m_error = lk_tr("newline found within string literal");
-				return INVALID;
-			}
-			else
-				m_buf += *p;
+				else
+					m_buf += *p;
 			
-			p++;
-		}
+				p++;
+			}
 		
-		if (*p) p++; // skip last quote
-				
+			if (*p) p++; // skip last quote
+
+			
+			whitespace(); // skip white space to move to next literal if there is another one
+		} // loop to support multiple literals
+			 	
 		return LITERAL;
 	}
 
