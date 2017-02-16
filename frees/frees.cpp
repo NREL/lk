@@ -18,7 +18,6 @@
 
 #include <lk/absyn.h>
 #include <lk/env.h>
-#include <lk/eval.h>
 #include <lk/parse.h>
 #include <lk/lex.h>
 #include <lk/stdlib.h>
