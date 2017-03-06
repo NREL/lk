@@ -109,7 +109,8 @@ namespace lk
 	{
 	public:
 		node_t *test, *on_true, *on_false;
-		cond_t(srcpos_t pos, node_t *t, node_t *ot, node_t *of) : node_t(pos), test(t), on_true(ot), on_false(of) { }
+		bool ternary;
+		cond_t(srcpos_t pos, node_t *t, node_t *ot, node_t *of, bool ter) : node_t(pos), test(t), on_true(ot), on_false(of), ternary(ter) { }
 		virtual ~cond_t() { if (test) delete test; if (on_true) delete on_true; if (on_false) delete on_false; }
 	};
 		

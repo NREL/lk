@@ -447,7 +447,7 @@ lk::node_t *lk::parser::test()
 	match( lk::lexer::SEP_RPAREN );
 	node_t *on_true = block();
 
-	cond_t *c_top = new cond_t( pos, test, on_true, 0 );
+	cond_t *c_top = new cond_t( pos, test, on_true, 0, false );
 
 	if ( lex.text() == "else" )
 	{
@@ -472,7 +472,7 @@ lk::node_t *lk::parser::test()
 			match( lk::lexer::SEP_RPAREN );
 			on_true = block();
 
-			cond_t *link = new cond_t( pos, test, on_true, 0 );
+			cond_t *link = new cond_t( pos, test, on_true, 0, false );
 			tail->on_false = link;
 			tail = link;
 		}
@@ -604,7 +604,7 @@ lk::node_t *lk::parser::ternary()
 		match( lk::lexer::SEP_COLON );
 		node_t *rfalse = ternary();
 		
-		return new lk::cond_t(srcpos(), test, rtrue, rfalse);
+		return new lk::cond_t(srcpos(), test, rtrue, rfalse, true);
 	}
 	else
 		return test;
