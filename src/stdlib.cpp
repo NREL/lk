@@ -1762,6 +1762,66 @@ static void _mmean( lk::invoke_t &cxt )
 	cxt.result().assign( sum / ((double)nvalues) );
 }
 
+static void _mmedian(lk::invoke_t &cxt)
+{
+	LK_DOC2("median", "Returns the median numeric value.",
+		"Returns the median of the numeric arguments.", "(...):real",
+		"Returns the median value in an array of numbers", "(array):real");
+
+	//get the values into an array
+	std::vector<double> values;
+	if (cxt.arg_count() >=2)
+		for (size_t i = 0; i < cxt.arg_count(); i++)
+			values.push_back(cxt.arg(i).as_number());
+	else if (cxt.arg_count() == 1 && cxt.arg(0).type() == lk::vardata_t::VECTOR	&& cxt.arg(0).length() > 0)
+	{
+		lk::vardata_t &arr = cxt.arg(0);
+		for (size_t i = 0; i < arr.length(); i++)
+			values.push_back(arr.index(i)->as_number());
+	}
+	else
+	{
+		cxt.error("invalid arguments to the min() function");
+		return;
+	}
+
+	//sort the array
+	for (int i = 0; i < values.size(); i++)
+	{
+		//start at the current spot in the output
+		int smallest = i;
+		for (int j = i + 1; j < values.size(); j++) //find the index of the smallest number in the remaining range
+			if (values[j] < values[smallest])
+				smallest = j;
+		//swap the spots of the current i and the smallest number
+		if (smallest != i)
+		{
+			double value_temp = values[i];
+			values[i] = values[smallest];
+			values[smallest] = value_temp;
+		}
+	}
+	
+	//determine if the array is an odd or even number of values
+	bool odd = false;
+	if (values.size() % 2 != 0) odd = true;
+
+	//if the array has an odd number of values, the median is the middle value
+	double median = _FPCLASS_QNAN;
+	if (odd)
+	{
+		int index = floor(values.size() / 2);
+		median = values[index];
+	}
+	else
+	{
+		int high_index = values.size() / 2;
+		median = (values[high_index] + values[high_index - 1]) / 2;
+	}
+
+	cxt.result().assign(median);
+}
+
 static void _mstddev( lk::invoke_t &cxt )
 {
 	LK_DOC("stddev", "Returns the sample standard deviation of all values passed to the function. Uses Bessel's correction (N-1). Arguments can be arrays or numbers.", "(...):real");
@@ -2230,6 +2290,7 @@ lk::fcall_t* lk::stdlib_math()
 		_mmin,
 		_mmax,
 		_mmean,
+		_mmedian,
 		_mstddev,
 		_gammaln,
 		_pearson,
