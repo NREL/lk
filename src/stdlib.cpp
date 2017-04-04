@@ -1809,7 +1809,8 @@ static void _mmedian(lk::invoke_t &cxt)
 	if (values.size() % 2 != 0) odd = true;
 
 	//if the array has an odd number of values, the median is the middle value
-	double median = _FPCLASS_QNAN;
+	double median = std::numeric_limits<double>::quiet_NaN();
+
 	if (odd)
 	{
 		int index = floor(values.size() / 2);
