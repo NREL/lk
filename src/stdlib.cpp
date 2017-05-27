@@ -446,11 +446,12 @@ static void _wx_html_dialog( lk::invoke_t &cxt )
 static void _wx_choose_file( lk::invoke_t &cxt )
 {
 
-	LK_DOC( "choose_file", "Show a file chooser dialog to select a file name for opening or saving. All of the arguments are options.  The filter should be a string like 'Text Files (*.txt)|*.txt'", "([string:initial path], [string:caption], [string:filter], [boolean:save dialog], [boolean:multiple files]):string");
+	LK_DOC( "choose_file", "Show a file chooser dialog to select a file name for opening or saving. All of the arguments are options.  The filter should be a string like 'Text Files (*.txt)|*.txt'", "([string:initial path], [string:caption], [string:filter], [boolean:save dialog], [boolean:multiple files], [string:initial filename]):string");
 
 	wxString caption = "Select a file";
 	wxString path = ::wxGetHomeDir();
 	wxString filter = "All Files (*.*)";
+	wxString fn = wxEmptyString;
 
 	bool savedlg = false;
 	bool multiple = false;
@@ -465,11 +466,13 @@ static void _wx_choose_file( lk::invoke_t &cxt )
 		savedlg = cxt.arg(3).as_boolean();
 	if (cxt.arg_count() > 4)
 		multiple = cxt.arg(4).as_boolean();
+	if (cxt.arg_count() > 5)
+		fn = cxt.arg(5).as_string();
 
 	wxString file;
 	long style =  savedlg ? wxFD_SAVE|wxFD_OVERWRITE_PROMPT : wxFD_OPEN;
 	wxFileDialog fdlg( GetCurrentTopLevelWindow(), caption,
-		path, wxEmptyString, filter, style );
+		path, fn, filter, style );
 
 	if (fdlg.ShowModal())
 	{
@@ -1808,6 +1811,7 @@ static void _mmedian(lk::invoke_t &cxt)
 
 	//if the array has an odd number of values, the median is the middle value
 	double median = std::numeric_limits<double>::quiet_NaN();
+
 	if (odd)
 	{
 		int index = floor(values.size() / 2);
