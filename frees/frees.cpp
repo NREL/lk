@@ -5,6 +5,7 @@
 #include <wx/busyinfo.h>
 #include <wx/splitter.h>
 #include <wx/config.h>
+#include <wx/dynlib.h>
 
 #include <math.h>
 #include <cmath>
@@ -18,7 +19,6 @@
 
 #include <lk/absyn.h>
 #include <lk/env.h>
-#include <lk/eval.h>
 #include <lk/parse.h>
 #include <lk/lex.h>
 #include <lk/stdlib.h>
@@ -1062,6 +1062,14 @@ class FreesApp : public wxApp
 public:
 	bool OnInit()
 	{
+#ifdef __WXMSW__
+    typedef BOOL (WINAPI *SetProcessDPIAware_t)(void); 
+    wxDynamicLibrary dllUser32(wxT("user32.dll")); 
+    SetProcessDPIAware_t pfnSetProcessDPIAware = 
+        (SetProcessDPIAware_t)dllUser32.RawGetSymbol(wxT("SetProcessDPIAware")); 
+    if ( pfnSetProcessDPIAware ) 
+        pfnSetProcessDPIAware(); 
+#endif
 		(new FreesWindow)->Show();
 		return true;
 	}

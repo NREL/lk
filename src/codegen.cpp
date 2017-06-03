@@ -311,8 +311,18 @@ bool codegen::initialize_const_hash( lk::list_t *v, vardata_t &vhash )
 bool codegen::pfgen_stmt( lk::node_t *root, unsigned int flags )
 {
 	bool ok = pfgen( root, flags );
+
 	// expressions always leave their value on the stack, so clean it up
-	if (expr_t *e = dynamic_cast<expr_t*>(root)) emit( e->srcpos(), POP );
+	if (expr_t *e = dynamic_cast<expr_t*>(root)) 
+	{
+		emit( e->srcpos(), POP );
+	}
+	else if ( cond_t *c = dynamic_cast<cond_t*>(root))
+	{
+		// inline ternary expressions also leave value on stack
+		if ( c->ternary )
+			emit( c->srcpos(), POP );
+	}
 	return ok;
 }
 
@@ -359,12 +369,20 @@ bool codegen::pfgen( lk::node_t *root, unsigned int flags )
 	}
 	else if ( cond_t *n = dynamic_cast<cond_t*>( root ) )
 	{	
+		bool ternary = n->ternary;
+
 		lk_string L1 = new_label();
 		lk_string L2 = L1;
 
 		pfgen( n->test, flags );
 		emit( n->srcpos(), JF, L1 );
-		pfgen_stmt( n->on_true, flags );
+		
+		// if an inline ternary conditional expression,
+		// don't pop the expression value off the stack as in 
+		// an expression
+		if ( ternary ) pfgen( n->on_true, false );
+		else pfgen_stmt( n->on_true, flags );
+
 		if ( n->on_false )
 		{
 			L2 = new_label();
@@ -373,7 +391,9 @@ bool codegen::pfgen( lk::node_t *root, unsigned int flags )
 			// since it's unknown at parse time
 			emit( srcpos_t::npos, J, L2 );
 			place_label( L1 );
-			pfgen_stmt( n->on_false, flags );
+
+			if ( ternary ) pfgen( n->on_false, false );
+			else pfgen_stmt( n->on_false, flags );
 		}
 		place_label( L2 );
 	}
