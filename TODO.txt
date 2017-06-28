@@ -13,3 +13,4 @@ environment and current variable view
 - bar plot width calculation issues with lots of single bar barplots on one plot
 - use wxPLPlot renderer in SAM script report objects
 - PL line plot data optimization to cull # points according to device-specific 'EM'
+- check choose file with file name option
