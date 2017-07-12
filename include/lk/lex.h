@@ -14,6 +14,7 @@ Define _DEBUG if compile with debugging
 
 #include <lk/absyn.h>
 
+// lexer extracts & stores expressions from LK strings (input_base) to be evaluated by the parser
 namespace lk {
 
 	class input_base

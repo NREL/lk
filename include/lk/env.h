@@ -46,6 +46,9 @@ namespace lk {
 		virtual const char *what() const throw (){ return text.c_str(); }
 	};
 
+
+	// variables defined in LK, ie from user input in scripting window: allocation, type conversions, copying, modification, etc
+	// instantiated by codegen using values from nodes
 	class vardata_t
 	{
 	private:

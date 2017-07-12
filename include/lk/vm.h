@@ -24,6 +24,8 @@ struct bytecode
 
 #define OP_PROFILE 1 
 
+// takes bytecode as input
+
 class vm
 {
 public:
