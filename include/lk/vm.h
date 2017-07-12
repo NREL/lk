@@ -1,3 +1,27 @@
+/***********************************************************************************************************************
+*  LK, Copyright (c) 2008-2017, Alliance for Sustainable Energy, LLC. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+*  following disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote
+*  products derived from this software without specific prior written permission from the respective party.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER, THE UNITED STATES GOVERNMENT, OR ANY CONTRIBUTORS BE LIABLE FOR
+*  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+*  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+*  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+*  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+**********************************************************************************************************************/
+
 #ifndef __lk_vm_h
 #define __lk_vm_h
 
@@ -5,106 +29,103 @@
 #include <lk/env.h>
 
 namespace lk {
+	enum Opcode {
+		ADD, SUB, MUL, DIV, LT, GT, LE, GE, NE, EQ, INC, DEC, OR, AND, NOT, NEG, EXP, PSH, POP, DUP, NUL, ARG, SWI,
+		J, JF, JT, IDX, KEY, MAT, WAT, SET, GET, WR, RREF, LREF, LCREF, LGREF, FREF, CALL, TCALL, RET, END, SZ, KEYS, TYP, VEC, HASH,
+		__MaxOp
+	};
+	struct OpCodeEntry { Opcode op; const char *name; };
+	extern OpCodeEntry op_table[];
 
-enum Opcode {
-	ADD, SUB, MUL, DIV, LT, GT, LE, GE, NE, EQ, INC, DEC, OR, AND, NOT, NEG, EXP, PSH, POP, DUP, NUL, ARG, SWI,
-	J, JF, JT, IDX, KEY, MAT, WAT, SET, GET, WR, RREF, LREF, LCREF, LGREF, FREF, CALL, TCALL, RET, END, SZ, KEYS, TYP, VEC, HASH,
-	__MaxOp };
-struct OpCodeEntry { Opcode op; const char *name; };
-extern OpCodeEntry op_table[];
-
-
-struct bytecode
-{
-	std::vector<unsigned int> program;
-	std::vector<vardata_t> constants;
-	std::vector<lk_string> identifiers;
-	std::vector<srcpos_t> debuginfo;
-};
-
-#define OP_PROFILE 1 
-
-class vm
-{
-public:
-	struct frame {
-		frame( lk::env_t *parent, size_t fptr, size_t ret, size_t na )
-			: env( parent), fp(fptr), retaddr(ret), nargs(na), iarg(0), thiscall( false )
-		{
-		}
-
-		lk::env_t env;
-		size_t fp;
-		size_t retaddr;
-		size_t nargs;
-		size_t iarg;
-		bool thiscall;
-		lk_string id;
+	struct bytecode
+	{
+		std::vector<unsigned int> program;
+		std::vector<vardata_t> constants;
+		std::vector<lk_string> identifiers;
+		std::vector<srcpos_t> debuginfo;
 	};
 
-private:
-	size_t ip;
-	int sp; // use int so that values can go negative and errors easier to catch rather than wrapping around to a large number
-	std::vector< vardata_t > stack;
+#define OP_PROFILE 1
 
-	bytecode *bc;
-	/*
-	std::vector< unsigned int > program;
-	std::vector< vardata_t > constants;
-	std::vector< lk_string > identifiers;
-	std::vector< srcpos_t > debuginfo;
-	*/
+	class vm
+	{
+	public:
+		struct frame {
+			frame(lk::env_t *parent, size_t fptr, size_t ret, size_t na)
+				: env(parent), fp(fptr), retaddr(ret), nargs(na), iarg(0), thiscall(false)
+			{
+			}
 
-	std::vector< frame* > frames;
-	std::vector< bool > brkpt;
+			lk::env_t env;
+			size_t fp;
+			size_t retaddr;
+			size_t nargs;
+			size_t iarg;
+			bool thiscall;
+			lk_string id;
+		};
 
-	lk_string errStr;
-	srcpos_t lastbrk;
+	private:
+		size_t ip;
+		int sp; // use int so that values can go negative and errors easier to catch rather than wrapping around to a large number
+		std::vector< vardata_t > stack;
 
-	void free_frames();
-	bool error( const char *fmt, ... );
-	
+		bytecode *bc;
+		/*
+		std::vector< unsigned int > program;
+		std::vector< vardata_t > constants;
+		std::vector< lk_string > identifiers;
+		std::vector< srcpos_t > debuginfo;
+		*/
+
+		std::vector< frame* > frames;
+		std::vector< bool > brkpt;
+
+		lk_string errStr;
+		srcpos_t lastbrk;
+
+		void free_frames();
+		bool error(const char *fmt, ...);
+
 #ifdef OP_PROFILE
-	size_t opcount[__MaxOp];
-	void clear_opcount();
+		size_t opcount[__MaxOp];
+		void clear_opcount();
 #endif
 
-public:
-	enum ExecMode { 
-		NORMAL,   // run with no debugging
-		DEBUG,    // run until next breakpoint
-		STEP,     // step 1 code statement
-		SINGLE    // step 1 assembly instruction
+	public:
+		enum ExecMode {
+			NORMAL,   // run with no debugging
+			DEBUG,    // run until next breakpoint
+			STEP,     // step 1 code statement
+			SINGLE    // step 1 assembly instruction
+		};
+
+		vm(size_t ssize = 4096);
+		virtual ~vm();
+
+		bool initialize(lk::env_t *env);
+		bool run(ExecMode mode = NORMAL);
+		lk_string error() { return errStr; }
+		virtual bool on_run(const srcpos_t &spos);
+
+		void clrbrk();
+		int setbrk(int line, const lk_string &file);
+		std::vector<srcpos_t> getbrk();
+
+		size_t get_ip() { return ip; }
+		frame **get_frames(size_t *nfrm);
+		vardata_t *get_stack(size_t *psp);
+
+		void load(bytecode *b);
+		bytecode *get_bytecode() { return bc; }
+
+		virtual bool special_set(const lk_string &name, vardata_t &val);
+		virtual bool special_get(const lk_string &name, vardata_t &val);
+
+#ifdef OP_PROFILE
+		void get_opcount(size_t iop[__MaxOp]);
+#endif
 	};
-
-	vm( size_t ssize = 4096 );
-	virtual ~vm();
-	
-	bool initialize( lk::env_t *env );
-	bool run( ExecMode mode = NORMAL );
-	lk_string error() { return errStr; }
-	virtual bool on_run( const srcpos_t &spos);
-
-	void clrbrk();
-	int setbrk( int line, const lk_string &file );
-	std::vector<srcpos_t> getbrk();
-
-	size_t get_ip() { return ip; }
-	frame **get_frames( size_t *nfrm );
-	vardata_t *get_stack( size_t *psp );
-
-	void load( bytecode *b );
-	bytecode *get_bytecode() { return bc; }
-
-	virtual bool special_set( const lk_string &name, vardata_t &val );
-	virtual bool special_get( const lk_string &name, vardata_t &val );
-	
-#ifdef OP_PROFILE
-	void get_opcount( size_t iop[__MaxOp] );
-#endif
-
-};
-
 } // namespace lk
 
 #endif
