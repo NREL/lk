@@ -1,3 +1,26 @@
+/***********************************************************************************************************************
+*  LK, Copyright (c) 2008-2017, Alliance for Sustainable Energy, LLC. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+*  following disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote
+*  products derived from this software without specific prior written permission from the respective party.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER, THE UNITED STATES GOVERNMENT, OR ANY CONTRIBUTORS BE LIABLE FOR
+*  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+*  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+*  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+*  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+**********************************************************************************************************************/
 
 #include <cstring>
 #include <cstdarg>
@@ -13,42 +36,42 @@ lk::input_string::input_string()
 	m_buf = m_p = 0;
 }
 
-lk::input_string::input_string( const lk_string &in )
+lk::input_string::input_string(const lk_string &in)
 {
 	m_buf = 0;
 
-	std::string utf8 = lk::to_utf8( in );	
-	allocate( utf8.length()+1 );
-	if ( m_buf != 0 )
+	std::string utf8 = lk::to_utf8(in);
+	allocate(utf8.length() + 1);
+	if (m_buf != 0)
 	{
 		strcpy(m_buf, utf8.c_str());
-		m_buf[ utf8.length() ] = 0;
+		m_buf[utf8.length()] = 0;
 	}
-	
+
 	m_p = m_buf;
 }
 
 lk::input_string::~input_string()
 {
-	if ( m_buf != 0 ) delete [] m_buf;
+	if (m_buf != 0) delete[] m_buf;
 }
 
-bool lk::input_string::allocate( size_t n )
+bool lk::input_string::allocate(size_t n)
 {
-	if ( m_buf ) delete [] m_buf;
+	if (m_buf) delete[] m_buf;
 	m_buf = new char[n];
-	return ( 0 != m_buf );
+	return (0 != m_buf);
 }
 
 char lk::input_string::operator*()
 {
-	if ( m_p != 0 ) return *m_p;
+	if (m_p != 0) return *m_p;
 	else return 0;
 }
 
 char lk::input_string::operator++(int)
 {
-	if ( m_p != 0 )
+	if (m_p != 0)
 	{
 		if (*m_p) m_p++;
 		return *m_p;
@@ -59,38 +82,38 @@ char lk::input_string::operator++(int)
 
 char lk::input_string::peek()
 {
-	if (m_p && *m_p) return *(m_p+1); else return 0;
+	if (m_p && *m_p) return *(m_p + 1); else return 0;
 }
 
-lk::input_file::input_file( const lk_string &file )
+lk::input_file::input_file(const lk_string &file)
 	: input_string()
 {
 	int len;
-	FILE *f = fopen( file.c_str(), "r" );
-	if ( !f ) return;
-	
-	if ( 0 != fseek( f, 0, SEEK_END ) )
+	FILE *f = fopen(file.c_str(), "r");
+	if (!f) return;
+
+	if (0 != fseek(f, 0, SEEK_END))
 	{
-		fclose( f );
-		return;
-	}
-	
-	len = ftell( f );
-	
-	allocate( len + 1 );
-	if ( !m_buf )
-	{
-		fclose( f );
+		fclose(f);
 		return;
 	}
 
-	rewind( f );
-	
-	len = (int)fread( m_buf, sizeof(char), len, f );	
+	len = ftell(f);
+
+	allocate(len + 1);
+	if (!m_buf)
+	{
+		fclose(f);
+		return;
+	}
+
+	rewind(f);
+
+	len = (int)fread(m_buf, sizeof(char), len, f);
 	m_buf[len] = 0;
 	m_p = m_buf;
 
-	fclose( f );
+	fclose(f);
 }
 
 lk::input_file::~input_file()
@@ -98,13 +121,13 @@ lk::input_file::~input_file()
 	// nothing to do, parent class will free memory
 }
 
-lk::lexer::lexer( input_base &input )
+lk::lexer::lexer(input_base &input)
 	: p(input)
 {
 	m_line = 1;
-	m_buf.reserve(256); // reserve some initial memory for the token buffer 
+	m_buf.reserve(256); // reserve some initial memory for the token buffer
 	m_val = 0.0;
-}	
+}
 
 lk_string lk::lexer::text()
 {
@@ -126,9 +149,9 @@ lk_string lk::lexer::error()
 	return m_error;
 }
 
-void lk::lexer::whitespace( )
+void lk::lexer::whitespace()
 {
-	while ( *p == '\n' || *p == ' ' || *p == '\r' || *p == '\t' ) // all other whitespace stripped out when loading input buffer
+	while (*p == '\n' || *p == ' ' || *p == '\r' || *p == '\t') // all other whitespace stripped out when loading input buffer
 	{
 		if (*p == '\n') m_line++;
 		p++;
@@ -138,14 +161,14 @@ void lk::lexer::whitespace( )
 bool lk::lexer::comments()
 {
 	bool handled_comment = false;
-	// handle block comments 
-	while ( *p == '/' && p.peek() == '*' )
+	// handle block comments
+	while (*p == '/' && p.peek() == '*')
 	{
 		handled_comment = true;
 		p++;
 		p++;
-		
-		while ( *p && p.peek() )
+
+		while (*p && p.peek())
 		{
 			if (*p == '*' && p.peek() == '/')
 			{
@@ -153,23 +176,23 @@ bool lk::lexer::comments()
 				p++;
 				break;
 			}
-			
-			if (*p == '\n') m_line++;			
+
+			if (*p == '\n') m_line++;
 			p++;
 		}
-		whitespace();		
+		whitespace();
 	}
-	
+
 	// handle single line comments
-	while ( *p == '/' && p.peek() == '/' )
+	while (*p == '/' && p.peek() == '/')
 	{
 		handled_comment = true;
 		p++;
 		p++;
-		
-		while ( *p && *p != '\n' ) p++;
-		
-		whitespace();	
+
+		while (*p && *p != '\n') p++;
+
+		whitespace();
 	}
 
 	return handled_comment;
@@ -179,23 +202,21 @@ int lk::lexer::next()
 {
 	m_buf = "";
 	m_val = 0.0;
-	
+
 	if (!*p) return END;
-	
+
 	bool found_comments = false;
 	do
 	{
 		whitespace();
 		found_comments = comments();
 		whitespace();
-	}
-	while ( found_comments );
+	} while (found_comments);
 
-	
 	if (!*p) return END;
 
 	// scan separators and operators
-	switch ( (int) *p )
+	switch ((int)*p)
 	{
 	case ';': p++; return SEP_SEMI;
 	case ':': p++; return SEP_COLON;
@@ -207,39 +228,54 @@ int lk::lexer::next()
 	case '[': p++; return SEP_LBRACK;
 	case ']': p++; return SEP_RBRACK;
 
-	case '+': p++;	if ( (int) *p == '=' ) { p++; return OP_PLUSEQ;  } else if( (int) *p == '+' ) { p++; return OP_PP; } else return OP_PLUS;
-	case '-': p++;	if ( (int) *p == '=' ) { p++; return OP_MINUSEQ; } else if( (int) *p == '@' ) { p++; return OP_MINUSAT; } else if( (int) *p == '-' ) { p++; return OP_MM; } else if ( (int) *p == '>' ) { p++; return OP_REF; } else return OP_MINUS;
-	case '*': p++;  if ( (int) *p == '=' ) { p++; return OP_MULTEQ;  } else if( (int) *p == '*' ) { p++; return OP_EXP; } else return OP_MULT;
-	case '/': p++;  if ( (int) *p == '=' ) { p++; return OP_DIVEQ;   } else return OP_DIV;
+	case '+': p++;	if ((int)*p == '=') { p++; return OP_PLUSEQ; }
+						else if ((int)*p == '+') { p++; return OP_PP; }
+						else return OP_PLUS;
+	case '-': p++;	if ((int)*p == '=') { p++; return OP_MINUSEQ; }
+						else if ((int)*p == '@') { p++; return OP_MINUSAT; }
+						else if ((int)*p == '-') { p++; return OP_MM; }
+						else if ((int)*p == '>') { p++; return OP_REF; }
+						else return OP_MINUS;
+	case '*': p++;  if ((int)*p == '=') { p++; return OP_MULTEQ; }
+						else if ((int)*p == '*') { p++; return OP_EXP; }
+						else return OP_MULT;
+	case '/': p++;  if ((int)*p == '=') { p++; return OP_DIVEQ; }
+						else return OP_DIV;
 
 	case '^': p++; return OP_EXP;
 	case '.': p++; return OP_DOT;
-	case '?': p++;  if ( (int) *p == '@' ) { p++; return OP_QMARKAT; } return OP_QMARK;
+	case '?': p++;  if ((int)*p == '@') { p++; return OP_QMARKAT; } return OP_QMARK;
 	case '#': p++; return OP_POUND;
 	case '~': p++; return OP_TILDE;
 	case '@': p++; return OP_AT;
 	case '%': p++; return OP_PERCENT;
-	case '&': p++;  if( (int) *p == '&' ) { p++; return OP_LOGIAND; } else return OP_BITAND;
-	case '|': p++;  if( (int) *p == '|' ) { p++; return OP_LOGIOR; } else return OP_BITOR;
-	case '!': p++;	if( (int) *p == '=' ) { p++; return OP_NE; } else return OP_BANG;
-	case '=': p++; if( (int) *p == '=' ) { p++; return OP_EQ; } else return OP_ASSIGN;
-	case '<': p++; if( (int) *p == '=' ) { p++; return OP_LE; } else return OP_LT;
-	case '>': p++; if( (int) *p == '=' ) { p++; return OP_GE; } else return OP_GT;
+	case '&': p++;  if ((int)*p == '&') { p++; return OP_LOGIAND; }
+						else return OP_BITAND;
+	case '|': p++;  if ((int)*p == '|') { p++; return OP_LOGIOR; }
+						else return OP_BITOR;
+	case '!': p++;	if ((int)*p == '=') { p++; return OP_NE; }
+						else return OP_BANG;
+	case '=': p++; if ((int)*p == '=') { p++; return OP_EQ; }
+						else return OP_ASSIGN;
+	case '<': p++; if ((int)*p == '=') { p++; return OP_LE; }
+						else return OP_LT;
+	case '>': p++; if ((int)*p == '=') { p++; return OP_GE; }
+						else return OP_GT;
 	}
 
-	if ( *p == '$' )
+	if (*p == '$')
 	{
 		p++;
-		if ( *p == '{' )
+		if (*p == '{')
 		{
 			p++;
-			while( isalnum(*p) || *p == '_' || *p == '.' || *p == '*' || *p == '-' || *p == '%' )
+			while (isalnum(*p) || *p == '_' || *p == '.' || *p == '*' || *p == '-' || *p == '%')
 			{
 				m_buf += *p;
 				p++;
 			}
 
-			if ( *p == '}' )
+			if (*p == '}')
 				p++;
 			else
 			{
@@ -257,9 +293,9 @@ int lk::lexer::next()
 	}
 
 	// scan identifiers
-	if ( isalpha( *p ) || *p == '_' )
+	if (isalpha(*p) || *p == '_')
 	{
-		while ( isalnum(*p) || *p == '_' )
+		while (isalnum(*p) || *p == '_')
 		{
 			m_buf += *p;
 			p++;
@@ -267,19 +303,19 @@ int lk::lexer::next()
 
 		return IDENTIFIER;
 	}
-	
+
 	// scan numbers
-	if ( isdigit( *p ) )
+	if (isdigit(*p))
 	{
-		while( isdigit(*p) || *p == '.')
+		while (isdigit(*p) || *p == '.')
 		{
 			m_buf += *p;
 
-			if ( *p == '.' && p.peek() == '#' )
+			if (*p == '.' && p.peek() == '#')
 			{
 				p++; // skip .
 				p++; // skip #
-				while( isalpha(*p) )
+				while (isalpha(*p))
 					p++; // skip QNAN characters
 
 				m_val = std::numeric_limits<double>::quiet_NaN();
@@ -288,10 +324,10 @@ int lk::lexer::next()
 
 			p++;
 		}
-		
-		if ( *p != 0 )
-		{			
-			if ( *p == 'e' || *p == 'E' )
+
+		if (*p != 0)
+		{
+			if (*p == 'e' || *p == 'E')
 			{
 				m_buf += 'e';
 				p++;
@@ -300,84 +336,83 @@ int lk::lexer::next()
 					m_buf += *p;
 					p++;
 				}
-				
-				while ( isdigit(*p) ) 
+
+				while (isdigit(*p))
 				{
 					m_buf += *p;
 					p++;
 				}
 			}
-			else if ( *p == 'T')
+			else if (*p == 'T')
 			{
 				m_buf += "e+12";
 				p++;
 			}
-			else if ( *p == 'G')
+			else if (*p == 'G')
 			{
 				m_buf += "e+9";
 				p++;
 			}
-			else if ( *p == 'k')
+			else if (*p == 'k')
 			{
 				m_buf += "e+3";
 				p++;
 			}
-			else if ( *p == 'm') 
+			else if (*p == 'm')
 			{
 				m_buf += "e-3";
 				p++;
 			}
-			else if ( *p == 'M') 
+			else if (*p == 'M')
 			{
 				m_buf += "e+6";
 				p++;
 			}
-			else if ( *p == 'u')
+			else if (*p == 'u')
 			{
 				m_buf += "e-6";
 				p++;
 			}
-			else if ( *p == 'n')
+			else if (*p == 'n')
 			{
 				m_buf += "e-9";
 				p++;
 			}
-			else if ( *p == 'p')
+			else if (*p == 'p')
 			{
 				m_buf += "e-12";
 				p++;
 			}
-			else if ( *p == 'f')
+			else if (*p == 'f')
 			{
 				m_buf += "e-15";
 				p++;
 			}
-			else if ( *p == 'a')
+			else if (*p == 'a')
 			{
 				m_buf += "e-18";
 				p++;
 			}
 		}
-		
-		m_val = atof( m_buf.c_str() );		
+
+		m_val = atof(m_buf.c_str());
 		return NUMBER;
 	}
-	
-	// scan literal strings
-	if ( *p == '"' || *p == '\'' )
-	{
-		while (*p == '"' || *p == '\'' )
-		{ // allow multiple literals to be concatenated together
 
+	// scan literal strings
+	if (*p == '"' || *p == '\'')
+	{
+		while (*p == '"' || *p == '\'')
+		{ // allow multiple literals to be concatenated together
 			char qclose = *p;
 
 			p++;
-		
-			while ( *p && *p != qclose )
+
+			while (*p && *p != qclose)
 			{
-				if ( *p == '\\' && p.peek() != 0 )
+				if (*p == '\\' && p.peek() != 0)
 				{
-					char cerr=0;
+					char cerr = 0;
 					switch (p.peek())
 					{
 					case '"':  m_buf += '"';  p++; break;
@@ -389,24 +424,24 @@ int lk::lexer::next()
 					case '/': m_buf += '/'; p++; break; // allow \/ in json strings
 					case 'u':
 #ifdef LK_UNICODE
+					{
+						p++; // skip the slash
+						p++; // skip the 'u'
+						std::string buf;
+						// read four digits
+						for (size_t k = 0; *p && k < 4; k++)
 						{
-							p++; // skip the slash
-							p++; // skip the 'u'
-							std::string buf;
-							// read four digits
-							for ( size_t k=0; *p && k<4;k++ )
-							{
-								buf += *p;
-								if ( k < 3 ) p++; // leave the last one on the end string
-							}
-							// convert unicode char constant to string
-							unsigned int uch = 0;
-							sscanf( buf.c_str(), "%x", &uch );
-							//m_buf += lk_string::Format("{u:%x,'%s' {", uch, buf.c_str()) + lk_char(uch) + lk_string("}}");
-							if ( uch != 0 )
-								m_buf += lk_char(uch);
+							buf += *p;
+							if (k < 3) p++; // leave the last one on the end string
 						}
-						break;
+						// convert unicode char constant to string
+						unsigned int uch = 0;
+						sscanf(buf.c_str(), "%x", &uch);
+						//m_buf += lk_string::Format("{u:%x,'%s' {", uch, buf.c_str()) + lk_char(uch) + lk_string("}}");
+						if (uch != 0)
+							m_buf += lk_char(uch);
+					}
+					break;
 #else
 						m_error = lk_tr("unicode character constant encountered while parsing with an ansi string build of LK.");
 						return INVALID;
@@ -415,7 +450,7 @@ int lk::lexer::next()
 						cerr = *p;
 						p++; // skip escape sequence
 						while (*p && *p != qclose) p++; // skip to end of string literal despite error
-					
+
 						m_error = lk_tr("invalid escape sequence") + "\\" + cerr;
 						return INVALID;
 					}
@@ -423,22 +458,21 @@ int lk::lexer::next()
 				else if (*p == '\n')
 				{
 					while (*p && *p != qclose) p++; // skip to end of string literal despite error
-				
+
 					m_error = lk_tr("newline found within string literal");
 					return INVALID;
 				}
 				else
 					m_buf += *p;
-			
+
 				p++;
 			}
-		
+
 			if (*p) p++; // skip last quote
 
-			
 			whitespace(); // skip white space to move to next literal if there is another one
 		} // loop to support multiple literals
-			 	
+
 		return LITERAL;
 	}
 
@@ -452,10 +486,9 @@ int lk::lexer::next()
 	return INVALID;
 }
 
-
 const char *lk::lexer::tokstr(int t)
 {
-	switch(t)
+	switch (t)
 	{
 	case END: return "<end>";
 	case IDENTIFIER: return "<identifer>";

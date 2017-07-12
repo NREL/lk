@@ -1,3 +1,27 @@
+/***********************************************************************************************************************
+*  LK, Copyright (c) 2008-2017, Alliance for Sustainable Energy, LLC. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+*  following disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote
+*  products derived from this software without specific prior written permission from the respective party.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER, THE UNITED STATES GOVERNMENT, OR ANY CONTRIBUTORS BE LIABLE FOR
+*  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+*  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+*  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+*  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+**********************************************************************************************************************/
+
 #ifndef __lk_invoke_h
 #define __lk_invoke_h
 
@@ -5,7 +29,7 @@
 extern "C" {
 #endif
 
-typedef void* lk_var_t;
+	typedef void* lk_var_t;
 
 #define LK_NULL    1
 #define LK_NUMBER  3
@@ -13,78 +37,76 @@ typedef void* lk_var_t;
 #define LK_ARRAY   5
 #define LK_TABLE   6
 
-struct __lk_invoke_t
-{
-	void *__pinvoke; // internal calling context reference
-	void *__hiter; // internal key interator context
-	void *__errbuf; // error message buffer
-	void *__sbuf; // internal string storage buffer (utf8)
-	void *__callargvec; // internal call argument vector 
-	void *__callresult; // internal call result
+	struct __lk_invoke_t
+	{
+		void *__pinvoke; // internal calling context reference
+		void *__hiter; // internal key interator context
+		void *__errbuf; // error message buffer
+		void *__sbuf; // internal string storage buffer (utf8)
+		void *__callargvec; // internal call argument vector
+		void *__callresult; // internal call result
 
-	int (*doc_mode)( struct __lk_invoke_t* );
-	void (*document)( struct __lk_invoke_t*, const char *fn, const char *desc, const char *sig );
-	void (*document2)( struct __lk_invoke_t*, const char *fn, const char *notes, 
-			const char *desc1, const char *sig1, 
-			const char *desc2, const char *sig2 );
-	void (*document3)( struct __lk_invoke_t*, const char *fn, const char *notes, 
-			const char *desc1, const char *sig1, 
-			const char *desc2, const char *sig2, 
+		int(*doc_mode)(struct __lk_invoke_t*);
+		void(*document)(struct __lk_invoke_t*, const char *fn, const char *desc, const char *sig);
+		void(*document2)(struct __lk_invoke_t*, const char *fn, const char *notes,
+			const char *desc1, const char *sig1,
+			const char *desc2, const char *sig2);
+		void(*document3)(struct __lk_invoke_t*, const char *fn, const char *notes,
+			const char *desc1, const char *sig1,
+			const char *desc2, const char *sig2,
 			const char *desc3, const char *sig3);
 
-	void (*error)( struct __lk_invoke_t*, const char * );
-	int (*arg_count)( struct __lk_invoke_t* );
-	lk_var_t (*arg)( struct __lk_invoke_t*, int );
+		void(*error)(struct __lk_invoke_t*, const char *);
+		int(*arg_count)(struct __lk_invoke_t*);
+		lk_var_t(*arg)(struct __lk_invoke_t*, int);
 
-	int (*type)( struct __lk_invoke_t*, lk_var_t );
-	const char *(*as_string)( struct __lk_invoke_t*, lk_var_t ); // returns utf8
-	double (*as_number)( struct __lk_invoke_t*, lk_var_t );
-	int (*as_integer)( struct __lk_invoke_t*, lk_var_t );
-	int (*as_boolean)( struct __lk_invoke_t*, lk_var_t );
+		int(*type)(struct __lk_invoke_t*, lk_var_t);
+		const char *(*as_string)(struct __lk_invoke_t*, lk_var_t); // returns utf8
+		double(*as_number)(struct __lk_invoke_t*, lk_var_t);
+		int(*as_integer)(struct __lk_invoke_t*, lk_var_t);
+		int(*as_boolean)(struct __lk_invoke_t*, lk_var_t);
 
-	int (*vec_count)( struct __lk_invoke_t*, lk_var_t );
-	lk_var_t (*vec_index)( struct __lk_invoke_t*, lk_var_t, int );
-	
-	int (*tab_count) ( struct __lk_invoke_t*, lk_var_t );
-	const char * (*tab_first_key)( struct __lk_invoke_t*, lk_var_t );
-	const char * (*tab_next_key)( struct __lk_invoke_t*, lk_var_t );
-	lk_var_t (*tab_value)( struct __lk_invoke_t*, lk_var_t, const char * );
-	
-	lk_var_t (*result)( struct __lk_invoke_t* );
-	
-	// variable modifications
-	void (*set_null)  ( struct __lk_invoke_t*, lk_var_t );
-	void (*set_string)( struct __lk_invoke_t*, lk_var_t, const char * ); // values are utf8
-	void (*set_number)( struct __lk_invoke_t*, lk_var_t, double );
+		int(*vec_count)(struct __lk_invoke_t*, lk_var_t);
+		lk_var_t(*vec_index)(struct __lk_invoke_t*, lk_var_t, int);
 
-	void (*set_number_vec)( struct __lk_invoke_t*, lk_var_t, double *, int );
-	void (*make_vec)( struct __lk_invoke_t*, lk_var_t );
-	void (*reserve)( struct __lk_invoke_t*, lk_var_t, int len );
-	lk_var_t (*append_number)( struct __lk_invoke_t*, lk_var_t, double );
-	lk_var_t (*append_string)( struct __lk_invoke_t*, lk_var_t, const char * );
-	lk_var_t (*append_null)( struct __lk_invoke_t*, lk_var_t );
+		int(*tab_count) (struct __lk_invoke_t*, lk_var_t);
+		const char * (*tab_first_key)(struct __lk_invoke_t*, lk_var_t);
+		const char * (*tab_next_key)(struct __lk_invoke_t*, lk_var_t);
+		lk_var_t(*tab_value)(struct __lk_invoke_t*, lk_var_t, const char *);
 
-	void (*make_tab)( struct __lk_invoke_t*, lk_var_t );
-	lk_var_t (*tab_set_number)( struct __lk_invoke_t*, lk_var_t, const char *, double );
-	lk_var_t (*tab_set_string)( struct __lk_invoke_t*, lk_var_t, const char *, const char * );
-	lk_var_t (*tab_set_null)( struct __lk_invoke_t*, lk_var_t, const char * );
+		lk_var_t(*result)(struct __lk_invoke_t*);
 
-	// creating, querying, destroying externally defined object types
-	int (*insert_object)( struct __lk_invoke_t*, const char *type, void*, void (*)(void *, void *), void * );
-	void *(*query_object)( struct __lk_invoke_t*, int );
-	void (*destroy_object)( struct __lk_invoke_t*, int );
+		// variable modifications
+		void(*set_null)  (struct __lk_invoke_t*, lk_var_t);
+		void(*set_string)(struct __lk_invoke_t*, lk_var_t, const char *); // values are utf8
+		void(*set_number)(struct __lk_invoke_t*, lk_var_t, double);
 
-	// invoking other functions in LK environment (i.e. for callbacks)
-	void (*clear_call_args)( struct __lk_invoke_t* );
-	lk_var_t (*append_call_arg)( struct __lk_invoke_t* );
-	lk_var_t (*call_result)( struct __lk_invoke_t* );
-	const char *(*call)( struct __lk_invoke_t*, const char *name ); // returns 0 on success, error message otherwise.
-};
+		void(*set_number_vec)(struct __lk_invoke_t*, lk_var_t, double *, int);
+		void(*make_vec)(struct __lk_invoke_t*, lk_var_t);
+		void(*reserve)(struct __lk_invoke_t*, lk_var_t, int len);
+		lk_var_t(*append_number)(struct __lk_invoke_t*, lk_var_t, double);
+		lk_var_t(*append_string)(struct __lk_invoke_t*, lk_var_t, const char *);
+		lk_var_t(*append_null)(struct __lk_invoke_t*, lk_var_t);
 
+		void(*make_tab)(struct __lk_invoke_t*, lk_var_t);
+		lk_var_t(*tab_set_number)(struct __lk_invoke_t*, lk_var_t, const char *, double);
+		lk_var_t(*tab_set_string)(struct __lk_invoke_t*, lk_var_t, const char *, const char *);
+		lk_var_t(*tab_set_null)(struct __lk_invoke_t*, lk_var_t, const char *);
 
-// function table must look like
-typedef void (*lk_invokable)( struct __lk_invoke_t * );
+		// creating, querying, destroying externally defined object types
+		int(*insert_object)(struct __lk_invoke_t*, const char *type, void*, void(*)(void *, void *), void *);
+		void *(*query_object)(struct __lk_invoke_t*, int);
+		void(*destroy_object)(struct __lk_invoke_t*, int);
 
+		// invoking other functions in LK environment (i.e. for callbacks)
+		void(*clear_call_args)(struct __lk_invoke_t*);
+		lk_var_t(*append_call_arg)(struct __lk_invoke_t*);
+		lk_var_t(*call_result)(struct __lk_invoke_t*);
+		const char *(*call)(struct __lk_invoke_t*, const char *name); // returns 0 on success, error message otherwise.
+	};
+
+	// function table must look like
+	typedef void(*lk_invokable)(struct __lk_invoke_t *);
 
 #define LK_FUNCTION( name ) void name( struct __lk_invoke_t *lk )
 
@@ -92,7 +114,7 @@ typedef void (*lk_invokable)( struct __lk_invoke_t * );
 #define LK_DOCUMENT2( fn, notes, desc1, sig1, desc2, sig2 ) if (lk->doc_mode(lk)) { lk->document2( lk, fn, notes, desc1, sig1, desc2, sig2 ); return; }
 #define LK_DOCUMENT3( fn, notes, desc1, sig1, desc2, sig2, desc3, sig3 ) if (lk->doc_mode(lk)) { lk->document3( lk, fn, notes, desc1, sig1, desc2, sig2, desc3, sig3 ); return; }
 
-// helper access functions
+	// helper access functions
 
 #define lk_error( msg ) lk->error(lk, msg)
 #define lk_arg_count( ) lk->arg_count(lk)
@@ -110,7 +132,7 @@ typedef void (*lk_invokable)( struct __lk_invoke_t * );
 #define lk_value( var, key ) lk->tab_value(lk, var, key)
 #define lk_result( ) lk->result(lk)
 #define lk_return_number( val ) lk->set_number(lk, lk->result(lk), val )
-#define lk_return_string( str ) lk->set_string(lk, lk->result(lk), str )	
+#define lk_return_string( str ) lk->set_string(lk, lk->result(lk), str )
 #define lk_set_null( var ) lk->set_null(lk, var)
 #define lk_set_string( var, str ) lk->set_string(lk, var, str)
 #define lk_set_number( var, val ) lk->set_number(lk, var, val)
@@ -132,12 +154,11 @@ typedef void (*lk_invokable)( struct __lk_invoke_t * );
 #define lk_call_result( ) lk->call_result(lk)
 #define lk_call( name ) lk->call(lk,name)
 
-// DLL must export 2 functions:
-// int lk_extension_api_version()
-// lk_invokable *lk_function_list()
+	// DLL must export 2 functions:
+	// int lk_extension_api_version()
+	// lk_invokable *lk_function_list()
 
 #define LK_EXTENSION_API_VERSION 1003
-
 
 #if defined(__WINDOWS__)||defined(WIN32)||defined(_WIN32)||defined(__MINGW___)||defined(_MSC_VER)
 #define LKAPIEXPORT __declspec(dllexport)
@@ -145,40 +166,35 @@ typedef void (*lk_invokable)( struct __lk_invoke_t * );
 #define LKAPIEXPORT
 #endif
 
-
 #define LK_BEGIN_EXTENSION() \
 	LKAPIEXPORT int lk_extension_api_version() \
-	{ return LK_EXTENSION_API_VERSION; } \
+		{ return LK_EXTENSION_API_VERSION; } \
 	LKAPIEXPORT lk_invokable *lk_function_list() { \
 	static lk_invokable _ll[] = {
-
 #define LK_END_EXTENSION() ,0 }; return _ll; }
 
+	/* examples: (these two functions are identical)
 
-/* examples: (these two functions are identical)
-
-void mean_func( struct __lk_invoke_t *lk )
-{
+	void mean_func( struct __lk_invoke_t *lk )
+	{
 	LK_DOCUMENT( "mean", "Returns the average of an array of numbers.", "(array):number" );
 
 	lk->set_number( lk->result(lk), 1.3 );
-}
+	}
 
-LK_FUNCTION( mean_func2 )
-{
+	LK_FUNCTION( mean_func2 )
+	{
 	LK_DOCUMENT( "mean2", "Returns the average of an array of numbers.", "(array):number" );
 
 	lk_return_number( 1.3 );
-}
+	}
 
-LK_BEGIN_EXTENSION()
-	mean_func, sigma_func, sum_func, 
+	LK_BEGIN_EXTENSION()
+	mean_func, sigma_func, sum_func,
 	xmult_func, average_func
-LK_END_EXTENSION()
+	LK_END_EXTENSION()
 
-*/
-
-
+	*/
 
 #ifdef __cplusplus
 }
