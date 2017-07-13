@@ -9,7 +9,7 @@
 #include <lk/absyn.h>
 #include <lk/invoke.h>
 
-
+/// create and associate a doc_t from within cxt, an invoke_t, if cxt doesn't yet have one
 #define LK_DOC(  fn, desc, sig ) if (cxt.doc_mode()) { cxt.document( lk::doc_t(fn , "", desc, sig ) ); return; }
 #define LK_DOC1( fn, notes, desc1, sig1 ) if (cxt.doc_mode()) { cxt.document( lk::doc_t(fn , notes, desc1, sig1 )); return; }
 #define LK_DOC2( fn, notes, desc1, sig1, desc2, sig2 ) if (cxt.doc_mode()) { cxt.document( lk::doc_t(fn , notes, desc1, sig1, desc2, sig2 )); return; }
@@ -46,9 +46,15 @@ namespace lk {
 		virtual const char *what() const throw (){ return text.c_str(); }
 	};
 
+	/**
+	* \class vardata_t
+	*
+	* Stores data for use by LK functions.
+	* Used as arguments to LK functions: variables, expressions & statements defined in LK, ie from user input in scripting window
+	* which are instantiated by codegen using values from nodes
+	* Used for returned values from LK functions: 
+	*/
 
-	// variables defined in LK, ie from user input in scripting window: allocation, type conversions, copying, modification, etc
-	// instantiated by codegen using values from nodes
 	class vardata_t
 	{
 	private:
@@ -181,6 +187,7 @@ namespace lk {
 
 	typedef void (*fcall_t)( lk::invoke_t& );
 
+	/// links together LK function name f, user data and lk_invokable
 	struct fcallinfo_t {
 		fcall_t f;
 		lk_invokable f_ext;
@@ -189,6 +196,14 @@ namespace lk {
 
 	typedef unordered_map< lk_string, fcallinfo_t, lk_string_hash, lk_string_equal > funchash_t;
 
+
+/**
+ * \class doc_t
+ *
+ * Documents LK functions: function name, descriptions such as "Input text from user", 
+ * input:output sig such as "(none):string", and how many pairs of desc/sig there are
+ *
+ */
 	class doc_t
 	{
 	friend class invoke_t;
@@ -238,6 +253,13 @@ namespace lk {
 		bool m_ok;
 	};
 
+/**
+ * \class invoke_t
+ *
+ * Used for input and output to an associated LK function: stores arguments and results in vardata_t and logs errors
+ *
+ */
+
 	class invoke_t
 	{
 		friend class doc_t;
@@ -264,6 +286,8 @@ namespace lk {
 
 		std::vector< vardata_t > &arg_list() { return m_argList; }
 		size_t arg_count() { return m_argList.size(); }
+
+		/// returns the values of user-defined inputs for use as arguments to functions
 		vardata_t &arg(size_t idx) throw( error_t ) {
 			if (idx < m_argList.size())	return m_argList[idx].deref();
 			else throw error_t( "invalid access to function argument %d, only %d given", idx, m_argList.size());
@@ -273,7 +297,14 @@ namespace lk {
 		lk_string error() { return m_error; }
 		bool has_error() { return m_hasError; }
 	};
-		
+	
+/**
+ * \env_t
+ *
+ * Stores LK functions in m_funcHash[function name] = fcallinfo
+ *
+ */
+
 	class env_t
 	{
 	public:		

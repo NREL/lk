@@ -3,20 +3,20 @@
 
 #include <cstdio>
 
-/* 
-
-For proper compilation:
-
-Define _WIN32 if on Windows
-Define _DEBUG if compile with debugging
-
-*/
-
 #include <lk/absyn.h>
 
-// lexer extracts & stores expressions from LK strings (input_base) to be evaluated by the parser
 namespace lk {
 
+/** 
+ * \class input_base
+ *
+ * This class stores script written in LK as lk_strings (wxstring).
+ *
+ * For proper compilation: 
+ * Define _WIN32 if on Windows
+ * Define _DEBUG if compile with debugging
+ *
+ */
 	class input_base
 	{
 	public:
@@ -48,7 +48,14 @@ namespace lk {
 		virtual ~input_file();
 	};
 	
-			
+
+/** 
+ * \class lexer
+ *
+ * lexer extracts & stores expressions from input_base to be evaluated by the parser
+ *
+ */
+
 	class lexer
 	{
 	public:
@@ -61,50 +68,50 @@ namespace lk {
 			SPECIAL,
 			NUMBER,
 			LITERAL,
-			
-			// one character tokens
-			SEP_SEMI,
-			SEP_COLON,
-			SEP_COMMA,
-			SEP_LPAREN,
-			SEP_RPAREN,
-			SEP_LCURLY,
-			SEP_RCURLY,
-			SEP_LBRACK,
-			SEP_RBRACK,
 
-			OP_PLUS,
-			OP_MINUS,
-			OP_MULT,
-			OP_DIV,
-			OP_EXP,
-			OP_DOT,
-			OP_QMARK,
-			OP_QMARKAT,
-			OP_POUND,
-			OP_TILDE,
-			OP_PERCENT,
-			OP_AT,
-			OP_LOGIAND,
-			OP_LOGIOR,
-			OP_BITAND,
-			OP_BITOR,
-			OP_BANG,
-			OP_ASSIGN,
-			OP_REF,
-			OP_PP,
-			OP_MM,
-			OP_LT,
-			OP_GT,
-			OP_EQ,
-			OP_NE,
-			OP_LE,
-			OP_GE,
-			OP_PLUSEQ,
-			OP_MINUSEQ,
-			OP_MULTEQ,
-			OP_DIVEQ,
-			OP_MINUSAT
+			// one character tokens
+			SEP_SEMI,		// ;
+			SEP_COLON,		// :
+			SEP_COMMA,		// ,
+			SEP_LPAREN,		// (
+			SEP_RPAREN,		// )
+			SEP_LCURLY,		// {
+			SEP_RCURLY,		// }
+			SEP_LBRACK,		// [
+			SEP_RBRACK,		// ]
+
+			OP_PLUS,		// +
+			OP_MINUS,		// -
+			OP_MULT,		// *
+			OP_DIV,			// /
+			OP_EXP,			// ^
+			OP_DOT,			// .
+			OP_QMARK,		// ?
+			OP_QMARKAT,		// ?@
+			OP_POUND,		// #
+			OP_TILDE,		// ~
+			OP_PERCENT,		// %
+			OP_AT,			// @
+			OP_LOGIAND,		// &&
+			OP_LOGIOR,		// ||
+			OP_BITAND,		// &
+			OP_BITOR,		// |
+			OP_BANG,		// !
+			OP_ASSIGN,		// =
+			OP_REF,			// ->
+			OP_PP,			// ++
+			OP_MM,			// --
+			OP_LT,			// <
+			OP_GT,			// >
+			OP_EQ,			// ==
+			OP_NE,			// !=
+			OP_LE,			// <=
+			OP_GE,			// >=
+			OP_PLUSEQ,		// +=
+			OP_MINUSEQ,		// -=
+			OP_MULTEQ,		// *=
+			OP_DIVEQ,		// /=
+			OP_MINUSAT		// -@
 
 		};
 

@@ -858,7 +858,8 @@ void lk::env_t::unregister_ext_func( lk_invokable f )
 	}
 }
 
-
+/// initializes and links together elements for an LK function:
+/// doc_t documentation, invoke_t fx arguments, and and invokable
 bool lk::env_t::register_func( fcall_t f, void *user_data )
 {
 	lk::doc_t d;
@@ -1128,7 +1129,7 @@ bool lk::doc_t::info( fcallinfo_t *f, doc_t &d )
 		return false;
 }
 
-
+/// links an LK function's invocation with its documentation: creates a doc_t associated with an invoke_t cxt; returns true if doc_t has been paired with an invoke_t
 bool lk::doc_t::info( fcall_t f, doc_t &d )
 {
 	if (f!=0)
@@ -1180,6 +1181,7 @@ bool lk::invoke_t::doc_mode()
 	return m_docPtr != 0;
 }
 
+/// associates LK function with a documentation
 void lk::invoke_t::document(doc_t d)
 {
 	if (m_docPtr != 0)
