@@ -18,10 +18,10 @@ The [System Advisor Model](https://sam.nrel.gov) includes LK script, and integra
 
 The documentation of the LK language is written in LaTeX:
 
-* [PDF](https://github.com/NREL/lk/blob/develop/doc/lk_guide.pdf)
+* [PDF](doc/lk_guide.pdf)
 
-* [Source documents](/doc)
+* [Source documents](doc/)
 
 ## License
 
-LK is licensed under an MIT [license](/license.md).
+LK is licensed under an MIT [license](LICENSE.md).
