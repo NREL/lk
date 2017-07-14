@@ -14,6 +14,14 @@ The [WEX](https://github.com/NREL/wex) project includes the lkscript program, wh
 
 The [System Advisor Model](https://sam.nrel.gov) includes LK script, and integrates the WEX lkscript program in its user interface.
 
+## LK Language Documentation
+
+The documentation of the LK language is written in LaTeX:
+
+* [PDF](https://github.com/NREL/lk/blob/develop/doc/lk_guide.pdf)
+
+* [Source documents](/doc)
+
 ## License
 
-LK is licensed under an MIT [license](license.md).
+LK is licensed under an MIT [license](/license.md).
