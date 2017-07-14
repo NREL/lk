@@ -22,6 +22,12 @@ The documentation of the LK language is written in LaTeX:
 
 * [Source documents](doc/)
 
+## Contributing
+
+If you have found an issue with LK or would like to make a feature request, please let us know by adding a new issue on the [issues page](https://github.com/NREL/lk/issues).
+
+If you would like to submit code to fix an issue or add a feature, you can use GitHub to do so. The overall steps are to create a fork on GitHub.com using the link above, and then install GitHub on your computer and use it to clone your fork, create a branch for your changes, and then once you have made your changes, commit and push the changes to your fork. You can then create a pull request that we will review and merge into the repository if approved.
+
 ## License
 
 LK is licensed under an MIT [license](LICENSE.md).
