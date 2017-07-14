@@ -101,6 +101,7 @@ lk::input_file::~input_file()
 	// nothing to do, parent class will free memory
 }
 
+/// initializer
 lk::lexer::lexer( input_base &input )
 	: p(input)
 {
@@ -129,7 +130,7 @@ lk_string lk::lexer::error()
 	return m_error;
 }
 
-/// skips over white space
+/// skips over white space and increments line # counter
 void lk::lexer::whitespace( )
 {
 	while ( *p == '\n' || *p == ' ' || *p == '\r' || *p == '\t' ) // all other whitespace stripped out when loading input buffer
@@ -180,7 +181,7 @@ bool lk::lexer::comments()
 	return handled_comment;
 }
 
-/// finds the next token, adds the characters to m_buf and returns token type
+/// finds the next token, moves the characters to m_buf and returns token type
 int lk::lexer::next()
 {
 	m_buf = "";

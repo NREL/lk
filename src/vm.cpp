@@ -57,6 +57,7 @@ OpCodeEntry op_table[] = {
 	{ __MaxOp, 0 } };
 
 #ifdef OP_PROFILE
+/// resets operation count
 void vm::clear_opcount() {
 	for( size_t i=0;i<__MaxOp;i++ )
 		opcount[i] = 0;
@@ -94,6 +95,7 @@ bool vm::on_run( const srcpos_t &spos)
 	return true;
 }
 
+/// deletes all frames
 void vm::free_frames()
 {
 	for( size_t i=0;i<frames.size(); i++ )
@@ -112,6 +114,7 @@ vardata_t *vm::get_stack( size_t *psp ) {
 	return &stack[0];
 }
 
+/// sets bytecode pointer to b and deletes any created frames
 void vm::load( bytecode *b )
 {
 	bc = b;	
@@ -128,6 +131,7 @@ bool vm::special_get( const lk_string &name, vardata_t &val )
 	throw error_t( lk_tr("no defined mechanism to get special variable") + " '" + name + "'" );
 }
 
+/// initializes new vm with given environment env
 bool vm::initialize( lk::env_t *env )
 {
 #ifdef OP_PROFILE

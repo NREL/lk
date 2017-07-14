@@ -21,7 +21,14 @@ namespace lk {
 	class vardata_t;
 	struct fcallinfo_t;
 	typedef unordered_map< lk_string, vardata_t*, lk_string_hash, lk_string_equal > varhash_t;
-		
+	
+/**
+* \class error_t
+*
+* 
+*
+*
+*/
 	
 	class error_t : public std::exception
 	{
@@ -46,14 +53,14 @@ namespace lk {
 		virtual const char *what() const throw (){ return text.c_str(); }
 	};
 
-	/**
-	* \class vardata_t
-	*
-	* Stores data for use by LK functions.
-	* Used as arguments to LK functions: variables, expressions & statements defined in LK, ie from user input in scripting window
-	* which are instantiated by codegen using values from nodes
-	* Used for returned values from LK functions: 
-	*/
+/**
+* \class vardata_t
+*
+* Stores data for use by LK functions.
+* Used as arguments to LK functions: variables, expressions & statements defined in LK, ie from user input in scripting window
+* which are instantiated by codegen using values from nodes
+* Used for returned values from LK functions: 
+*/
 
 	class vardata_t
 	{
@@ -170,6 +177,15 @@ namespace lk {
 	};
 	
 	class env_t;
+
+/**
+* \class objref_t
+*
+* 
+*
+*
+*/
+
 	class objref_t
 	{
 	private:
@@ -187,7 +203,13 @@ namespace lk {
 
 	typedef void (*fcall_t)( lk::invoke_t& );
 
-	/// links together LK function name f, user data and lk_invokable
+/**
+* \class fcallinfo_t
+*
+* links together LK function name f, user data and lk_invokable
+*
+*
+*/
 	struct fcallinfo_t {
 		fcall_t f;
 		lk_invokable f_ext;
@@ -307,7 +329,15 @@ namespace lk {
 
 	class env_t
 	{
-	public:		
+	public:	
+
+/**
+* \struct dynlib_t
+*
+* 
+*
+*
+*/
 		struct dynlib_t
 		{
 			lk_string path;

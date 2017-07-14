@@ -42,7 +42,8 @@ void lk::vardata_t::set_type( unsigned char ty )
 	m_type &= FLAGMASK; // clear all type info
 	m_type |= (ty&TYPEMASK); // set lower 4 bits to type
 }
-		
+
+/// checks if value has been assigned and is constant
 void lk::vardata_t::assert_modify() throw( error_t )
 {
 	if ( flagval( CONSTVAL )
@@ -425,10 +426,12 @@ void lk::vardata_t::assign( const char *s ) throw( error_t )
 	}
 }
 
+/// function for associating an lk_string pointer to a vardata_t
 void lk::vardata_t::assign( const lk_string &s ) throw( error_t )
 {
 	assert_modify();
 
+	// checks if previously assigned
 	if ( type() != STRING)
 	{
 		nullify();

@@ -7,8 +7,16 @@
 
 namespace lk
 {
-	// contains functions used to take an lk script as input_bases & parse using lexer; returns nodes_t for recursive descent tree
-	// root node produced by script(): expression stored as binary trees, functions as abstract trees
+
+/**
+* \class parser
+*
+* Contains functions used to take an lk script as input_bases and to parse them using lexer.
+* Returns nodes_t as nodes in recursive descent tree, where root node is produced by script().
+* Expressions stored as binary trees and functions as abstract trees.
+*
+*/
+
 	class parser
 	{
 	public:

@@ -10,7 +10,7 @@ namespace lk {
 /** 
  * \class input_base
  *
- * This class stores script written in LK as lk_strings (wxstring).
+ * This class stores input script as lk_strings (wxstring).
  *
  * For proper compilation: 
  * Define _WIN32 if on Windows
@@ -52,7 +52,10 @@ namespace lk {
 /** 
  * \class lexer
  *
- * lexer extracts & stores expressions from input_base to be evaluated by the parser
+ * Lexer takes as input an input_base and extracts tokens from the input LK string
+ * by identifying the structural pieces of the language. Lexer changes state as it
+ * traverses the input string when next() is called: the token type is returned and
+ * m_buf stores the string literal of the current token, which is accessed through text().
  *
  */
 

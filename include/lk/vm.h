@@ -6,6 +6,14 @@
 
 namespace lk {
 
+/// Opcodes: J, if-elseif-else; PSH, push onto stack; RREF LREF LCREF LGREF, identifers
+/**
+* \struct Opcode
+*
+* 
+*
+*
+*/
 enum Opcode {
 	ADD, SUB, MUL, DIV, LT, GT, LE, GE, NE, EQ, INC, DEC, OR, AND, NOT, NEG, EXP, PSH, POP, DUP, NUL, ARG, SWI,
 	J, JF, JT, IDX, KEY, MAT, WAT, SET, GET, WR, RREF, LREF, LCREF, LGREF, FREF, CALL, TCALL, RET, END, SZ, KEYS, TYP, VEC, HASH,
@@ -13,6 +21,13 @@ enum Opcode {
 struct OpCodeEntry { Opcode op; const char *name; };
 extern OpCodeEntry op_table[];
 
+/**
+* \sruct bytecode
+*
+* Stores instruction stack information such as source data positions for debugging,
+* variables used in script, and flags for each stack
+*
+*/
 
 struct bytecode
 {
@@ -25,6 +40,13 @@ struct bytecode
 #define OP_PROFILE 1 
 
 // takes bytecode as input
+
+/**
+* \class vm
+*
+*	
+*
+*/
 
 class vm
 {
@@ -65,7 +87,9 @@ private:
 
 	void free_frames();
 	bool error( const char *fmt, ... );
-	
+
+
+/// global variable keeping track of number of operation types (47)
 #ifdef OP_PROFILE
 	size_t opcount[__MaxOp];
 	void clear_opcount();

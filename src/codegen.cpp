@@ -30,7 +30,9 @@ bool codegen::error( const char *fmt, ... )
 codegen::codegen() {
 	m_labelCounter = 1;
 }
-	
+
+
+/// transfers instruction stack information & variable lists to bytecode
 size_t codegen::get( bytecode &bc )
 {
 	if ( m_asm.size() == 0 ) return 0;
@@ -133,6 +135,7 @@ void codegen::textout( lk_string &assembly, lk_string &bytecode )
 		bytecode += ".id " + m_idList[i] + "\n";
 }
 
+/// returns true if stack of instructions generated
 bool codegen::generate( lk::node_t *root )
 {
 	m_idList.clear();
@@ -146,6 +149,7 @@ bool codegen::generate( lk::node_t *root )
 	return pfgen(root, F_NONE );
 }
 
+/// adds id to m_idList if not already added, return index of d
 int codegen::place_identifier( const lk_string &id )
 {
 	for( size_t i=0;i<m_idList.size();i++ )
@@ -156,6 +160,7 @@ int codegen::place_identifier( const lk_string &id )
 	return m_idList.size() - 1;
 }
 
+/// adds d to m_constData if not already added, return index of d
 int codegen::place_const( vardata_t &d )
 {
 	if ( d.type() == vardata_t::HASH && d.hash()->size() == 2 )
@@ -175,6 +180,8 @@ int codegen::const_value( double value )
 	x.assign( value );
 	return place_const( x );
 }
+
+/// creates a vardata_t for a const string literal
 int codegen::const_literal( const lk_string &lit )
 {
 	vardata_t x;
@@ -194,6 +201,7 @@ void codegen::place_label( const lk_string &s )
 	m_labelAddr[ s ] = (int)m_asm.size();
 }
 
+/// makes instructions & adds to m_asm
 int codegen::emit( srcpos_t pos, Opcode o, int arg )
 {
 	// copy previous line's position if parser doesn't know the statement line,
@@ -308,6 +316,7 @@ bool codegen::initialize_const_hash( lk::list_t *v, vardata_t &vhash )
 	return true;
 }
 
+/// handles stack popping for statements by adding a POP instruction
 bool codegen::pfgen_stmt( lk::node_t *root, unsigned int flags )
 {
 	bool ok = pfgen( root, flags );
@@ -326,6 +335,7 @@ bool codegen::pfgen_stmt( lk::node_t *root, unsigned int flags )
 	return ok;
 }
 
+/// returns true if instruction stack generation successful
 bool codegen::pfgen( lk::node_t *root, unsigned int flags )
 {
 	if ( !root ) return true;

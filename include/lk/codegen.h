@@ -9,6 +9,17 @@ namespace lk {
 // produces bytecode from a tree of nodes, where root is a list node containing nodes of individual statements
 // original LK script text stored in srcpos_t are transfered to instr's, which are pushed onto m_asm as tree is traversed
 
+// labels created at beginning of nodes with children nodes and
+// contain information about where in the stack the instructions made from the node are
+// maps from label # to position in stack, ie: the fifth label created label, "L5", is in m_asm position 1
+
+/**
+* \class codegen
+*
+* Codegen produces bytecode from a tree of nodes. Root node is a list_t node
+* containing a vector of statements.
+*
+*/
 class codegen
 {
 public:
@@ -24,6 +35,14 @@ public:
 	void textout( lk_string &assembly, lk_string &bytecode );
 
 private:	
+
+/**
+* \class instr
+*
+* Makes up the instructions that go into the m_asm stack by containing the source data
+* position, the operation to be done,
+*
+*/
 	struct instr {
 		instr( srcpos_t sp, Opcode _op, int _arg, const char *lbl = 0 )
 			: pos(sp), op(_op), arg(_arg) {
@@ -61,14 +80,12 @@ private:
 
 	// functions as virtual stack
 	std::vector<instr> m_asm;
-	// labels created at beginning of nodes with children nodes and
-	// contain information about where in the stack the instructions made from the node are
-	// maps from label # to position in stack, ie: the fifth label created label, "L5", is in m_asm position 10
 	typedef unordered_map< lk_string, int, lk_string_hash, lk_string_equal > LabelMap;
 	LabelMap m_labelAddr;
 	std::vector< vardata_t > m_constData;
 	std::vector< lk_string > m_idList;
 	int m_labelCounter;
+	// stores labels associated with loops: continueAddr for advancing loops, break for end
 	std::vector<lk_string> m_breakAddr, m_continueAddr;
 	lk_string m_errStr;
 

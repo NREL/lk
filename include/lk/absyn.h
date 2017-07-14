@@ -62,7 +62,14 @@ namespace lk
 		virtual ~attr_t() {  };
 	};
 
-	// source position data: file is name of input_base (ie "main"), line is current line, stmt is last successfully accepted token
+/**
+* \class srcpos_t
+*
+* Class for source position data: file is name of input_base (ie "main"), line is current line #, 
+* stmt is line # of last successfully accepted token from file.
+*
+*/
+
 	class srcpos_t
 	{
 	public:
@@ -76,7 +83,15 @@ namespace lk
 	
 	bool operator==(const srcpos_t &, const srcpos_t &);
 
-	// nodes of the recursive descent tree set up by LK parser, contains expressions & where the text is located
+/**
+* \class node_t
+*
+* Nodes of the recursive descent tree used by LK parser to store meaningful chunks of code
+* such as string literals, identifiers, control structures, and expressions, as well as where
+* in the source LK script these pieces are in the source code.
+*
+*/
+
 	class node_t
 	{
 	private:
