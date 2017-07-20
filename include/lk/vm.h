@@ -24,8 +24,8 @@ extern OpCodeEntry op_table[];
 /**
 * \sruct bytecode
 *
-* Stores instruction stack information such as source data positions for debugging,
-* variables used in script, and flags for each stack
+* Stores instruction stack information. Operation to be done and on which argument is stored in program. 
+* Constants store variable data types while identifiers are names of variables.
 *
 */
 
@@ -51,6 +51,16 @@ struct bytecode
 class vm
 {
 public:
+
+/**
+* \class frame
+*
+*	Stores stack frames for vm, default one contains global variables. Each corresponds 
+* to a call to a subroutine which has not yet terminated with a return, and contains
+* an environment with active functions, stack position, return address of the subroutine's
+* caller, arguments to subroutine, and local arguments
+*
+*/
 	struct frame {
 		frame( lk::env_t *parent, size_t fptr, size_t ret, size_t na )
 			: env( parent), fp(fptr), retaddr(ret), nargs(na), iarg(0), thiscall( false )
@@ -68,7 +78,7 @@ public:
 
 private:
 	size_t ip;
-	int sp; // use int so that values can go negative and errors easier to catch rather than wrapping around to a large number
+	int sp; ///< stack size, use int so that values can go negative and errors easier to catch rather than wrapping around to a large number
 	std::vector< vardata_t > stack;
 
 	bytecode *bc;
@@ -80,7 +90,7 @@ private:
 	*/
 
 	std::vector< frame* > frames;
-	std::vector< bool > brkpt;
+	std::vector< bool > brkpt; ///< breakpoints for debugging
 
 	lk_string errStr;
 	srcpos_t lastbrk;

@@ -85,9 +85,9 @@ namespace lk {
 		static const unsigned char STRING = 4;
 		static const unsigned char VECTOR = 5;
 		static const unsigned char HASH = 6;
-		static const unsigned char FUNCTION = 7;
-		static const unsigned char EXTFUNC = 8;
-		static const unsigned char INTFUNC = 9;
+		static const unsigned char FUNCTION = 7;	///< code expression pointer
+		static const unsigned char EXTFUNC = 8;		///< external function pointer
+		static const unsigned char INTFUNC = 9;		///< internal function pointer
 
 		static const unsigned char TYPEMASK = 0x0F;
 		static const unsigned char FLAGMASK = 0xF0;
@@ -127,7 +127,7 @@ namespace lk {
 			copy( const_cast<vardata_t&>(rhs) );
 			return *this;
 		}
-
+		/// return referenced vardata_t
 		inline vardata_t &deref() const throw (error_t) {
 			vardata_t *p = const_cast<vardata_t*>(this);
 			while ( p->type() == REFERENCE ) {

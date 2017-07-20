@@ -64,6 +64,7 @@ void vm::clear_opcount() {
 }
 #endif
 
+/// initializes a vm with a stack of given size
 vm::vm( size_t ssize )
 {
 	bc = 0;

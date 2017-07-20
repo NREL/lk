@@ -32,7 +32,7 @@ codegen::codegen() {
 }
 
 
-/// transfers instruction stack information & variable lists to bytecode
+/// transfers stack instructions & variable lists to bytecode
 size_t codegen::get( bytecode &bc )
 {
 	if ( m_asm.size() == 0 ) return 0;
@@ -54,7 +54,7 @@ size_t codegen::get( bytecode &bc )
 	return m_asm.size();
 }
 
-
+/// generates assembly code
 void codegen::textout( lk_string &assembly, lk_string &bytecode )
 {
 	char buf[128];		

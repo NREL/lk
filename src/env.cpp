@@ -373,6 +373,7 @@ const char *lk::vardata_t::typestr() const
 	}
 }
 
+/// deletes value, ie object to which m_u.p points
 void lk::vardata_t::nullify()
 {
 	switch( type() )
@@ -512,6 +513,7 @@ void lk::vardata_t::assign( vardata_t *ref ) throw( error_t )
 	m_u.p = ref;
 }
 
+/// assigns as EXTFUNC type whose value points to the function's fci
 void lk::vardata_t::assign_fcall( fcallinfo_t *fci ) throw( error_t )
 {
 	assert_modify();
@@ -750,6 +752,7 @@ void lk::env_t::clear_vars()
 	m_varHash.clear();
 }
 
+/// assigns an identifer to a vardata_t with value
 void lk::env_t::assign( const lk_string &name, vardata_t *value )
 {
 	vardata_t *x = lookup(name, false);
@@ -896,6 +899,7 @@ bool lk::env_t::register_funcs( fcall_t list[], void *user_data )
 	return ok;
 }
 
+/// looks for function fcallinfo in current & parent environments
 lk::fcallinfo_t *lk::env_t::lookup_func( const lk_string &name )
 {
 	funchash_t::iterator it = m_funcHash.find( name );

@@ -40,7 +40,7 @@ private:
 * \class instr
 *
 * Makes up the instructions that go into the m_asm stack by containing the source data
-* position, the operation to be done,
+* position, the operation to be done, and any flags
 *
 */
 	struct instr {
