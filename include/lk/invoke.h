@@ -15,12 +15,12 @@ typedef void* lk_var_t;
 
 struct __lk_invoke_t
 {
-	void *__pinvoke; // internal calling context reference
-	void *__hiter; // internal key interator context
-	void *__errbuf; // error message buffer
-	void *__sbuf; // internal string storage buffer (utf8)
-	void *__callargvec; // internal call argument vector 
-	void *__callresult; // internal call result
+	void *__pinvoke; ///< internal calling context reference
+	void *__hiter; ///< internal key interator context
+	void *__errbuf; ///< error message buffer
+	void *__sbuf; ///< internal string storage buffer (utf8)
+	void *__callargvec; ///< internal call argument vector 
+	void *__callresult; ///< internal call result
 
 	int (*doc_mode)( struct __lk_invoke_t* );
 	void (*document)( struct __lk_invoke_t*, const char *fn, const char *desc, const char *sig );

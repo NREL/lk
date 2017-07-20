@@ -6,23 +6,28 @@
 
 namespace lk {
 
-/// Opcodes: J, if-elseif-else; PSH, push onto stack; RREF LREF LCREF LGREF, identifers
 /**
-* \struct Opcode
-*
-* 
-*
-*
+* \enum Opcode
+* Operation codes used by interpreter
 */
 enum Opcode {
-	ADD, SUB, MUL, DIV, LT, GT, LE, GE, NE, EQ, INC, DEC, OR, AND, NOT, NEG, EXP, PSH, POP, DUP, NUL, ARG, SWI,
-	J, JF, JT, IDX, KEY, MAT, WAT, SET, GET, WR, RREF, LREF, LCREF, LGREF, FREF, CALL, TCALL, RET, END, SZ, KEYS, TYP, VEC, HASH,
+	ADD, SUB, MUL, DIV, LT, GT, LE, GE, NE, EQ, INC, DEC, OR, AND, NOT, NEG, EXP, 
+	PSH, ///< push
+	POP, ///< pop
+	DUP, NUL, ARG, SWI,
+	J, ///< if-elseif-else
+	JF, JT, IDX, KEY, MAT, WAT, SET, GET, WR, 
+	RREF, ///< right-hand reference
+	LREF, ///< left-hand reference
+	LCREF, ///< left-hand constant reference
+	LGREF, ///< left-hand global reference
+	FREF, CALL, TCALL, RET, END, SZ, KEYS, TYP, VEC, HASH,
 	__MaxOp };
 struct OpCodeEntry { Opcode op; const char *name; };
 extern OpCodeEntry op_table[];
 
 /**
-* \sruct bytecode
+* \struct bytecode
 *
 * Stores instruction stack information. Operation to be done and on which argument is stored in program. 
 * Constants store variable data types while identifiers are names of variables.
@@ -53,7 +58,7 @@ class vm
 public:
 
 /**
-* \class frame
+* \struct frame
 *
 *	Stores stack frames for vm, default one contains global variables. Each corresponds 
 * to a call to a subroutine which has not yet terminated with a return, and contains
@@ -107,10 +112,10 @@ private:
 
 public:
 	enum ExecMode { 
-		NORMAL,   // run with no debugging
-		DEBUG,    // run until next breakpoint
-		STEP,     // step 1 code statement
-		SINGLE    // step 1 assembly instruction
+		NORMAL,   ///< run with no debugging
+		DEBUG,    ///< run until next breakpoint
+		STEP,     ///< step 1 code statement
+		SINGLE    ///< step 1 assembly instruction
 	};
 
 	vm( size_t ssize = 4096 );

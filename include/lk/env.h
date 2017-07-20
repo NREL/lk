@@ -56,19 +56,20 @@ namespace lk {
 /**
 * \class vardata_t
 *
-* Stores data for use by LK functions.
-* Used as arguments to LK functions: variables, expressions & statements defined in LK, ie from user input in scripting window
-* which are instantiated by codegen using values from nodes
-* Used for returned values from LK functions: 
+* Vardata_t form the execution stack of the vm: stores identifiers and expressions, 
+* arguments and results for function invocations, and operations.
 */
 
 	class vardata_t
 	{
 	private:
-		// m_type stores both data type and flag information
-		// lower four bits are data type (16 possible values)
-		// upper four bits are boolean flags (CONSTVAL, etc)
 		unsigned char m_type;
+		/** \union m_u
+		* 
+		* m_type stores both data type and flag information. 
+		* Lower four bits are data type (16 possible values)
+		* Upper four bits are boolean flags (CONSTVAL, etc)
+		*/
 		union {
 			void *p;
 			double v;
@@ -78,7 +79,7 @@ namespace lk {
 		void assert_modify() throw( error_t );
 		
 	public:
-		// data types
+		/// Data Types
 		static const unsigned char NULLVAL = 1;
 		static const unsigned char REFERENCE = 2;
 		static const unsigned char NUMBER = 3;
@@ -92,7 +93,7 @@ namespace lk {
 		static const unsigned char TYPEMASK = 0x0F;
 		static const unsigned char FLAGMASK = 0xF0;
 
-		// flags
+		/// Flags
 		static const unsigned char ASSIGNED = 1;
 		static const unsigned char CONSTVAL = 2;
 		static const unsigned char GLOBALVAL = 3;
@@ -117,7 +118,7 @@ namespace lk {
 		bool equals( vardata_t &rhs ) const;
 		bool lessthan( vardata_t &rhs ) const;
 
-		void nullify(); // only function that override const-ness
+		void nullify(); ///< only function that override const-ness
 		
 		void deep_localize();
 
@@ -146,8 +147,8 @@ namespace lk {
 		void empty_hash() throw( error_t );
 		void assign( const lk_string &key, vardata_t *val ) throw( error_t );
 		void unassign( const lk_string &key ) throw( error_t );
-		void assign( expr_t *func ) throw( error_t ); // does NOT take ownership (expr_t must be deleted by the environment
-		void assign( vardata_t *ref ) throw( error_t ); // makes this vardata_t a reference to the object 'ref'
+		void assign( expr_t *func ) throw( error_t ); ///< does NOT take ownership (expr_t must be deleted by the environment
+		void assign( vardata_t *ref ) throw( error_t ); ///< makes this vardata_t a reference to the object 'ref'
 
 		void assign_fcall( fcallinfo_t *fci ) throw (error_t);
 		void assign_faddr( size_t bcip ) throw(error_t);
@@ -158,9 +159,9 @@ namespace lk {
 		double num() const throw(error_t);
 		lk_string str() const throw(error_t);
 		expr_t *func() const throw(error_t);
-		vardata_t *index(size_t idx) const throw(error_t); // returned variable inherits const-ness of parent
+		vardata_t *index(size_t idx) const throw(error_t); ///< returned variable inherits const-ness of parent
 		size_t length() const ;
-		vardata_t *lookup( const lk_string &key ) const throw(error_t); // returned variable inherits const-ness of parent
+		vardata_t *lookup( const lk_string &key ) const throw(error_t); ///< returned variable inherits const-ness of parent
 		fcallinfo_t *fcall() const throw(error_t);
 		size_t faddr() const throw(error_t);
 
@@ -204,7 +205,7 @@ namespace lk {
 	typedef void (*fcall_t)( lk::invoke_t& );
 
 /**
-* \class fcallinfo_t
+* \struct fcallinfo_t
 *
 * links together LK function name f, user data and lk_invokable
 *
@@ -219,11 +220,12 @@ namespace lk {
 	typedef unordered_map< lk_string, fcallinfo_t, lk_string_hash, lk_string_equal > funchash_t;
 
 
-/**
+/** Documents LK functions.
  * \class doc_t
  *
- * Documents LK functions: function name, descriptions such as "Input text from user", 
- * input:output sig such as "(none):string", and how many pairs of desc/sig there are
+ * Records function name, descriptions such as "Input text from user", input:output 
+ * sig such as "(none):string", and number of pairs of desc/sig. Used in function window
+ * in LK scripting window.
  *
  */
 	class doc_t
@@ -399,7 +401,7 @@ namespace lk {
 		
 	};
 	
-	// implemented in lk_invoke.cpp for external dll calls
+	/// implemented in lk_invoke.cpp for external dll calls
 	void external_call( lk_invokable p, lk::invoke_t &cxt );
 
 }; // namespace lk

@@ -62,7 +62,7 @@ namespace lk
 		virtual ~attr_t() {  };
 	};
 
-/**
+/** Records position in source script.
 * \class srcpos_t
 *
 * Class for source position data: file is name of input_base (ie "main"), line is current line #, 
@@ -83,7 +83,7 @@ namespace lk
 	
 	bool operator==(const srcpos_t &, const srcpos_t &);
 
-/**
+/** Forms nodes of recursive descent tree.
 * \class node_t
 *
 * Nodes of the recursive descent tree used by LK parser to store meaningful chunks of code

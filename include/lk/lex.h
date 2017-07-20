@@ -10,7 +10,7 @@ namespace lk {
 /** 
  * \class input_base
  *
- * This class stores input script as lk_strings (wxstring).
+ * Stores input script as lk_strings (wxstring).
  *
  * For proper compilation: 
  * Define _WIN32 if on Windows
@@ -49,7 +49,7 @@ namespace lk {
 	};
 	
 
-/** 
+/** Translates input into tokens.
  * \class lexer
  *
  * Lexer takes as input an input_base and extracts tokens from the input LK string
@@ -63,7 +63,9 @@ namespace lk {
 	{
 	public:
 		static const char *tokstr(int t);
-
+		/** \enum Tokens
+		*  One character tokens used by lexer
+		*/
 		enum {
 			INVALID,
 			END,
@@ -72,49 +74,48 @@ namespace lk {
 			NUMBER,
 			LITERAL,
 
-			// one character tokens
-			SEP_SEMI,		// ;
-			SEP_COLON,		// :
-			SEP_COMMA,		// ,
-			SEP_LPAREN,		// (
-			SEP_RPAREN,		// )
-			SEP_LCURLY,		// {
-			SEP_RCURLY,		// }
-			SEP_LBRACK,		// [
-			SEP_RBRACK,		// ]
+			SEP_SEMI,		///< ;
+			SEP_COLON,		///< :
+			SEP_COMMA,		///< ,
+			SEP_LPAREN,		///< (
+			SEP_RPAREN,		///< )
+			SEP_LCURLY,		///< {
+			SEP_RCURLY,		///< }
+			SEP_LBRACK,		///< [
+			SEP_RBRACK,		///< ]
 
-			OP_PLUS,		// +
-			OP_MINUS,		// -
-			OP_MULT,		// *
-			OP_DIV,			// /
-			OP_EXP,			// ^
-			OP_DOT,			// .
-			OP_QMARK,		// ?
-			OP_QMARKAT,		// ?@
-			OP_POUND,		// #
-			OP_TILDE,		// ~
-			OP_PERCENT,		// %
-			OP_AT,			// @
-			OP_LOGIAND,		// &&
-			OP_LOGIOR,		// ||
-			OP_BITAND,		// &
-			OP_BITOR,		// |
-			OP_BANG,		// !
-			OP_ASSIGN,		// =
-			OP_REF,			// ->
-			OP_PP,			// ++
-			OP_MM,			// --
-			OP_LT,			// <
-			OP_GT,			// >
-			OP_EQ,			// ==
-			OP_NE,			// !=
-			OP_LE,			// <=
-			OP_GE,			// >=
-			OP_PLUSEQ,		// +=
-			OP_MINUSEQ,		// -=
-			OP_MULTEQ,		// *=
-			OP_DIVEQ,		// /=
-			OP_MINUSAT		// -@
+			OP_PLUS,		///< +
+			OP_MINUS,		///< -
+			OP_MULT,		///< *
+			OP_DIV,			///< /
+			OP_EXP,			///< ^
+			OP_DOT,			///< .
+			OP_QMARK,		///< ?
+			OP_QMARKAT,		///< ?@
+			OP_POUND,		///< #
+			OP_TILDE,		///< ~
+			OP_PERCENT,		///< %
+			OP_AT,			///< @
+			OP_LOGIAND,		///< &&
+			OP_LOGIOR,		///< ||
+			OP_BITAND,		///< &
+			OP_BITOR,		///< |
+			OP_BANG,		///< !
+			OP_ASSIGN,		///< =
+			OP_REF,			///< ->
+			OP_PP,			///< ++
+			OP_MM,			///< --
+			OP_LT,			///< <
+			OP_GT,			///< >
+			OP_EQ,			///< ==
+			OP_NE,			///< !=
+			OP_LE,			///< <=
+			OP_GE,			///< >=
+			OP_PLUSEQ,		///< +=
+			OP_MINUSEQ,		///< -=
+			OP_MULTEQ,		///< *=
+			OP_DIVEQ,		///< /=
+			OP_MINUSAT		///< -@
 
 		};
 
