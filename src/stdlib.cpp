@@ -1788,11 +1788,11 @@ static void _mmedian(lk::invoke_t &cxt)
 	}
 
 	//sort the array
-	for (int i = 0; i < values.size(); i++)
+	for (size_t i = 0; i < values.size(); i++)
 	{
 		//start at the current spot in the output
 		int smallest = i;
-		for (int j = i + 1; j < values.size(); j++) //find the index of the smallest number in the remaining range
+		for (size_t j = i + 1; j < values.size(); j++) //find the index of the smallest number in the remaining range
 			if (values[j] < values[smallest])
 				smallest = j;
 		//swap the spots of the current i and the smallest number
