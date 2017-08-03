@@ -133,7 +133,7 @@ public:
 		}
 	}
 
-	void OnClose(wxCloseEvent &evt)
+	void OnClose(wxCloseEvent &)
 	{
 		EndModal(wxID_CANCEL);
 	}
@@ -1796,7 +1796,7 @@ static void _mmedian(lk::invoke_t &cxt)
 			if (values[j] < values[smallest])
 				smallest = j;
 		//swap the spots of the current i and the smallest number
-		if (smallest != i)
+		if (smallest !=(int) i)
 		{
 			double value_temp = values[i];
 			values[i] = values[smallest];
@@ -2456,7 +2456,7 @@ std::vector< lk_string > lk::dir_list(const lk_string &path, const lk_string &ex
 	dir = ::opendir((const char*)path.c_str());
 	if (!dir) return list;
 
-	while ((ent = readdir(dir)))
+	while (((ent = readdir(dir)))!=0)
 	{
 		lk_string item(ent->d_name);
 		if (item == "." || item == "..")

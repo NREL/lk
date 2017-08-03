@@ -111,7 +111,7 @@ namespace lk {
 		free_frames();
 	}
 
-	bool vm::on_run(const srcpos_t &spos)
+	bool vm::on_run(const srcpos_t &)
 	{
 		return true;
 	}
@@ -140,12 +140,12 @@ namespace lk {
 		free_frames();
 	}
 
-	bool vm::special_set(const lk_string &name, vardata_t &val)
+	bool vm::special_set(const lk_string &name, vardata_t &)
 	{
 		throw error_t(lk_tr("no defined mechanism to set special variable") + " '" + name + "'");
 	}
 
-	bool vm::special_get(const lk_string &name, vardata_t &val)
+	bool vm::special_get(const lk_string &name, vardata_t &)
 	{
 		throw error_t(lk_tr("no defined mechanism to get special variable") + " '" + name + "'");
 	}

@@ -160,7 +160,7 @@ lk::node_t *lk::parser::script()
 
 	while (!token(lk::lexer::END)
 		&& !token(lk::lexer::INVALID)
-		&& (stmt = statement()))
+		&& ((stmt = statement())!=0))
 	{
 		if (0 == head) head = new list_t(startpos);
 		head->items.push_back(stmt);

@@ -995,7 +995,7 @@ lk::objref_t *lk::env_t::query_object(size_t ref)
 	else return 0;
 }
 
-void lk::env_t::call(const lk_string &name, std::vector< vardata_t > &args, vardata_t &result) throw(lk::error_t)
+void lk::env_t::call(const lk_string &name, std::vector< vardata_t > &args, vardata_t &) throw(lk::error_t)
 {
 	vardata_t *f = lookup(name, true);
 	if (!f)	throw lk::error_t(lk_tr("could not locate function name in environment: ") + name);

@@ -75,12 +75,12 @@ bool lk::eval::run()
 	return interpret(m_tree, m_env, m_result, 0, ctl);
 }
 
-bool lk::eval::special_set(const lk_string &name, vardata_t &val)
+bool lk::eval::special_set(const lk_string &name, vardata_t &)
 {
 	throw error_t(lk_tr("no defined mechanism to set special variable") + " '" + name + "'");
 }
 
-bool lk::eval::special_get(const lk_string &name, vardata_t &val)
+bool lk::eval::special_get(const lk_string &name, vardata_t &)
 {
 	throw error_t(lk_tr("no defined mechanism to get special variable") + " '" + name + "'");
 }
@@ -595,7 +595,7 @@ bool lk::eval::interpret(node_t *root,
 							return false;
 						}
 
-						if (argindex < argnames->items.size() && (id = dynamic_cast<iden_t*>(argnames->items[argindex])))
+						if (argindex < argnames->items.size() && ((id = dynamic_cast<iden_t*>(argnames->items[argindex]))!=0))
 							frame.assign(id->name, new vardata_t(v));
 
 						__args->vec()->push_back(vardata_t(v));

@@ -96,7 +96,7 @@ lk_var_t _CC_arg(struct __lk_invoke_t *_lk, int idx)
 		return (lk_var_t)(&((lk::invoke_t*)_lk->__pinvoke)->arg(idx));
 }
 
-int _CC_type(struct __lk_invoke_t *_lk, lk_var_t vv)
+int _CC_type(struct __lk_invoke_t *, lk_var_t vv)
 {
 	if (vv != 0) return ((lk::vardata_t*)vv)->type();
 	else return 0;
@@ -113,7 +113,7 @@ const char *_CC_as_string(struct __lk_invoke_t *_lk, lk_var_t vv)
 	else return 0;
 }
 
-double _CC_as_number(struct __lk_invoke_t *_lk, lk_var_t vv)
+double _CC_as_number(struct __lk_invoke_t *, lk_var_t vv)
 {
 	if (vv != 0)
 		return ((lk::vardata_t*)vv)->as_number();
@@ -121,7 +121,7 @@ double _CC_as_number(struct __lk_invoke_t *_lk, lk_var_t vv)
 		return 0.0;
 }
 
-int _CC_as_integer(struct __lk_invoke_t *_lk, lk_var_t vv)
+int _CC_as_integer(struct __lk_invoke_t *, lk_var_t vv)
 {
 	if (vv != 0)
 		return ((lk::vardata_t*)vv)->as_integer();
@@ -129,7 +129,7 @@ int _CC_as_integer(struct __lk_invoke_t *_lk, lk_var_t vv)
 		return 0;
 }
 
-int _CC_as_boolean(struct __lk_invoke_t *_lk, lk_var_t vv)
+int _CC_as_boolean(struct __lk_invoke_t *, lk_var_t vv)
 {
 	if (vv != 0)
 		return ((lk::vardata_t*)vv)->as_boolean() ? 1 : 0;
@@ -137,19 +137,19 @@ int _CC_as_boolean(struct __lk_invoke_t *_lk, lk_var_t vv)
 		return 0;
 }
 
-int _CC_vec_count(struct __lk_invoke_t *_lk, lk_var_t vv)
+int _CC_vec_count(struct __lk_invoke_t *, lk_var_t vv)
 {
 	if (vv != 0) return ((lk::vardata_t*)vv)->length();
 	else return 0;
 }
 
-lk_var_t _CC_vec_index(struct __lk_invoke_t *_lk, lk_var_t vv, int idx)
+lk_var_t _CC_vec_index(struct __lk_invoke_t *, lk_var_t vv, int idx)
 {
 	if (vv != 0) return (lk_var_t)((lk::vardata_t*)vv)->index(idx);
 	else return 0;
 }
 
-int _CC_tab_count(struct __lk_invoke_t *_lk, lk_var_t vv)
+int _CC_tab_count(struct __lk_invoke_t *, lk_var_t vv)
 {
 	if (vv != 0)
 		return ((lk::vardata_t*)vv)->hash()->size();
@@ -189,7 +189,7 @@ const char * _CC_tab_next_key(struct __lk_invoke_t *_lk, lk_var_t vv)
 	return 0;
 }
 
-lk_var_t _CC_tab_value(struct __lk_invoke_t *_lk, lk_var_t vv, const char *key)
+lk_var_t _CC_tab_value(struct __lk_invoke_t *, lk_var_t vv, const char *key)
 {
 	if (vv != 0 && key != 0)
 		return (lk_var_t)((lk::vardata_t*)vv)->lookup(key);
@@ -203,22 +203,22 @@ lk_var_t _CC_result(struct __lk_invoke_t *_lk)
 }
 
 // variable modifications
-void _CC_set_null(struct __lk_invoke_t *_lk, lk_var_t vv)
+void _CC_set_null(struct __lk_invoke_t *, lk_var_t vv)
 {
 	if (vv != 0) ((lk::vardata_t*)vv)->nullify();
 }
 
-void _CC_set_string(struct __lk_invoke_t *_lk, lk_var_t vv, const char *str)
+void _CC_set_string(struct __lk_invoke_t *, lk_var_t vv, const char *str)
 {
 	if (vv != 0) ((lk::vardata_t*)vv)->assign(lk::from_utf8(str));
 }
 
-void _CC_set_number(struct __lk_invoke_t *_lk, lk_var_t vv, double val)
+void _CC_set_number(struct __lk_invoke_t *, lk_var_t vv, double val)
 {
 	if (vv != 0) ((lk::vardata_t*)vv)->assign(val);
 }
 
-void _CC_set_number_vec(struct __lk_invoke_t *_lk, lk_var_t vv, double *arr, int len)
+void _CC_set_number_vec(struct __lk_invoke_t *, lk_var_t vv, double *arr, int len)
 {
 	if (vv != 0 && arr != 0 && len > 0)
 	{
@@ -230,12 +230,12 @@ void _CC_set_number_vec(struct __lk_invoke_t *_lk, lk_var_t vv, double *arr, int
 	}
 }
 
-void _CC_make_vec(struct __lk_invoke_t *_lk, lk_var_t vv)
+void _CC_make_vec(struct __lk_invoke_t *, lk_var_t vv)
 {
 	if (vv != 0) ((lk::vardata_t*)vv)->empty_vector();
 }
 
-void _CC_reserve(struct __lk_invoke_t *_lk, lk_var_t vv, int len)
+void _CC_reserve(struct __lk_invoke_t *, lk_var_t vv, int len)
 {
 	if (vv != 0 && len > 0)
 	{
@@ -245,7 +245,7 @@ void _CC_reserve(struct __lk_invoke_t *_lk, lk_var_t vv, int len)
 	}
 }
 
-lk_var_t _CC_append_number(struct __lk_invoke_t *_lk, lk_var_t vv, double val)
+lk_var_t _CC_append_number(struct __lk_invoke_t *, lk_var_t vv, double val)
 {
 	if (vv != 0)
 	{
@@ -256,7 +256,7 @@ lk_var_t _CC_append_number(struct __lk_invoke_t *_lk, lk_var_t vv, double val)
 	else return 0;
 }
 
-lk_var_t _CC_append_string(struct __lk_invoke_t *_lk, lk_var_t vv, const char *str)
+lk_var_t _CC_append_string(struct __lk_invoke_t *, lk_var_t vv, const char *str)
 {
 	if (vv != 0)
 	{
@@ -267,7 +267,7 @@ lk_var_t _CC_append_string(struct __lk_invoke_t *_lk, lk_var_t vv, const char *s
 	else return 0;
 }
 
-lk_var_t _CC_append_null(struct __lk_invoke_t *_lk, lk_var_t vv)
+lk_var_t _CC_append_null(struct __lk_invoke_t *, lk_var_t vv)
 {
 	if (vv != 0)
 	{
@@ -278,12 +278,12 @@ lk_var_t _CC_append_null(struct __lk_invoke_t *_lk, lk_var_t vv)
 	else return 0;
 }
 
-void _CC_make_tab(struct __lk_invoke_t *_lk, lk_var_t vv)
+void _CC_make_tab(struct __lk_invoke_t *, lk_var_t vv)
 {
 	if (vv != 0) ((lk::vardata_t*)vv)->empty_hash();
 }
 
-lk_var_t _CC_tab_set_number(struct __lk_invoke_t *_lk, lk_var_t vv, const char *key, double val)
+lk_var_t _CC_tab_set_number(struct __lk_invoke_t *, lk_var_t vv, const char *key, double val)
 {
 	if (vv != 0)
 	{
@@ -294,7 +294,7 @@ lk_var_t _CC_tab_set_number(struct __lk_invoke_t *_lk, lk_var_t vv, const char *
 	else return 0;
 }
 
-lk_var_t _CC_tab_set_string(struct __lk_invoke_t *_lk, lk_var_t vv, const char *key, const char *str)
+lk_var_t _CC_tab_set_string(struct __lk_invoke_t *, lk_var_t vv, const char *key, const char *str)
 {
 	if (vv != 0)
 	{
@@ -305,7 +305,7 @@ lk_var_t _CC_tab_set_string(struct __lk_invoke_t *_lk, lk_var_t vv, const char *
 	else return 0;
 }
 
-lk_var_t _CC_tab_set_null(struct __lk_invoke_t *_lk, lk_var_t vv, const char *key)
+lk_var_t _CC_tab_set_null(struct __lk_invoke_t *, lk_var_t vv, const char *key)
 {
 	if (vv != 0)
 	{
