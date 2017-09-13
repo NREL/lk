@@ -46,6 +46,7 @@ public:
     std::cout<<"Do Processing On loaded Data"<<std::endl;
   }
 };
+/*
 int main()
 {
    Application app;
@@ -55,3 +56,4 @@ int main()
    thread_1.join();
    return 0;
 }
+*/
