@@ -1126,7 +1126,15 @@ static void _ostype( lk::invoke_t &cxt )
 #endif
 
 	cxt.result().assign(os);
-				}
+}
+
+static void _async( lk::invoke_t &cxt )
+{
+	LK_DOC("async", "For running funciton in a thread like std::async.", "(string:function, string: args):string");
+	// wrapper around std::async to run functions with arrgument
+	// will use std::promise, std::future in combination with std::package or std::async
+
+}
 
 class vardata_compare
 {
@@ -2327,6 +2335,16 @@ void _sql_error(lk::invoke_t &cxt)
 		cxt.result().assign(lk_string(sqlite3_errmsg(obj->db)));
 	}
 }
+
+lk::fcall_t* lk::stdlib_thread()
+{
+	static const lk::fcall_t vec[] = {
+		_async,
+		0 };
+
+	return (fcall_t*)vec;
+}
+
 
 lk::fcall_t* lk::stdlib_sysio()
 {

@@ -21,5 +21,11 @@
     <ClCompile Include="Part10.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Part8.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Part9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

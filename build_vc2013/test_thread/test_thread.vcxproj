@@ -116,7 +116,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Part10.cpp" />
+    <ClCompile Include="Part8.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="Part9.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
