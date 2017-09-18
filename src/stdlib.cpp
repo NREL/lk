@@ -30,6 +30,10 @@
 #include <algorithm>
 #include <limits>
 #include <climits>
+// threading
+#include <thread>
+#include <future>
+
 #include <math.h>
 #include <float.h>
 #include <string.h>
@@ -1133,7 +1137,27 @@ static void _async( lk::invoke_t &cxt )
 	LK_DOC("async", "For running funciton in a thread like std::async.", "(string:function, string: args):string");
 	// wrapper around std::async to run functions with arrgument
 	// will use std::promise, std::future in combination with std::package or std::async
+	lk_string func = cxt.arg(0).as_string();
+	if (cxt.arg(1).deref().type() == lk::vardata_t::VECTOR)
+	{
+		int num_threads = cxt.arg(1).length();
+		std::vector<std::thread> th; 
+		// create thread for each argument
+		// create lk bytecode for function named in first argument
+		// create vm for each argument with byte code for function
+		// call each function with each argument to async
+		// run each vm in a separate thread
+		// wait until all finished
+		// get results
+		// assign to list
+		std::vector<double> list; // needs to be more generic to hold thread return values (table?)
+		cxt.result().empty_vector();
+		for (size_t i = 0; i < list.size(); i++)
+			cxt.result().vec_append(list[i]);
 
+	}
+	else
+		cxt.result().assign("No input vector specified");
 }
 
 class vardata_compare
