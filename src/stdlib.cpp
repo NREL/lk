@@ -39,6 +39,7 @@
 #include <string.h>
 
 #include <lk/stdlib.h>
+#include <lk/vm.h>
 
 #include "sqlite3.h"
 
@@ -1134,16 +1135,74 @@ static void _ostype( lk::invoke_t &cxt )
 
 static void _async( lk::invoke_t &cxt )
 {
-	LK_DOC("async", "For running funciton in a thread like std::async.", "(string:function, string: args):string");
+	LK_DOC("async", "For running function in a thread like std::async.", "(string:lk code to run in separate thread, string: args corresponding to each threaded function call):string");
 	// wrapper around std::async to run functions with arrgument
 	// will use std::promise, std::future in combination with std::package or std::async
-	lk_string func = cxt.arg(0).as_string();
+	//lk_string func_name = cxt.arg(0).as_string();
+	lk_string  fn = cxt.arg(0).as_string();
 	if (cxt.arg(1).deref().type() == lk::vardata_t::VECTOR)
 	{
 		int num_threads = cxt.arg(1).length();
-		std::vector<std::thread> th; 
+		std::vector<std::thread> ths; 
+		std::vector<lk::env_t> envs;
+		std::vector<lk::vm> vms;
 		// create thread for each argument
+		// load file, initialize vm with env and codegen parsing
+		/* for each from wex lkscript
+			wxBusyInfo info("Compiling script...", this);
+	wxYield();
+
+	lk::input_string p(GetText());
+	lk::parser parse(p);
+	if (!m_workDir.IsEmpty() && wxDirExists(m_workDir))
+		parse.add_search_path(m_workDir);
+
+	std::auto_ptr<lk::node_t> tree(parse.script());
+
+	int i = 0;
+	while (i < parse.error_count())
+		OnOutput(wxString(parse.error(i++)) + "\n");
+
+	if (parse.token() != lk::lexer::END)
+		OnOutput("parsing did not reach end of input\n");
+
+	if (parse.error_count() > 0 || parse.token() != lk::lexer::END)
+		return false;
+
+	m_env->clear_vars();
+	m_env->clear_objs();
+
+	lk::codegen cg;
+	if (cg.generate(tree.get()))
+	{
+		m_assemblyText.Clear();
+		wxString bcText;
+		cg.textout(m_assemblyText, bcText);
+
+		cg.get(m_bc);
+		m_vm.load(&m_bc);
+		m_vm.initialize(m_env);
+		return true;
+	}
+	else
+	{
+		OnOutput("error in code generation: " + cg.error() + "\n");
+		return false;
+	}
+
+	run 
+	 success = m_vm.run(lk::vm::NORMAL);
+	 if not success
+	 "Error: " + m_vm.error()
+	 success or vm.error() will be future and promise return value or table of solutions
+
+		*/
+		for (int i=0; i< num_threads; i++)
+		{
+			envs.push_back(lk::env_t(cxt.env()));
+		}
 		// create lk bytecode for function named in first argument
+		//lk::fcallinfo_t *f = cxt.env()->lookup_func(func_name);
 		// create vm for each argument with byte code for function
 		// call each function with each argument to async
 		// run each vm in a separate thread
