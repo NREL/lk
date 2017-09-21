@@ -39,7 +39,10 @@
 #include <string.h>
 
 #include <lk/stdlib.h>
+// threading
 #include <lk/vm.h>
+#include <lk/parse.h>
+#include <lk/codegen.h>
 
 #include "sqlite3.h"
 
@@ -1135,88 +1138,109 @@ static void _ostype( lk::invoke_t &cxt )
 
 static void _async( lk::invoke_t &cxt )
 {
-	LK_DOC("async", "For running function in a thread like std::async.", "(string:lk code to run in separate thread, string: args corresponding to each threaded function call):string");
-	// wrapper around std::async to run functions with arrgument
+	LK_DOC("async", "For running function in a thread like std::async.", "(string: file containg lk code to run in separate thread, string: variable to set for each separate thread, vector: arguments for variable for each thread):vector");
+	// wrapper around std::async to run functions with argument
 	// will use std::promise, std::future in combination with std::package or std::async
 	//lk_string func_name = cxt.arg(0).as_string();
-	lk_string  fn = cxt.arg(0).as_string();
-	if (cxt.arg(1).deref().type() == lk::vardata_t::VECTOR)
-	{
-		int num_threads = cxt.arg(1).length();
-		std::vector<std::thread> ths; 
-		std::vector<lk::env_t> envs;
-		std::vector<lk::vm> vms;
-		// create thread for each argument
-		// load file, initialize vm with env and codegen parsing
-		/* for each from wex lkscript
-			wxBusyInfo info("Compiling script...", this);
-	wxYield();
-
-	lk::input_string p(GetText());
-	lk::parser parse(p);
-	if (!m_workDir.IsEmpty() && wxDirExists(m_workDir))
-		parse.add_search_path(m_workDir);
-
-	std::auto_ptr<lk::node_t> tree(parse.script());
-
-	int i = 0;
-	while (i < parse.error_count())
-		OnOutput(wxString(parse.error(i++)) + "\n");
-
-	if (parse.token() != lk::lexer::END)
-		OnOutput("parsing did not reach end of input\n");
-
-	if (parse.error_count() > 0 || parse.token() != lk::lexer::END)
-		return false;
-
-	m_env->clear_vars();
-	m_env->clear_objs();
-
-	lk::codegen cg;
-	if (cg.generate(tree.get()))
-	{
-		m_assemblyText.Clear();
-		wxString bcText;
-		cg.textout(m_assemblyText, bcText);
-
-		cg.get(m_bc);
-		m_vm.load(&m_bc);
-		m_vm.initialize(m_env);
-		return true;
-	}
+	lk_string fn = cxt.arg(0).as_string();
+	FILE *fp = fopen(fn.c_str(), "r");
+	if (!fp)
+		cxt.result().assign("No valid input file specified");
 	else
 	{
-		OnOutput("error in code generation: " + cg.error() + "\n");
-		return false;
-	}
+		lk_string file_contents;
+		char buf[1024];
+		while (fgets(buf, 1023, fp) != 0)
+			file_contents += buf;
 
-	run 
-	 success = m_vm.run(lk::vm::NORMAL);
-	 if not success
-	 "Error: " + m_vm.error()
-	 success or vm.error() will be future and promise return value or table of solutions
-
-		*/
-		for (int i=0; i< num_threads; i++)
+		fclose(fp);
+		// testing with vector and then will move to table or other files as inputs.
+		if (cxt.arg(2).deref().type() == lk::vardata_t::VECTOR) 
 		{
-			envs.push_back(lk::env_t(cxt.env()));
-		}
-		// create lk bytecode for function named in first argument
-		//lk::fcallinfo_t *f = cxt.env()->lookup_func(func_name);
-		// create vm for each argument with byte code for function
-		// call each function with each argument to async
-		// run each vm in a separate thread
-		// wait until all finished
-		// get results
-		// assign to list
-		std::vector<double> list; // needs to be more generic to hold thread return values (table?)
-		cxt.result().empty_vector();
-		for (size_t i = 0; i < list.size(); i++)
-			cxt.result().vec_append(list[i]);
+			int num_threads = cxt.arg(2).length();
+			cxt.result().empty_vector();
+			std::vector<lk::env_t> envs;
+			std::vector<lk::vm> vms;
+			// create thread for each argument
+			// load file, initialize vm with env and codegen parsing
+			// for each from wex lkscript
+			wxYield();
+			// create lk bytecode for function named in first argument
+			//lk::fcallinfo_t *f = cxt.env()->lookup_func(func_name);
+			// create vm for each argument with byte code for function
+			// call each function with each argument to async
+			// run each vm in a separate thread
+			// wait until all finished
+			// get results
+			// assign to list
+			for (int i_thread = 0; i_thread< num_threads;i_thread++)
+			{
+				lk::input_string p(cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i_thread).as_string() + "\n" + file_contents);
+				lk::parser parse(p);
+	//			if (!m_workDir.IsEmpty() && wxDirExists(m_workDir))
+	//				parse.add_search_path(m_workDir);
 
+				std::auto_ptr<lk::node_t> tree(parse.script());
+
+				int i = 0;
+				while (i < parse.error_count())
+					cxt.result().vec_append(lk_string(parse.error(i++)) + "\n");
+
+				if (parse.token() != lk::lexer::END)
+					cxt.result().vec_append("parsing did not reach end of input\n");
+
+				if (parse.error_count() > 0 || parse.token() != lk::lexer::END)
+					continue;
+
+				envs.push_back(lk::env_t());
+				envs[i_thread].clear_vars();
+				envs[i_thread].clear_objs();
+
+				vms.push_back(lk::vm());
+
+				lk::bytecode bc;
+				lk::codegen cg;
+				if (cg.generate(tree.get()))
+				{
+
+					cg.get(bc);
+					vms[i_thread].load(&bc);
+					vms[i_thread].initialize(&envs[i_thread]);
+				}
+				else
+				{
+					cxt.result().vec_append("error in code generation: " + cg.error() + "\n");
+					continue;
+				}
+
+			}
+			// now each vm is initialized and loaded
+//			run in separate threads with future and promise
+//			std::vector<std::thread> ths; 
+//			std::vector< std::packaged_task<bool (int)> > tasks;
+			std::vector< std::future<bool> > runs;
+			for (int i_thread=0; i_thread < vms.size(); i_thread++)
+			{
+//				tasks.push_back( std::packaged_task<bool (int)> ());
+				runs.push_back( std::async(std::launch::async, &(lk::vm::run),  &(vms[i_thread]), lk::vm::NORMAL) );
+//				ths.push_back( std::thread(std::move(tasks[i_thread])));
+			}
+
+			for (int i_thread=0; i_thread < vms.size(); i_thread++)
+			{
+				if (!runs[i_thread].get())
+					cxt.result().vec_append("error running input: " + std::to_string(i_thread) + "\n");
+				else
+					cxt.result().vec_append(envs[i_thread].lookup("lk_result", true)->as_string());
+			}
+// assumes that "result" is set in script in file to desired value that can be a string			
+// extend to table
+
+		
+		}
+		else
+			cxt.result().assign("No input vector specified");
 	}
-	else
-		cxt.result().assign("No input vector specified");
 }
 
 class vardata_compare
