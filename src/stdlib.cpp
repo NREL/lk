@@ -1161,6 +1161,11 @@ static void _async( lk::invoke_t &cxt )
 			cxt.result().empty_vector();
 			std::vector<lk::env_t> envs;
 			std::vector<lk::vm> vms;
+			for (int i_thread = 0; i_thread< num_threads;i_thread++)
+			{
+				envs.push_back(lk::env_t());
+				vms.push_back(lk::vm());
+			}
 			// create thread for each argument
 			// load file, initialize vm with env and codegen parsing
 			// for each from wex lkscript
@@ -1175,7 +1180,19 @@ static void _async( lk::invoke_t &cxt )
 			// assign to list
 			for (int i_thread = 0; i_thread< num_threads;i_thread++)
 			{
-				lk::input_string p(cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i_thread).as_string() + "\n" + file_contents);
+				lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i_thread).as_string() + ";\n" + file_contents;
+				lk::input_string p(lks);
+
+	/*			// test lk script generated 
+	FILE *fp_test = fopen("C:/Projects/SAM/Documentation/lk/Parallelization/test/async_thread_generated.lk", "w");
+	if (!fp)
+		cxt.result().assign("No valid input file specified");
+	else
+	{
+		fputs((const char*)lks.c_str(), fp);
+		fclose(fp);
+	}
+	*/
 				lk::parser parse(p);
 	//			if (!m_workDir.IsEmpty() && wxDirExists(m_workDir))
 	//				parse.add_search_path(m_workDir);
@@ -1192,11 +1209,11 @@ static void _async( lk::invoke_t &cxt )
 				if (parse.error_count() > 0 || parse.token() != lk::lexer::END)
 					continue;
 
-				envs.push_back(lk::env_t());
-				envs[i_thread].clear_vars();
-				envs[i_thread].clear_objs();
-
-				vms.push_back(lk::vm());
+	//			envs.push_back(lk::env_t());
+	//			envs[i_thread].clear_vars();
+	//			envs[i_thread].clear_objs();
+	//			lk::vm vm = lk::vm();
+	//			vms.push_back(vm);
 
 				lk::bytecode bc;
 				lk::codegen cg;
