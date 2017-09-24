@@ -38,7 +38,7 @@ int main()
  
  
 	//Fetch Data from File
-	std::string fileData = fetchDataFromFile("Data");
+//	std::string fileData = fetchDataFromFile("Data");
  
 	//Fetch Data from DB
 	// Will block till data is available in future<std::string> object.
@@ -54,7 +54,7 @@ int main()
 	std::cout << "Total Time Taken = " << diff << " Seconds" << std::endl;
  
 	//Combine The Data
-	std::string data = dbData + " :: " + dbData2 + " :: " + fileData;
+	std::string data = dbData + " :: " + dbData2 ;//+ " :: " + fileData;
  
 	//Printing the combined Data
 	std::cout << "Data = " << data << std::endl;
