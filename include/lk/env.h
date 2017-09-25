@@ -33,16 +33,26 @@
 #include <lk/absyn.h>
 #include <lk/invoke.h>
 
+/// create and associate a doc_t from within cxt, an invoke_t, if cxt doesn't yet have one
 #define LK_DOC(  fn, desc, sig ) if (cxt.doc_mode()) { cxt.document( lk::doc_t(fn , "", desc, sig ) ); return; }
 #define LK_DOC1( fn, notes, desc1, sig1 ) if (cxt.doc_mode()) { cxt.document( lk::doc_t(fn , notes, desc1, sig1 )); return; }
 #define LK_DOC2( fn, notes, desc1, sig1, desc2, sig2 ) if (cxt.doc_mode()) { cxt.document( lk::doc_t(fn , notes, desc1, sig1, desc2, sig2 )); return; }
 #define LK_DOC3( fn, notes, desc1, sig1, desc2, sig2, desc3, sig3 ) if (cxt.doc_mode()) { cxt.document( lk::doc_t(fn , notes, desc1, sig1, desc2, sig2, desc3, sig3 )); return; }
 
+
 namespace lk {
 	class vardata_t;
 	struct fcallinfo_t;
 	typedef unordered_map< lk_string, vardata_t*, lk_string_hash, lk_string_equal > varhash_t;
-
+	
+/**
+* \class error_t
+*
+* 
+*
+*
+*/
+	
 	class error_t : public std::exception
 	{
 	public:
@@ -66,37 +76,47 @@ namespace lk {
 		virtual const char *what() const throw (){ return text.c_str(); }
 	};
 
+/**
+* \class vardata_t
+*
+* Vardata_t form the execution stack of the vm: stores identifiers and expressions, 
+* arguments and results for function invocations, and operations.
+*/
+
 	class vardata_t
 	{
 	private:
-		// m_type stores both data type and flag information
-		// lower four bits are data type (16 possible values)
-		// upper four bits are boolean flags (CONSTVAL, etc)
 		unsigned char m_type;
+		/** \union m_u
+		* 
+		* m_type stores both data type and flag information. 
+		* Lower four bits are data type (16 possible values)
+		* Upper four bits are boolean flags (CONSTVAL, etc)
+		*/
 		union {
 			void *p;
 			double v;
 		} m_u;
 
-		void set_type(unsigned char ty);
-		void assert_modify() throw(error_t);
-
+		void set_type( unsigned char ty );
+		void assert_modify() throw( error_t );
+		
 	public:
-		// data types
+		/// Data Types
 		static const unsigned char NULLVAL = 1;
 		static const unsigned char REFERENCE = 2;
 		static const unsigned char NUMBER = 3;
 		static const unsigned char STRING = 4;
 		static const unsigned char VECTOR = 5;
 		static const unsigned char HASH = 6;
-		static const unsigned char FUNCTION = 7;
-		static const unsigned char EXTFUNC = 8;
-		static const unsigned char INTFUNC = 9;
+		static const unsigned char FUNCTION = 7;	///< code expression pointer
+		static const unsigned char EXTFUNC = 8;		///< external function pointer
+		static const unsigned char INTFUNC = 9;		///< internal function pointer
 
 		static const unsigned char TYPEMASK = 0x0F;
 		static const unsigned char FLAGMASK = 0xF0;
 
-		// flags
+		/// Flags
 		static const unsigned char ASSIGNED = 1;
 		static const unsigned char CONSTVAL = 2;
 		static const unsigned char GLOBALVAL = 3;
@@ -118,11 +138,11 @@ namespace lk {
 		lk_string as_string() const;
 		double as_number() const;
 
-		bool equals(vardata_t &rhs) const;
-		bool lessthan(vardata_t &rhs) const;
+		bool equals( vardata_t &rhs ) const;
+		bool lessthan( vardata_t &rhs ) const;
 
-		void nullify(); // only function that override const-ness
-
+		void nullify(); ///< only function that override const-ness
+		
 		void deep_localize();
 
 		bool copy(vardata_t &rhs) throw(error_t);
@@ -131,7 +151,7 @@ namespace lk {
 			copy(const_cast<vardata_t&>(rhs));
 			return *this;
 		}
-
+		/// return referenced vardata_t
 		inline vardata_t &deref() const throw (error_t) {
 			vardata_t *p = const_cast<vardata_t*>(this);
 			while (p->type() == REFERENCE) {
@@ -142,44 +162,54 @@ namespace lk {
 			if (!p) throw error_t("dereference resulted in null target");
 			return *p;
 		}
+				
+		void assign( double d ) throw( error_t );
+		void assign( const char *s ) throw( error_t );
+		void assign( const lk_string &s ) throw( error_t );
+		void empty_vector() throw( error_t );
+		void empty_hash() throw( error_t );
+		void assign( const lk_string &key, vardata_t *val ) throw( error_t );
+		void unassign( const lk_string &key ) throw( error_t );
+		void assign( expr_t *func ) throw( error_t ); ///< does NOT take ownership (expr_t must be deleted by the environment
+		void assign( vardata_t *ref ) throw( error_t ); ///< makes this vardata_t a reference to the object 'ref'
 
-		void assign(double d) throw(error_t);
-		void assign(const char *s) throw(error_t);
-		void assign(const lk_string &s) throw(error_t);
-		void empty_vector() throw(error_t);
-		void empty_hash() throw(error_t);
-		void assign(const lk_string &key, vardata_t *val) throw(error_t);
-		void unassign(const lk_string &key) throw(error_t);
-		void assign(expr_t *func) throw(error_t); // does NOT take ownership (expr_t must be deleted by the environment
-		void assign(vardata_t *ref) throw(error_t); // makes this vardata_t a reference to the object 'ref'
+		void assign_fcall( fcallinfo_t *fci ) throw (error_t);
+		void assign_faddr( size_t bcip ) throw(error_t);
 
-		void assign_fcall(fcallinfo_t *fci) throw (error_t);
-		void assign_faddr(size_t bcip) throw(error_t);
-
-		void resize(size_t n) throw(error_t);
+		void resize( size_t n ) throw( error_t );
 
 		vardata_t *ref() const;
 		double num() const throw(error_t);
 		lk_string str() const throw(error_t);
 		expr_t *func() const throw(error_t);
-		vardata_t *index(size_t idx) const throw(error_t); // returned variable inherits const-ness of parent
-		size_t length() const;
-		vardata_t *lookup(const lk_string &key) const throw(error_t); // returned variable inherits const-ness of parent
+		vardata_t *index(size_t idx) const throw(error_t); ///< returned variable inherits const-ness of parent
+		size_t length() const ;
+		vardata_t *lookup( const lk_string &key ) const throw(error_t); ///< returned variable inherits const-ness of parent
 		fcallinfo_t *fcall() const throw(error_t);
 		size_t faddr() const throw(error_t);
 
 		std::vector<vardata_t> *vec() const throw(error_t);
-		void vec_append(double d) throw(error_t);
-		void vec_append(const lk_string &s) throw(error_t);
+		void vec_append( double d ) throw(error_t);
+		void vec_append( const lk_string &s ) throw(error_t);
 
 		varhash_t *hash() const throw(error_t);
-		void hash_item(const lk_string &key, double d) throw(error_t);
-		void hash_item(const lk_string &key, const lk_string &s) throw(error_t);
-		void hash_item(const lk_string &key, const vardata_t &v) throw(error_t);
-		vardata_t &hash_item(const lk_string &key) throw(error_t);
-	};
+		void hash_item( const lk_string &key, double d ) throw(error_t);
+		void hash_item( const lk_string &key, const lk_string &s ) throw(error_t);
+		void hash_item( const lk_string &key, const vardata_t &v ) throw(error_t);
+		vardata_t &hash_item( const lk_string &key ) throw(error_t);
 
+	};
+	
 	class env_t;
+
+/**
+* \class objref_t
+*
+* 
+*
+*
+*/
+
 	class objref_t
 	{
 	private:
@@ -192,11 +222,18 @@ namespace lk {
 		env_t *get_env() { return m_env; }
 		virtual lk_string type_name() = 0;
 	};
-
+	
 	class invoke_t;
 
-	typedef void(*fcall_t)(lk::invoke_t&);
+	typedef void (*fcall_t)( lk::invoke_t& );
 
+/**
+* \struct fcallinfo_t
+*
+* links together LK function name f, user data and lk_invokable
+*
+*
+*/
 	struct fcallinfo_t {
 		fcall_t f;
 		lk_invokable f_ext;
@@ -205,6 +242,15 @@ namespace lk {
 
 	typedef unordered_map< lk_string, fcallinfo_t, lk_string_hash, lk_string_equal > funchash_t;
 
+
+/** Documents LK functions.
+ * \class doc_t
+ *
+ * Records function name, descriptions such as "Input text from user", input:output 
+ * sig such as "(none):string", and number of pairs of desc/sig. Used in function window
+ * in LK scripting window.
+ *
+ */
 	class doc_t
 	{
 		friend class invoke_t;
@@ -254,6 +300,13 @@ namespace lk {
 		bool m_ok;
 	};
 
+/**
+ * \class invoke_t
+ *
+ * Used for input and output to an associated LK function: stores arguments and results in vardata_t and logs errors
+ *
+ */
+
 	class invoke_t
 	{
 		friend class doc_t;
@@ -280,19 +333,36 @@ namespace lk {
 
 		std::vector< vardata_t > &arg_list() { return m_argList; }
 		size_t arg_count() { return m_argList.size(); }
-		vardata_t &arg(size_t idx) throw(error_t) {
+
+		/// returns the values of user-defined inputs for use as arguments to functions
+		vardata_t &arg(size_t idx) throw( error_t ) {
 			if (idx < m_argList.size())	return m_argList[idx].deref();
-			else throw error_t("invalid access to function argument %d, only %d given", idx, m_argList.size());
+			else throw error_t( "invalid access to function argument %d, only %d given", idx, m_argList.size());
 		}
 
 		void error(const lk_string &text) { m_error = text; m_hasError = true; }
 		lk_string error() { return m_error; }
 		bool has_error() { return m_hasError; }
 	};
+	
+/**
+ * \env_t
+ *
+ * Stores LK functions in m_funcHash[function name] = fcallinfo
+ *
+ */
 
 	class env_t
 	{
-	public:
+	public:	
+
+/**
+* \struct dynlib_t
+*
+* 
+*
+*
+*/
 		struct dynlib_t
 		{
 			lk_string path;
@@ -344,17 +414,19 @@ namespace lk {
 		fcallinfo_t *lookup_func(const lk_string &name);
 		std::vector<lk_string> list_funcs();
 
-		size_t insert_object(objref_t *o);
-		bool destroy_object(objref_t *o);
-		objref_t *query_object(size_t ref);
+		size_t insert_object( objref_t *o );
+		bool destroy_object( objref_t *o );
+		objref_t *query_object( size_t ref );
 
-		void call(const lk_string &name,
-			std::vector< vardata_t > &args,
-			vardata_t &result) throw(error_t);
+		void call( const lk_string &name,
+				   std::vector< vardata_t > &args,
+				   vardata_t &result ) throw( error_t );
+		
 	};
+	
+	/// implemented in lk_invoke.cpp for external dll calls
+	void external_call( lk_invokable p, lk::invoke_t &cxt );
 
-	// implemented in lk_invoke.cpp for external dll calls
-	void external_call(lk_invokable p, lk::invoke_t &cxt);
 }; // namespace lk
 
 #endif

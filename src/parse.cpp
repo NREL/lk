@@ -28,8 +28,9 @@
 
 #include <lk/parse.h>
 
-lk::parser::parser(input_base &input, const lk_string &name)
-	: lex(input)
+/// initializes a parser and lexer; stores reference to input, initializes values and determines first token type
+lk::parser::parser( input_base &input, const lk_string &name )
+	: lex( input )
 {
 	m_haltFlag = false;
 	m_lastLine = lex.line();
@@ -105,6 +106,7 @@ bool lk::parser::match(int t)
 	return true;
 }
 
+/// creates a source data position marker at the current line and returns it
 lk::srcpos_t lk::parser::srcpos()
 {
 	return srcpos_t(m_name, line(), m_lastStmt);
@@ -151,6 +153,8 @@ void lk::parser::error(const lk_string &s)
 	m_errorList.push_back(e);
 }
 
+
+/// entry point for parsing a lk script, returns root node of tree
 lk::node_t *lk::parser::script()
 {
 	list_t *head = 0;
