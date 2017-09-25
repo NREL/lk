@@ -497,7 +497,7 @@ int lk::lexer::next()
 const char *lk::lexer::tokstr(int t)
 {
 	int token = t;
-	switch(t)
+	switch(token)
 	{
 	case END: return "<end>";
 	case IDENTIFIER: return "<identifer>";
