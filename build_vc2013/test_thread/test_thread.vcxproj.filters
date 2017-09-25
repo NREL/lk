@@ -27,5 +27,8 @@
     <ClCompile Include="Part9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Part9_vector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

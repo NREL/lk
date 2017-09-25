@@ -117,6 +117,7 @@
   <ItemGroup>
     <ClCompile Include="Part10.cpp" />
     <ClCompile Include="Part8.cpp" />
+    <ClCompile Include="Part9_vector.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="Part9.cpp" />
   </ItemGroup>
