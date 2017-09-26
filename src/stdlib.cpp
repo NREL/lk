@@ -1136,6 +1136,78 @@ static void _ostype( lk::invoke_t &cxt )
 	cxt.result().assign(os);
 }
 
+
+
+// async thread function
+lk_string async_thread( lk_string &lks)
+{
+	lk_string ret_str = "";
+	lk::input_string p(lks);
+	lk::parser parse(p);
+	std::auto_ptr<lk::node_t> tree(parse.script());
+	int i = 0;
+	while (i < parse.error_count())
+		ret_str += (lk_string(parse.error(i++)) + "\n");
+
+	if (parse.token() != lk::lexer::END)
+		ret_str += ("parsing did not reach end of input\n");
+
+	if (ret_str.Len() > 0) return ret_str;
+	
+	lk::env_t myenv;
+	myenv.register_funcs(lk::stdlib_basic());
+	myenv.register_funcs(lk::stdlib_sysio());
+	myenv.register_funcs(lk::stdlib_math());
+	myenv.register_funcs(lk::stdlib_string());
+	lk::bytecode bc;
+	lk::codegen cg;
+	lk::vm myvm;
+	if (cg.generate(tree.get()))
+	{
+		cg.get(bc);
+		myvm.load(&bc);
+		myvm.initialize(&myenv);
+
+		bool ok1 = myvm.run();
+
+		if (ok1)
+		{
+			lk::vardata_t *vd = myenv.lookup("lk_result", true);
+			if (vd)
+			{
+				ret_str += (vd->as_string());
+			}
+			else
+			{
+				size_t nfrm;
+				lk::vardata_t *v;
+				lk::vm::frame **frames = myvm.get_frames(&nfrm);
+				bool found = false;
+				for (size_t i = 0; i < nfrm; i++)
+				{
+					lk::vm::frame &F = *frames[nfrm - i - 1];
+					if ((v = F.env.lookup("lk_result", true)) != NULL)
+					{
+						ret_str += (v->as_string());
+						found=true;
+						break;
+					}
+				}
+				if (!found)
+					ret_str += ("lk_result lookup error");
+			}
+		}
+		else
+			ret_str += ("async failed for first arg");
+	}
+	else
+	{
+		ret_str += ("error in code generation: " + cg.error() + "\n");
+	}
+	return ret_str;
+}
+
+
 static void _async( lk::invoke_t &cxt )
 {
 	LK_DOC("async", "For running function in a thread like std::async.", "(string: file containg lk code to run in separate thread, string: variable to set for each separate thread, vector: arguments for variable for each thread):vector");
@@ -1152,108 +1224,26 @@ static void _async( lk::invoke_t &cxt )
 		char buf[1024];
 		while (fgets(buf, 1023, fp) != 0)
 			file_contents += buf;
-
 		fclose(fp);
+
 		// testing with vector and then will move to table or other files as inputs.
 		if (cxt.arg(2).deref().type() == lk::vardata_t::VECTOR) 
 		{
 			int num_threads = cxt.arg(2).length();
 			cxt.result().empty_vector();
-
-			lk::env_t myenv;
-			myenv.register_funcs(lk::stdlib_basic());
-			myenv.register_funcs(lk::stdlib_sysio());
-			myenv.register_funcs(lk::stdlib_math());
-			myenv.register_funcs(lk::stdlib_string());
-			lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(0).as_string() + ";\n" + file_contents + "\n";
-			lk::input_string p(lks);
-			lk::parser parse(p);
-			std::auto_ptr<lk::node_t> tree(parse.script());
-			int i = 0;
-			while (i < parse.error_count())
-				cxt.result().vec_append(lk_string(parse.error(i++)) + "\n");
-
-			if (parse.token() != lk::lexer::END)
-				cxt.result().vec_append("parsing did not reach end of input\n");
-
-			lk::bytecode bc;
-			lk::codegen cg;
-			lk::vm myvm;
-			if (cg.generate(tree.get()))
+			std::vector< std::future<lk_string> > results;
+			for (int i = 0; i< num_threads; i++)
 			{
-				cg.get(bc);
-				myvm.load(&bc);
-				myvm.initialize(&myenv);
-
-				std::future<bool> run1 = std::async(std::launch::async, &(lk::vm::run),  &(myvm), lk::vm::NORMAL);
-				bool ok1 = run1.get();
-
-				if (ok1)
-				{
-					lk::vardata_t *vd = myenv.lookup("lk_result", true);
-					if (vd)
-					{
-						cxt.result().vec_append(vd->as_string());
-					}
-					else
-					{
-						size_t nfrm;
-						lk::vardata_t *v;
-						lk::vm::frame **frames = myvm.get_frames(&nfrm);
-						bool found = false;
-						for (size_t i = 0; i < nfrm; i++)
-						{
-							lk::vm::frame &F = *frames[nfrm - i - 1];
-							if ((v = F.env.lookup("lk_result", true)) != NULL)
-							{
-								found=true;
-								break;
-							}
-						}
-						if (found)
-							cxt.result().vec_append(v->as_string());
-						else
-							cxt.result().vec_append("lk_result lookup error");
-					}
-				}
-				else
-					cxt.result().vec_append("async failed for first arg");
+				lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i).as_string() + ";\n" + file_contents + "\n";
+				results.push_back( std::async(std::launch::async, async_thread, lks));
 			}
-			else
+	// Will block till data is available in future<std::string> object.
+			for (int i=0; i<num_threads; i++)
 			{
-				cxt.result().vec_append("error in code generation: " + cg.error() + "\n");
-//				continue;
+				cxt.result().vec_append( results[i].get());
 			}
 
-			//std::vector<lk::env_t> envs;
-			//std::vector<lk::vm> vms;
-			//for (int i_thread = 0; i_thread< num_threads;i_thread++)
-			//{
-			//	envs.push_back(lk::env_t());
-			//	envs[i_thread].register_funcs(lk::stdlib_basic());
-			//	envs[i_thread].register_funcs(lk::stdlib_sysio());
-			//	envs[i_thread].register_funcs(lk::stdlib_math());
-			//	envs[i_thread].register_funcs(lk::stdlib_string());
 
-			//	vms.push_back(lk::vm());
-			//}
-			// create thread for each argument
-			// load file, initialize vm with env and codegen parsing
-			// for each from wex lkscript
-			// wxYield();
-			// create lk bytecode for function named in first argument
-			//lk::fcallinfo_t *f = cxt.env()->lookup_func(func_name);
-			// create vm for each argument with byte code for function
-			// call each function with each argument to async
-			// run each vm in a separate thread
-			// wait until all finished
-			// get results
-			// assign to list
-			//for (int i_thread = 0; i_thread< num_threads;i_thread++)
-			//{
-			//	lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i_thread).as_string() + ";\n" + file_contents;
-			//	lk::input_string p(lks);
-				
 	/*			// test lk script generated 
 	FILE *fp_test = fopen("C:/Projects/SAM/Documentation/lk/Parallelization/test/async_thread_generated.lk", "w");
 	if (!fp)
@@ -1263,87 +1253,11 @@ static void _async( lk::invoke_t &cxt )
 		fputs((const char*)lks.c_str(), fp);
 		fclose(fp);
 	}
-	
-				lk::parser parse(p);
-	//			if (!m_workDir.IsEmpty() && wxDirExists(m_workDir))
-	//				parse.add_search_path(m_workDir);
-
-				std::auto_ptr<lk::node_t> tree(parse.script());
-
-				int i = 0;
-				while (i < parse.error_count())
-					cxt.result().vec_append(lk_string(parse.error(i++)) + "\n");
-
-				if (parse.token() != lk::lexer::END)
-					cxt.result().vec_append("parsing did not reach end of input\n");
-
-				if (parse.error_count() > 0 || parse.token() != lk::lexer::END)
-					continue;
-
-	//			envs.push_back(lk::env_t());
-	//			envs[i_thread].clear_vars();
-	//			envs[i_thread].clear_objs();
-	//			lk::vm vm = lk::vm();
-	//			vms.push_back(vm);
-
-				lk::bytecode bc;
-				lk::codegen cg;
-				if (cg.generate(tree.get()))
-				{
-
-					cg.get(bc);
-					vms[i_thread].load(&bc);
-					vms[i_thread].initialize(&envs[i_thread]);
-				}
-				else
-				{
-					cxt.result().vec_append("error in code generation: " + cg.error() + "\n");
-					continue;
-				}
-
-			}
-			// now each vm is initialized and loaded
-//			run in separate threads with future and promise
-//			std::vector<std::thread> ths; 
-//			std::vector< std::packaged_task<bool (int)> > tasks;
-			/*
-			std::vector< std::future<bool> > runs;
-			for (int i_thread=0; i_thread < vms.size(); i_thread++)
-			{
-//				tasks.push_back( std::packaged_task<bool (int)> ());
-				runs.push_back( std::async(std::launch::async, &(lk::vm::run),  &(vms[i_thread]), lk::vm::NORMAL) );
-//				ths.push_back( std::thread(std::move(tasks[i_thread])));
-			}
-
-			bool ok =  true;
-			do
-			{
-				ok = true;
-				for (int i_thread=0; i_thread < vms.size(); i_thread++)
-					ok &= runs[i_thread].get();
-			} while (!ok );
-// assumes that "result" is set in script in file to desired value that can be a string			
-// extend to table
-		
-			std::future<bool> run1 = std::async(std::launch::async, &(lk::vm::run),  &(vms[0]), lk::vm::NORMAL);
-			std::future<bool> run2 = std::async(std::launch::async, &(lk::vm::run),  &(vms[1]), lk::vm::NORMAL);
-			std::future<bool> run3 = std::async(std::launch::async, &(lk::vm::run),  &(vms[2]), lk::vm::NORMAL);
-
-			bool ok1 = run1.get();
-			bool ok2 = run1.get();
-			bool ok3 = run1.get();
-
-			if (ok1 && ok2 && ok3)
-			{
-			for (int i_thread=0; i_thread < vms.size(); i_thread++)
-				cxt.result().vec_append(envs[i_thread].lookup("lk_result", true)->as_string());
-			}
-		*/
+	*/	
 		}
-		else
-			cxt.result().assign("No input vector specified");
 	}
 }
+
 
 class vardata_compare
 {
