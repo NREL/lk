@@ -21,7 +21,7 @@ std::string getDataFromDB2( std::string token)
 }
 
 
-int main_10()
+int main()
 {
  
 	// Create a packaged_task<> that encapsulated the callback i.e. a function
@@ -37,7 +37,7 @@ int main_10()
  
 	// Fetch the associated future<> from packaged_task<>
 	std::future<std::string> result2 = task2.get_future();
-	std::thread th2(std::move(task), "Arg2");
+	std::thread th2(std::move(task2), "Arg2");
  
 	// Join the thread. Its blocking and returns when thread is finished.
 	th.join();

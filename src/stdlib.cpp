@@ -33,16 +33,19 @@
 // threading
 #include <thread>
 #include <future>
+#include <chrono>
 
 #include <math.h>
 #include <float.h>
 #include <string.h>
 
 #include <lk/stdlib.h>
+
 // threading
 #include <lk/vm.h>
 #include <lk/parse.h>
 #include <lk/codegen.h>
+
 
 #include "sqlite3.h"
 
@@ -1138,10 +1141,17 @@ static void _ostype( lk::invoke_t &cxt )
 
 
 
+
+
 // async thread function
 lk_string async_thread( lk_string &lks)
 {
 	lk_string ret_str = "";
+
+// checking for bottlenecks
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+	lk_string parse_time, env_time, bc_time, vminit_time, vmrun_time, rt_time;
+
 	lk::input_string p(lks);
 	lk::parser parse(p);
 	std::auto_ptr<lk::node_t> tree(parse.script());
@@ -1153,25 +1163,67 @@ lk_string async_thread( lk_string &lks)
 		ret_str += ("parsing did not reach end of input\n");
 
 	if (ret_str.Len() > 0) return ret_str;
-	
+
+//
+	auto end = std::chrono::system_clock::now();
+	auto diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	parse_time = " Parse time: " + std::to_string(diff) + "ms ";
+
+//
+	start = std::chrono::system_clock::now();
+
 	lk::env_t myenv;
 	myenv.register_funcs(lk::stdlib_basic());
 	myenv.register_funcs(lk::stdlib_sysio());
 	myenv.register_funcs(lk::stdlib_math());
 	myenv.register_funcs(lk::stdlib_string());
+
+
+//
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	env_time = " Env time: " + std::to_string(diff) + "ms ";
+
+
 	lk::bytecode bc;
 	lk::codegen cg;
 	lk::vm myvm;
+
+//
+	start = std::chrono::system_clock::now();
+
 	if (cg.generate(tree.get()))
 	{
 		cg.get(bc);
+//
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	bc_time = " bytecode time: " + std::to_string(diff) + "ms ";
+
 		myvm.load(&bc);
+
+//
+	start = std::chrono::system_clock::now();
+
 		myvm.initialize(&myenv);
+//
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	vminit_time = " vm init time: " + std::to_string(diff) + "ms ";
+	start = std::chrono::system_clock::now();
 
 		bool ok1 = myvm.run();
+//
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	vmrun_time = " vm run time: " + std::to_string(diff) + "ms ";
 
 		if (ok1)
 		{
+
+//
+	start = std::chrono::system_clock::now();
+
 			lk::vardata_t *vd = myenv.lookup("lk_result", true);
 			if (vd)
 			{
@@ -1204,16 +1256,38 @@ lk_string async_thread( lk_string &lks)
 	{
 		ret_str += ("error in code generation: " + cg.error() + "\n");
 	}
+
+//
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	rt_time = " result lookup time: " + std::to_string(diff) + "ms ";
+	ret_str += parse_time + env_time + bc_time + vminit_time + vmrun_time + rt_time + "\n";
+
 	return ret_str;
 }
 
 
+// async thread function
+void async_thread_promise( lk_string &lks, std::promise<lk_string> *pobj )
+{
+	pobj->set_value(  async_thread(lks));
+}
+
+
+
+
 static void _async( lk::invoke_t &cxt )
 {
-	LK_DOC("async", "For running function in a thread like std::async.", "(string: file containg lk code to run in separate thread, string: variable to set for each separate thread, vector: arguments for variable for each thread):vector");
+	LK_DOC("async", "For running function in a thread using std::async.", "(string: file containg lk code to run in separate thread, string: variable to set for each separate thread, vector: arguments for variable for each thread):vector");
 	// wrapper around std::async to run functions with argument
 	// will use std::promise, std::future in combination with std::package or std::async
 	//lk_string func_name = cxt.arg(0).as_string();
+
+// checking for bottlenecks
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+	lk_string file_time, loop_time;
+
+
 	lk_string fn = cxt.arg(0).as_string();
 	FILE *fp = fopen(fn.c_str(), "r");
 	if (!fp)
@@ -1226,11 +1300,25 @@ static void _async( lk::invoke_t &cxt )
 			file_contents += buf;
 		fclose(fp);
 
+
+//
+	auto end = std::chrono::system_clock::now();
+	auto diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	file_time = " File time: " + std::to_string(diff) + "ms ";
+
+//
+	start = std::chrono::system_clock::now();
+
+
+//
+
 		// testing with vector and then will move to table or other files as inputs.
 		if (cxt.arg(2).deref().type() == lk::vardata_t::VECTOR) 
 		{
 			int num_threads = cxt.arg(2).length();
 			cxt.result().empty_vector();
+
+			// std::async implementation - speed up of about 5.2 for 8 threads or more
 			std::vector< std::future<lk_string> > results;
 			for (int i = 0; i< num_threads; i++)
 			{
@@ -1243,20 +1331,153 @@ static void _async( lk::invoke_t &cxt )
 				cxt.result().vec_append( results[i].get());
 			}
 
+		}
+//
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	loop_time = " loop time: " + std::to_string(diff) + "ms \n";
+	cxt.result().vec_append( file_time + loop_time);
 
-	/*			// test lk script generated 
-	FILE *fp_test = fopen("C:/Projects/SAM/Documentation/lk/Parallelization/test/async_thread_generated.lk", "w");
+	}
+}
+
+
+static void _packaged_task( lk::invoke_t &cxt )
+{
+	LK_DOC("package_task", "For running function in a thread using std::packaged_task.", "(string: file containg lk code to run in separate thread, string: variable to set for each separate thread, vector: arguments for variable for each thread):vector");
+	// wrapper around std::async to run functions with argument
+	// will use std::promise, std::future in combination with std::package or std::async
+	//lk_string func_name = cxt.arg(0).as_string();
+
+// checking for bottlenecks
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+	lk_string file_time, loop_time;
+
+
+	lk_string fn = cxt.arg(0).as_string();
+	FILE *fp = fopen(fn.c_str(), "r");
 	if (!fp)
 		cxt.result().assign("No valid input file specified");
 	else
 	{
-		fputs((const char*)lks.c_str(), fp);
+		lk_string file_contents;
+		char buf[1024];
+		while (fgets(buf, 1023, fp) != 0)
+			file_contents += buf;
 		fclose(fp);
-	}
-	*/	
+
+//
+	auto end = std::chrono::system_clock::now();
+	auto diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	file_time = " File time: " + std::to_string(diff) + "ms ";
+
+//
+	start = std::chrono::system_clock::now();
+//
+		// testing with vector and then will move to table or other files as inputs.
+		if (cxt.arg(2).deref().type() == lk::vardata_t::VECTOR) 
+		{
+			int num_threads = cxt.arg(2).length();
+			cxt.result().empty_vector();
+			// std::packaged_task inplementation
+			std::vector< std::packaged_task<lk_string (lk_string&) > > tasks;
+			std::vector< std::future<lk_string> > results;
+			std::vector< std::thread > threads;
+
+			for (int i = 0; i< num_threads; i++)
+			{
+				tasks.push_back(std::packaged_task<lk_string (lk_string&) > (async_thread));
+				results.push_back(tasks[i].get_future());
+				lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i).as_string() + ";\n" + file_contents + "\n";
+				threads.push_back(std::thread(std::move(tasks[i]), lks));
+				threads[i].detach();
+			}
+			for (int i=0; i<num_threads; i++)
+			{
+				cxt.result().vec_append( results[i].get());
+			}
 		}
+//
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	loop_time = " loop time: " + std::to_string(diff) + "ms \n";
+	cxt.result().vec_append( file_time + loop_time);
+
 	}
 }
+
+
+static void _promise( lk::invoke_t &cxt )
+{
+	LK_DOC("promise", "For running function in a thread using std::promise.", "(string: file containg lk code to run in separate thread, string: variable to set for each separate thread, vector: arguments for variable for each thread):vector");
+	// wrapper around std::async to run functions with argument
+	// will use std::promise, std::future in combination with std::package or std::async
+	//lk_string func_name = cxt.arg(0).as_string();
+
+// checking for bottlenecks
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+	lk_string file_time, loop_time;
+
+
+	lk_string fn = cxt.arg(0).as_string();
+	FILE *fp = fopen(fn.c_str(), "r");
+	if (!fp)
+		cxt.result().assign("No valid input file specified");
+	else
+	{
+		lk_string file_contents;
+		char buf[1024];
+		while (fgets(buf, 1023, fp) != 0)
+			file_contents += buf;
+		fclose(fp);
+
+
+//
+	auto end = std::chrono::system_clock::now();
+	auto diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	file_time = " File time: " + std::to_string(diff) + "ms ";
+
+//
+	start = std::chrono::system_clock::now();
+//
+
+		// testing with vector and then will move to table or other files as inputs.
+		if (cxt.arg(2).deref().type() == lk::vardata_t::VECTOR) 
+		{
+			int num_threads = cxt.arg(2).length();
+			cxt.result().empty_vector();
+
+			// std::packaged_task inplementation
+			//std::vector< std::promise<wxString> > pobjs;
+			std::vector< std::future<lk_string> > results;
+			std::vector< std::thread > threads;
+
+			for (int i = 0; i< num_threads; i++)
+			{
+				std::promise<lk_string> p;
+				results.push_back( p.get_future());
+				//pobjs.push_back(p);
+				//results.push_back(pobjs[i].get_future());
+				lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i).as_string() + ";\n" + file_contents + "\n";
+				threads.push_back(std::thread(async_thread_promise, lks, &p));
+				threads[i].detach();
+			}
+			for (int i=0; i<num_threads; i++)
+			{
+				cxt.result().vec_append( results[i].get());
+			}
+		}
+//
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	loop_time = " loop time: " + std::to_string(diff) + "ms \n";
+	cxt.result().vec_append( file_time + loop_time);
+
+	}
+}
+
+
+
 
 
 class vardata_compare
@@ -2463,6 +2684,8 @@ lk::fcall_t* lk::stdlib_thread()
 {
 	static const lk::fcall_t vec[] = {
 		_async,
+		_packaged_task,
+		_promise,
 		0 };
 
 	return (fcall_t*)vec;

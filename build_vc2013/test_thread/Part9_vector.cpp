@@ -30,7 +30,7 @@ std::string vecfetchDataFromFile(std::string recvdData)
 	return "File_" + recvdData;
 }
  
-int main()
+int main_9vec()
 {
 	std::vector< std::future<std::string> > results;
 	std::vector< std::string > dbData;	
