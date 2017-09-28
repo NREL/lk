@@ -1268,9 +1268,9 @@ lk_string async_thread( lk_string &lks)
 
 
 // async thread function
-void async_thread_promise( lk_string &lks, std::promise<lk_string> *pobj )
+void async_thread_promise( lk_string &lks, std::promise<lk_string>& pobj )
 {
-	pobj->set_value(  async_thread(lks));
+	pobj.set_value(  async_thread(lks));
 }
 
 
@@ -1344,7 +1344,7 @@ static void _async( lk::invoke_t &cxt )
 
 static void _packaged_task( lk::invoke_t &cxt )
 {
-	LK_DOC("package_task", "For running function in a thread using std::packaged_task.", "(string: file containg lk code to run in separate thread, string: variable to set for each separate thread, vector: arguments for variable for each thread):vector");
+	LK_DOC("packaged_task", "For running function in a thread using std::packaged_task.", "(string: file containg lk code to run in separate thread, string: variable to set for each separate thread, vector: arguments for variable for each thread):vector");
 	// wrapper around std::async to run functions with argument
 	// will use std::promise, std::future in combination with std::package or std::async
 	//lk_string func_name = cxt.arg(0).as_string();
@@ -1447,8 +1447,6 @@ static void _promise( lk::invoke_t &cxt )
 			int num_threads = cxt.arg(2).length();
 			cxt.result().empty_vector();
 
-			// std::packaged_task inplementation
-			//std::vector< std::promise<wxString> > pobjs;
 			std::vector< std::future<lk_string> > results;
 			std::vector< std::thread > threads;
 
@@ -1456,10 +1454,8 @@ static void _promise( lk::invoke_t &cxt )
 			{
 				std::promise<lk_string> p;
 				results.push_back( p.get_future());
-				//pobjs.push_back(p);
-				//results.push_back(pobjs[i].get_future());
 				lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i).as_string() + ";\n" + file_contents + "\n";
-				threads.push_back(std::thread(async_thread_promise, lks, &p));
+				threads.push_back(std::thread(async_thread_promise, lks, std::move(p)));
 				threads[i].detach();
 			}
 			for (int i=0; i<num_threads; i++)

@@ -21,7 +21,7 @@ std::string getDataFromDB2( std::string token)
 }
 
 
-int main()
+int main_10()
 {
  
 	// Create a packaged_task<> that encapsulated the callback i.e. a function
