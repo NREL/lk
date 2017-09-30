@@ -1141,6 +1141,173 @@ static void _ostype( lk::invoke_t &cxt )
 
 
 
+// async thread function
+lk_string async_func_thread( lk::env_t *env, lk::vardata_t &vin, lk_string &fnc)
+{
+	lk_string ret_str = "";
+
+// checking for bottlenecks
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+	lk_string  env_time,   vmrun_time, rt_time;
+
+
+	lk::env_t myenv(env);
+//	myenv.register_funcs(lk::stdlib_basic());
+//	myenv.register_funcs(lk::stdlib_sysio());
+//	myenv.register_funcs(lk::stdlib_math());
+//	myenv.register_funcs(lk::stdlib_string());
+
+
+//
+	auto end = std::chrono::system_clock::now();
+	auto diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	env_time = " Env time: " + std::to_string(diff) + "ms ";
+
+
+//	lk::bytecode bc;
+//	lk::codegen cg;
+//	lk::vm myvm;
+
+//
+	start = std::chrono::system_clock::now();
+
+//	if (cg.generate(tree.get()))
+//	{
+//		cg.get(bc);
+//
+//	end = std::chrono::system_clock::now();
+//	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+//	bc_time = " bytecode time: " + std::to_string(diff) + "ms ";
+
+//		myvm.load(&bc);
+
+//
+//	start = std::chrono::system_clock::now();
+
+//		myvm.initialize(&myenv);
+//
+//	end = std::chrono::system_clock::now();
+//	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+//	vminit_time = " vm init time: " + std::to_string(diff) + "ms ";
+//	start = std::chrono::system_clock::now();
+
+//		bool ok1 = myvm.run();
+//
+	lk::vardata_t vout;
+	std::vector<lk::vardata_t> vins;
+	vins.push_back(vin);
+	myenv.call(fnc, vins, vout);
+	
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	vmrun_time = " run time: " + std::to_string(diff) + "ms ";
+
+
+//
+	start = std::chrono::system_clock::now();
+
+	if (vout.type() == lk::vardata_t::ASSIGNED)
+	{
+		ret_str += (vout.as_string());
+	}
+	else
+	{
+		ret_str += ("error result: \n");
+	}
+
+//
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	rt_time = " result lookup time: " + std::to_string(diff) + "ms ";
+	ret_str +=  env_time + vmrun_time + rt_time + "\n";
+
+	return ret_str;
+}
+
+
+
+
+static void _async_func( lk::invoke_t &cxt )
+{
+	LK_DOC("async_func", "For running function in a thread using std::async.", "(string: lk function containg lk code to run in separate thread, string: variable to set for each separate thread, vector: arguments for variable for each thread, string: output variable to retrieve after thread finishes):vector");
+	// wrapper around std::async to run functions with argument
+	// will use std::promise, std::future in combination with std::package or std::async
+	//lk_string func_name = cxt.arg(0).as_string();
+
+// checking for bottlenecks
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+	lk_string file_time, loop_time;
+
+	cxt.user_data();
+
+	lk_string fnc = cxt.arg(0).as_string();
+
+	lk::vardata_t *v;
+	lk_string key;
+	cxt.result().empty_vector();
+
+	
+	if (cxt.env()->first(key, v))
+	{
+		cxt.result().vec_append(key + "=" + v->as_string() + "\n");
+		while (cxt.env()->next(key,v))
+		{
+			cxt.result().vec_append(key + "=" + v->as_string() + "\n");
+		}
+	}
+	else
+		cxt.result().vec_append("Empty environment\n");
+	
+
+
+
+//
+	auto end = std::chrono::system_clock::now();
+	auto diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	file_time = " List time: " + std::to_string(diff) + "ms ";
+
+//
+	start = std::chrono::system_clock::now();
+
+
+//
+
+		// testing with vector and then will move to table or other files as inputs.
+		if (cxt.arg(2).deref().type() == lk::vardata_t::VECTOR) 
+		{
+			int num_threads = cxt.arg(2).length();
+			cxt.result().empty_vector();
+
+			// std::async implementation - speed up of about 5.2 for 8 threads or more
+			std::vector< std::future<lk_string> > results;
+			std::vector< lk::vardata_t > args;
+
+			for (int i = 0; i< num_threads; i++)
+			{
+//				lk::env_t env(cxt.env());	
+				//lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i).as_string() + ";\n" + file_contents + "\n";
+//				async_func_thread( lk::env_t &env, lk::vardata_t &vin, lk_string &fnc)
+				results.push_back( std::async(std::launch::async, async_func_thread, cxt.env(), cxt.arg(2).vec()->at(i), fnc));
+			}
+	// Will block till data is available in future<std::string> object.
+			for (int i=0; i<num_threads; i++)
+			{
+				cxt.result().vec_append( results[i].get());
+			}
+
+		}
+//
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	loop_time = " loop time: " + std::to_string(diff) + "ms \n";
+	cxt.result().vec_append( file_time + loop_time);
+
+	
+
+}
+
+
+
 
 
 // async thread function
@@ -2682,6 +2849,7 @@ lk::fcall_t* lk::stdlib_thread()
 		_async,
 		_packaged_task,
 		_promise,
+		_async_func,
 		0 };
 
 	return (fcall_t*)vec;
