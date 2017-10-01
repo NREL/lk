@@ -1253,10 +1253,19 @@ static void _async_func( lk::invoke_t &cxt )
 		while (cxt.env()->next(key,v))
 		{
 			cxt.result().vec_append(key + "=" + v->as_string() + "\n");
+			if (v->type() == lk::vardata_t::INTFUNC)
+			{
+			}
 		}
 	}
 	else
 		cxt.result().vec_append("Empty environment\n");
+	
+	std::vector<lk_string> funcs = cxt.env()->list_funcs();
+	for (size_t i = 0; i< funcs.size(); i++)
+	{
+		cxt.result().vec_append(funcs[i] + "\n");
+	}
 	
 
 
@@ -1266,6 +1275,7 @@ static void _async_func( lk::invoke_t &cxt )
 	auto diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
 	file_time = " List time: " + std::to_string(diff) + "ms ";
 
+	return;
 //
 	start = std::chrono::system_clock::now();
 
