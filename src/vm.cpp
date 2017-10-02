@@ -312,7 +312,7 @@ namespace lk {
 						frame &F = *frames.back();
 						fcallinfo_t *fci = rhs_deref.fcall();
 						vardata_t &retval = stack[sp - arg - 2];
-						invoke_t cxt(&F.env, retval, fci->user_data);
+						invoke_t cxt(&F.env, retval, fci->user_data, bc);
 
 						for (size_t i = 0; i < arg; i++)
 							cxt.arg_list().push_back(stack[sp - arg - 1 + i]);

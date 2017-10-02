@@ -1142,16 +1142,16 @@ static void _ostype( lk::invoke_t &cxt )
 
 
 // async thread function
-lk_string async_func_thread( lk::env_t *env, lk::vardata_t &vin, lk_string &fnc)
+lk_string async_func_thread( lk::invoke_t *cxt, lk::vardata_t &vin, lk_string &fnc)
 {
 	lk_string ret_str = "";
 
 // checking for bottlenecks
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-	lk_string  env_time,   vmrun_time, rt_time;
+	lk_string  env_time, vminit_time,   vmrun_time, rt_time;
 
 
-	lk::env_t myenv(env);
+	lk::env_t myenv(cxt->env());
 //	myenv.register_funcs(lk::stdlib_basic());
 //	myenv.register_funcs(lk::stdlib_sysio());
 //	myenv.register_funcs(lk::stdlib_math());
@@ -1166,7 +1166,7 @@ lk_string async_func_thread( lk::env_t *env, lk::vardata_t &vin, lk_string &fnc)
 
 //	lk::bytecode bc;
 //	lk::codegen cg;
-//	lk::vm myvm;
+	lk::vm myvm;
 
 //
 	start = std::chrono::system_clock::now();
@@ -1179,30 +1179,25 @@ lk_string async_func_thread( lk::env_t *env, lk::vardata_t &vin, lk_string &fnc)
 //	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
 //	bc_time = " bytecode time: " + std::to_string(diff) + "ms ";
 
-//		myvm.load(&bc);
+		myvm.load(cxt->bc());
 
 //
 //	start = std::chrono::system_clock::now();
 
-//		myvm.initialize(&myenv);
+		myvm.initialize(&myenv);
 //
-//	end = std::chrono::system_clock::now();
-//	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
-//	vminit_time = " vm init time: " + std::to_string(diff) + "ms ";
-//	start = std::chrono::system_clock::now();
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	vminit_time = " vm init time: " + std::to_string(diff) + "ms ";
+	start = std::chrono::system_clock::now();
 
-//		bool ok1 = myvm.run();
-//
-	lk::vardata_t vout;
-	std::vector<lk::vardata_t> vins;
-	vins.push_back(vin);
-	myenv.call(fnc, vins, vout);
+		bool ok1 = myvm.run();
 	
 	end = std::chrono::system_clock::now();
 	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
 	vmrun_time = " run time: " + std::to_string(diff) + "ms ";
 
-
+/*
 //
 	start = std::chrono::system_clock::now();
 
@@ -1214,7 +1209,7 @@ lk_string async_func_thread( lk::env_t *env, lk::vardata_t &vin, lk_string &fnc)
 	{
 		ret_str += ("error result: \n");
 	}
-
+*/
 //
 	end = std::chrono::system_clock::now();
 	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
@@ -1297,7 +1292,7 @@ static void _async_func( lk::invoke_t &cxt )
 //				lk::env_t env(cxt.env());	
 				//lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i).as_string() + ";\n" + file_contents + "\n";
 //				async_func_thread( lk::env_t &env, lk::vardata_t &vin, lk_string &fnc)
-				results.push_back( std::async(std::launch::async, async_func_thread, cxt.env(), cxt.arg(2).vec()->at(i), fnc));
+				results.push_back( std::async(std::launch::async, async_func_thread, &cxt, cxt.arg(2).vec()->at(i), fnc));
 			}
 	// Will block till data is available in future<std::string> object.
 			for (int i=0; i<num_threads; i++)
