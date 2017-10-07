@@ -1316,7 +1316,7 @@ static void _async_func( lk::invoke_t &cxt )
 
 
 // async thread function
-lk_string async_thread( lk_string &lks)
+lk_string async_thread( lk_string &lks, lk_string lk_result="lk_result")
 {
 	lk_string ret_str = "";
 
@@ -1396,7 +1396,7 @@ lk_string async_thread( lk_string &lks)
 //
 	start = std::chrono::system_clock::now();
 
-			lk::vardata_t *vd = myenv.lookup("lk_result", true);
+			lk::vardata_t *vd = myenv.lookup(lk_result, true);
 			if (vd)
 			{
 				ret_str += (vd->as_string());
@@ -1410,7 +1410,7 @@ lk_string async_thread( lk_string &lks)
 				for (size_t i = 0; i < nfrm; i++)
 				{
 					lk::vm::frame &F = *frames[nfrm - i - 1];
-					if ((v = F.env.lookup("lk_result", true)) != NULL)
+					if ((v = F.env.lookup(lk_result, true)) != NULL)
 					{
 						ret_str += (v->as_string());
 						found=true;
@@ -1418,7 +1418,7 @@ lk_string async_thread( lk_string &lks)
 					}
 				}
 				if (!found)
-					ret_str += ("lk_result lookup error");
+					ret_str += (lk_result + " lookup error");
 			}
 		}
 		else
@@ -1494,8 +1494,15 @@ static void _async( lk::invoke_t &cxt )
 			std::vector< std::future<lk_string> > results;
 			for (int i = 0; i< num_threads; i++)
 			{
+				// input
 				lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i).as_string() + ";\n" + file_contents + "\n";
-				results.push_back( std::async(std::launch::async, async_thread, lks));
+				// output
+				lk_string lk_result = "lk_result";
+				if (cxt.arg_count() > 3)
+					lk_result = cxt.arg(3).as_string(); // optional?
+				// global or additional input - hash for pvrpm
+				// see if global can be passed...
+				results.push_back( std::async(std::launch::async, async_thread, lks, lk_result));
 			}
 	// Will block till data is available in future<std::string> object.
 			for (int i=0; i<num_threads; i++)
@@ -1552,16 +1559,17 @@ static void _packaged_task( lk::invoke_t &cxt )
 			int num_threads = cxt.arg(2).length();
 			cxt.result().empty_vector();
 			// std::packaged_task inplementation
-			std::vector< std::packaged_task<lk_string (lk_string&) > > tasks;
+			std::vector< std::packaged_task<lk_string (lk_string&, lk_string) > > tasks;
 			std::vector< std::future<lk_string> > results;
 			std::vector< std::thread > threads;
 
 			for (int i = 0; i< num_threads; i++)
 			{
-				tasks.push_back(std::packaged_task<lk_string (lk_string&) > (async_thread));
+				tasks.push_back(std::packaged_task<lk_string (lk_string&, lk_string) > (async_thread));
 				results.push_back(tasks[i].get_future());
 				lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i).as_string() + ";\n" + file_contents + "\n";
-				threads.push_back(std::thread(std::move(tasks[i]), lks));
+				lk_string lk_result = "lk_result";
+				threads.push_back(std::thread(std::move(tasks[i]), lks, lk_result));
 				threads[i].detach();
 			}
 			for (int i=0; i<num_threads; i++)
