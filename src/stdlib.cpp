@@ -1316,7 +1316,7 @@ static void _async_func( lk::invoke_t &cxt )
 
 
 // async thread function
-lk_string async_thread( lk_string &lks, lk_string lk_result="lk_result", lk_string input_name="", lk::vardata_t *input_value = NULL)
+lk_string async_thread( lk_string &lks, lk_string lk_result, lk_string input_name, lk::vardata_t input_value)
 {
 	lk_string ret_str = "";
 
@@ -1349,9 +1349,13 @@ lk_string async_thread( lk_string &lks, lk_string lk_result="lk_result", lk_stri
 	myenv.register_funcs(lk::stdlib_sysio());
 	myenv.register_funcs(lk::stdlib_math());
 	myenv.register_funcs(lk::stdlib_string());
-	if (input_value != NULL)
-		myenv.assign(input_name, input_value);
-
+	
+//	if (input_value != NULL)
+	{
+		lk::vardata_t vd(input_value);
+		myenv.assign(input_name, &vd);
+	}
+	
 //
 	end = std::chrono::system_clock::now();
 	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
@@ -1443,7 +1447,7 @@ lk_string async_thread( lk_string &lks, lk_string lk_result="lk_result", lk_stri
 // async thread function
 void async_thread_promise( lk_string &lks, std::promise<lk_string>& pobj )
 {
-	pobj.set_value(  async_thread(lks));
+	//pobj.set_value(  async_thread(lks));
 }
 
 
@@ -1502,13 +1506,22 @@ static void _async( lk::invoke_t &cxt )
 				if (cxt.arg_count() > 3)
 					lk_result = cxt.arg(3).as_string(); // optional?
 				// global or additional input - hash for pvrpm
-				lk_string input_name = "";
+				lk_string input_name = "meta";
+				lk::vardata_t input_value;
+				if (cxt.arg_count() > 4)
+				{
+//					cxt.arg(4).copy(input_value);					
+					input_value = cxt.arg(4);					
+				}
+				// fails with ownership issues
+				/*
 				lk::vardata_t *input_value = NULL;
 				if (cxt.arg_count() > 4)
 				{
 					input_name = cxt.arg(4).as_string(); // optional?
 					input_value = cxt.env()->lookup( input_name, true);
 				}
+				*/
 //				lk::vardata_t input_value(*vd);
 				// see if global can be passed...
 				results.push_back( std::async(std::launch::async, async_thread, lks, lk_result, input_name, input_value));
@@ -1568,18 +1581,18 @@ static void _packaged_task( lk::invoke_t &cxt )
 			int num_threads = cxt.arg(2).length();
 			cxt.result().empty_vector();
 			// std::packaged_task inplementation
-			std::vector< std::packaged_task<lk_string (lk_string&, lk_string, lk_string, lk::vardata_t *) > > tasks;
+			std::vector< std::packaged_task<lk_string (lk_string&, lk_string, lk_string, lk::vardata_t) > > tasks;
 			std::vector< std::future<lk_string> > results;
 			std::vector< std::thread > threads;
 
 			for (int i = 0; i< num_threads; i++)
 			{
-				tasks.push_back(std::packaged_task<lk_string (lk_string&, lk_string, lk_string, lk::vardata_t *) > (async_thread));
+				tasks.push_back(std::packaged_task<lk_string (lk_string&, lk_string, lk_string, lk::vardata_t) > (async_thread));
 				results.push_back(tasks[i].get_future());
 				lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i).as_string() + ";\n" + file_contents + "\n";
 				lk_string lk_result = "lk_result";
 				lk_string input_name = "";
-				lk::vardata_t* input_value = NULL;
+				lk::vardata_t input_value;
 				threads.push_back(std::thread(std::move(tasks[i]), lks, lk_result, input_name, input_value));
 				threads[i].detach();
 			}
