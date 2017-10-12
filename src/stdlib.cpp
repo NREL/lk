@@ -1351,11 +1351,11 @@ lk_string async_thread( lk_string &lks, lk_string lk_result, lk_string input_nam
 	myenv.register_funcs(lk::stdlib_string());
 	
 //	if (input_value != NULL)
-	{
+/*	{
 		lk::vardata_t vd(input_value);
 		myenv.assign(input_name, &vd);
 	}
-	
+*/	
 //
 	end = std::chrono::system_clock::now();
 	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
@@ -1377,13 +1377,59 @@ lk_string async_thread( lk_string &lks, lk_string lk_result, lk_string input_nam
 	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
 	bc_time = " bytecode time: " + std::to_string(diff) + "ms ";
 
-		myvm.load(&bc);
 
 //
 	start = std::chrono::system_clock::now();
 
+	// Get identifier to set or add to bytecode
+		size_t ndx_i = std::find(bc.identifiers.begin(), bc.identifiers.end(), input_name) - bc.identifiers.begin();
+		if (ndx_i > bc.identifiers.size()) // add
+		{
+			ndx_i = bc.identifiers.size();
+			bc.identifiers.push_back(input_name);
+			//ndx_i = std::find(bc.identifiers.begin(), bc.identifiers.end(), input_name) - bc.identifiers.begin();
+		}
+
+		size_t ndx_c = bc.constants.size();
+		bc.constants.push_back(input_value);
+		// update byte code program to set input name = input value using ndx_i = ndx_c
+		std::vector<unsigned int> program_update;
+		// instruction to push input_value (constant_index) onto the stack
+		unsigned int bc_update = (0x00000011 | ((unsigned int)ndx_c) << 8);
+		program_update.push_back(bc_update);
+		// instruction to get reference to input_name (identifier_index) onto the stack
+		bc_update = (0x00000022 | ((unsigned int)ndx_i) << 8);
+		program_update.push_back(bc_update);
+		// instruction to write stack value to reference 
+		bc_update = (0x00000020);
+		program_update.push_back(bc_update);
+		// instruction to pop value off of the stack 
+		bc_update = (0x00000012);
+		program_update.push_back(bc_update);
+
+		// add remainder of bytecode generated from script
+		for (size_t i = 0; i< bc.program.size(); i++)
+			program_update.push_back(bc.program[i]);
+
+		bc.program = program_update;
+		// debug info should only reference code line - should be okay...
+
+		myvm.load(&bc);
 		myvm.initialize(&myenv);
-//
+
+		/* assigned to frame but not to identifier
+		size_t nfrms;
+		lk::vm::frame **frames = myvm.get_frames(&nfrms);
+		if (nfrms > 0)
+		{
+			lk::vardata_t vd(input_value);
+			lk::vm::frame &F = *frames[0];
+			F.env.assign(input_name, &vd);
+		}
+		*/
+
+		
+		//
 	end = std::chrono::system_clock::now();
 	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
 	vminit_time = " vm init time: " + std::to_string(diff) + "ms ";
@@ -1427,7 +1473,7 @@ lk_string async_thread( lk_string &lks, lk_string lk_result, lk_string input_nam
 			}
 		}
 		else
-			ret_str += ("async failed for first arg");
+			ret_str += ("error running vm: " + myvm.error());
 	}
 	else
 	{
@@ -1438,7 +1484,7 @@ lk_string async_thread( lk_string &lks, lk_string lk_result, lk_string input_nam
 	end = std::chrono::system_clock::now();
 	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
 	rt_time = " result lookup time: " + std::to_string(diff) + "ms ";
-	ret_str += parse_time + env_time + bc_time + vminit_time + vmrun_time + rt_time + "\n";
+	ret_str += "\n" + parse_time + env_time + bc_time + vminit_time + vmrun_time + rt_time + "\n";
 
 	return ret_str;
 }
