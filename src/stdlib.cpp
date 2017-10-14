@@ -2711,11 +2711,12 @@ lk_string lk::get_cwd()
 {
 	char buf[2048];
 #ifdef _WIN32
-	::GetCurrentDirectoryA(2047, buf);
+	if (::GetCurrentDirectoryA(sizeof(buf), buf) == 0)
+	  return lk_string();
 #else
-	::getcwd(buf, 2047);
+	if (::getcwd(buf, sizeof(buf)) == NULL)
+	  return lk_string();
 #endif
-	buf[2047] = 0;
 	return lk_string(buf);
 }
 
