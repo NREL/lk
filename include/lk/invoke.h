@@ -37,23 +37,23 @@ extern "C" {
 #define LK_ARRAY   5
 #define LK_TABLE   6
 
-	struct __lk_invoke_t
-	{
-		void *__pinvoke; // internal calling context reference
-		void *__hiter; // internal key interator context
-		void *__errbuf; // error message buffer
-		void *__sbuf; // internal string storage buffer (utf8)
-		void *__callargvec; // internal call argument vector
-		void *__callresult; // internal call result
+struct __lk_invoke_t
+{
+	void *__pinvoke; ///< internal calling context reference
+	void *__hiter; ///< internal key interator context
+	void *__errbuf; ///< error message buffer
+	void *__sbuf; ///< internal string storage buffer (utf8)
+	void *__callargvec; ///< internal call argument vector 
+	void *__callresult; ///< internal call result
 
-		int(*doc_mode)(struct __lk_invoke_t*);
-		void(*document)(struct __lk_invoke_t*, const char *fn, const char *desc, const char *sig);
-		void(*document2)(struct __lk_invoke_t*, const char *fn, const char *notes,
-			const char *desc1, const char *sig1,
-			const char *desc2, const char *sig2);
-		void(*document3)(struct __lk_invoke_t*, const char *fn, const char *notes,
-			const char *desc1, const char *sig1,
-			const char *desc2, const char *sig2,
+	int (*doc_mode)( struct __lk_invoke_t* );
+	void (*document)( struct __lk_invoke_t*, const char *fn, const char *desc, const char *sig );
+	void (*document2)( struct __lk_invoke_t*, const char *fn, const char *notes, 
+			const char *desc1, const char *sig1, 
+			const char *desc2, const char *sig2 );
+	void (*document3)( struct __lk_invoke_t*, const char *fn, const char *notes, 
+			const char *desc1, const char *sig1, 
+			const char *desc2, const char *sig2, 
 			const char *desc3, const char *sig3);
 
 		void(*error)(struct __lk_invoke_t*, const char *);

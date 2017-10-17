@@ -31,6 +31,16 @@
 
 namespace lk
 {
+
+/**
+* \class parser
+*
+* Contains functions used to take an lk script as input_bases and to parse them using lexer.
+* Returns nodes_t as nodes in recursive descent tree, where root node is produced by script().
+* Expressions stored as binary trees and functions as abstract trees.
+*
+*/
+
 	class parser
 	{
 	public:
@@ -65,21 +75,22 @@ namespace lk
 		int error_count() { return m_errorList.size(); }
 		lk_string error(int idx, int *line = 0);
 
-		int token();
+		int token();		// describes what type the current statement should be treated as
 		bool token(int t);
-
-		void skip();
+		
+		void skip();		// moves through input, updating positions
 		bool match(int t);
-		bool match(const char *s);
-
+		bool match( const char *s );
+		
 	private:
-		list_t *ternarylist(int septok, int endtok);
-		list_t *identifierlist(int septok, int endtok);
+		list_t *ternarylist( int septok, int endtok );
+		list_t *identifierlist( int septok, int endtok );
 
-		void error(const lk_string &s);
-		void error(const char *fmt, ...);
-
-		lexer lex;
+	
+		void error( const lk_string &s );
+		void error( const char *fmt, ... );
+		
+		lexer lex;				
 		int m_tokType;
 		int m_lastLine;
 		int m_lastStmt;

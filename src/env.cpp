@@ -67,12 +67,13 @@ void lk::vardata_t::set_type(unsigned char ty)
 	m_type |= (ty&TYPEMASK); // set lower 4 bits to type
 }
 
-void lk::vardata_t::assert_modify() throw(error_t)
+/// checks if value has been assigned and is constant
+void lk::vardata_t::assert_modify() throw( error_t )
 {
-	if (flagval(CONSTVAL)
-		&& flagval(ASSIGNED))
+	if ( flagval( CONSTVAL )
+		&& flagval( ASSIGNED ) )
 	{
-		throw error_t(lk_tr("cannot modify a constant value"));
+		throw error_t( lk_tr("cannot modify a constant value") );
 	}
 
 	set_flag(ASSIGNED);
@@ -393,6 +394,7 @@ const char *lk::vardata_t::typestr() const
 	}
 }
 
+/// deletes value, ie object to which m_u.p points
 void lk::vardata_t::nullify()
 {
 	switch (type())
@@ -446,11 +448,13 @@ void lk::vardata_t::assign(const char *s) throw(error_t)
 	}
 }
 
-void lk::vardata_t::assign(const lk_string &s) throw(error_t)
+/// function for associating an lk_string pointer to a vardata_t
+void lk::vardata_t::assign( const lk_string &s ) throw( error_t )
 {
 	assert_modify();
 
-	if (type() != STRING)
+	// checks if previously assigned
+	if ( type() != STRING)
 	{
 		nullify();
 		set_type(STRING);
@@ -530,7 +534,8 @@ void lk::vardata_t::assign(vardata_t *ref) throw(error_t)
 	m_u.p = ref;
 }
 
-void lk::vardata_t::assign_fcall(fcallinfo_t *fci) throw(error_t)
+/// assigns as EXTFUNC type whose value points to the function's fci
+void lk::vardata_t::assign_fcall( fcallinfo_t *fci ) throw( error_t )
 {
 	assert_modify();
 
@@ -762,7 +767,8 @@ void lk::env_t::clear_vars()
 	m_varHash.clear();
 }
 
-void lk::env_t::assign(const lk_string &name, vardata_t *value)
+/// assigns an identifer to a vardata_t with value
+void lk::env_t::assign( const lk_string &name, vardata_t *value )
 {
 	vardata_t *x = lookup(name, false);
 
@@ -873,7 +879,9 @@ void lk::env_t::unregister_ext_func(lk_invokable f)
 	}
 }
 
-bool lk::env_t::register_func(fcall_t f, void *user_data)
+
+/// doc_t documentation, invoke_t fx arguments, and and invokable
+bool lk::env_t::register_func( fcall_t f, void *user_data )
 {
 	lk::doc_t d;
 	if (lk::doc_t::info(f, d) && !d.func_name.empty())
@@ -906,10 +914,11 @@ bool lk::env_t::register_funcs(fcall_t list[], void *user_data)
 	return ok;
 }
 
-lk::fcallinfo_t *lk::env_t::lookup_func(const lk_string &name)
+/// looks for function fcallinfo in current & parent environments
+lk::fcallinfo_t *lk::env_t::lookup_func( const lk_string &name )
 {
-	funchash_t::iterator it = m_funcHash.find(name);
-	if (it != m_funcHash.end())
+	funchash_t::iterator it = m_funcHash.find( name );
+	if ( it != m_funcHash.end() )
 	{
 		return &(*it).second;
 	}
@@ -1140,9 +1149,10 @@ bool lk::doc_t::info(fcallinfo_t *f, doc_t &d)
 		return false;
 }
 
-bool lk::doc_t::info(fcall_t f, doc_t &d)
+/// links an LK function's invocation with its documentation: creates a doc_t associated with an invoke_t cxt; returns true if doc_t has been paired with an invoke_t
+bool lk::doc_t::info( fcall_t f, doc_t &d )
 {
-	if (f != 0)
+	if (f!=0)
 	{
 		lk::vardata_t dummy_var;
 		lk::invoke_t cxt(0, dummy_var, 0);
@@ -1190,6 +1200,7 @@ bool lk::invoke_t::doc_mode()
 	return m_docPtr != 0;
 }
 
+/// associates LK function with a documentation
 void lk::invoke_t::document(doc_t d)
 {
 	if (m_docPtr != 0)

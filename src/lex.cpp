@@ -36,7 +36,8 @@ lk::input_string::input_string()
 	m_buf = m_p = 0;
 }
 
-lk::input_string::input_string(const lk_string &in)
+/// lk_string is converted to UTF8 encoding before being stored as char*
+lk::input_string::input_string( const lk_string &in )
 {
 	m_buf = 0;
 
@@ -80,12 +81,14 @@ char lk::input_string::operator++(int)
 		return 0;
 }
 
+/// returns the character at the next position without moving the iterator
 char lk::input_string::peek()
 {
 	if (m_p && *m_p) return *(m_p + 1); else return 0;
 }
 
-lk::input_file::input_file(const lk_string &file)
+/// input_file: checks if file can be opened, records length of file
+lk::input_file::input_file( const lk_string &file )
 	: input_string()
 {
 	int len;
@@ -121,7 +124,8 @@ lk::input_file::~input_file()
 	// nothing to do, parent class will free memory
 }
 
-lk::lexer::lexer(input_base &input)
+/// initializer
+lk::lexer::lexer( input_base &input )
 	: p(input)
 {
 	m_line = 1;
@@ -149,15 +153,17 @@ lk_string lk::lexer::error()
 	return m_error;
 }
 
-void lk::lexer::whitespace()
+/// skips over white space and increments line # counter
+void lk::lexer::whitespace( )
 {
-	while (*p == '\n' || *p == ' ' || *p == '\r' || *p == '\t') // all other whitespace stripped out when loading input buffer
+	while ( *p == '\n' || *p == ' ' || *p == '\r' || *p == '\t' ) // all other whitespace stripped out when loading input buffer
 	{
 		if (*p == '\n') m_line++;
 		p++;
 	}
 }
 
+/// skips over comments
 bool lk::lexer::comments()
 {
 	bool handled_comment = false;
@@ -198,6 +204,7 @@ bool lk::lexer::comments()
 	return handled_comment;
 }
 
+/// finds the next token, moves the characters to m_buf and returns token type
 int lk::lexer::next()
 {
 	m_buf = "";
@@ -486,9 +493,11 @@ int lk::lexer::next()
 	return INVALID;
 }
 
+/// returns the string representing the token type
 const char *lk::lexer::tokstr(int t)
 {
-	switch (t)
+	int token = t;
+	switch(token)
 	{
 	case END: return "<end>";
 	case IDENTIFIER: return "<identifer>";
