@@ -1152,6 +1152,7 @@ lk_string async_func_thread( lk::invoke_t *cxt, lk::vardata_t &vin, lk_string &f
 
 
 	lk::env_t myenv(cxt->env());
+	myenv.set_parent(cxt->env());
 //	myenv.register_funcs(lk::stdlib_basic());
 //	myenv.register_funcs(lk::stdlib_sysio());
 //	myenv.register_funcs(lk::stdlib_math());
@@ -1325,7 +1326,7 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 //
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
-	lk::env_t myenv(cxt.env());
+//	lk::env_t myenv(cxt.env()->parent());
 /*	myenv.register_funcs(lk::stdlib_basic());
 	myenv.register_funcs(lk::stdlib_sysio());
 	myenv.register_funcs(lk::stdlib_math());
@@ -1394,7 +1395,8 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 		bc.debuginfo = debuginfo_update;
 
 		myvm.load(&bc);
-		myvm.initialize(&myenv);
+//		myvm.initialize(&myenv);
+		myvm.initialize(cxt.env()->parent());
 
 		/* assigned to frame but not to identifier
 		size_t nfrms;
@@ -1426,14 +1428,14 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 //
 	start = std::chrono::system_clock::now();
 
-			lk::vardata_t *vd = myenv.lookup(lk_result, true);
+/*			lk::vardata_t *vd = myenv.lookup(lk_result, true);
 			if (vd)
 			{
 				ret_str += (vd->as_string());
 			}
 			else
 			{
-				size_t nfrm;
+*/				size_t nfrm;
 				lk::vardata_t *v;
 				lk::vm::frame **frames = myvm.get_frames(&nfrm);
 				bool found = false;
@@ -1450,7 +1452,7 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 				if (!found)
 					ret_str += (lk_result + " lookup error");
 			}
-		}
+//		}
 		else
 			ret_str += ("error running vm: " + myvm.error());
 
