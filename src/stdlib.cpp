@@ -1326,7 +1326,7 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 //
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
-//	lk::env_t myenv(cxt.env()->parent());
+	lk::env_t myenv(cxt.env()->parent());
 /*	myenv.register_funcs(lk::stdlib_basic());
 	myenv.register_funcs(lk::stdlib_sysio());
 	myenv.register_funcs(lk::stdlib_math());
@@ -1395,8 +1395,8 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 		bc.debuginfo = debuginfo_update;
 
 		myvm.load(&bc);
-//		myvm.initialize(&myenv);
-		myvm.initialize(cxt.env()->parent());
+		myvm.initialize(&myenv);
+//		myvm.initialize(cxt.env()->parent());
 
 		/* assigned to frame but not to identifier
 		size_t nfrms;
