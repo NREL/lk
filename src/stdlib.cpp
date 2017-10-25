@@ -1327,11 +1327,12 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
 	lk::env_t myenv(cxt.env()->parent());
-/*	myenv.register_funcs(lk::stdlib_basic());
+	/*
+	myenv.register_funcs(lk::stdlib_basic());
 	myenv.register_funcs(lk::stdlib_sysio());
 	myenv.register_funcs(lk::stdlib_math());
 	myenv.register_funcs(lk::stdlib_string());
-*/	
+	*/
 //	if (input_value != NULL)
 /*	{
 		lk::vardata_t vd(input_value);
@@ -1380,9 +1381,9 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 		program_update.push_back(bc_update);
 		debuginfo_update.push_back(lk::srcpos_t());
 		// instruction to pop value off of the stack 
-//		bc_update = (0x00000012);
-//		program_update.push_back(bc_update);
-//		debuginfo_update.push_back(lk::srcpos_t());
+		bc_update = (0x00000012);
+		program_update.push_back(bc_update);
+		debuginfo_update.push_back(lk::srcpos_t());
 
 		// add remainder of bytecode generated from script
 		for (size_t i = 0; i< bc.program.size(); i++)
@@ -1393,6 +1394,9 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 
 		bc.program = program_update;
 		bc.debuginfo = debuginfo_update;
+
+		
+
 
 		myvm.load(&bc);
 		myvm.initialize(&myenv);
@@ -1585,9 +1589,9 @@ static void _async( lk::invoke_t &cxt )
 		program_update.push_back(bc_update);
 		debuginfo_update.push_back(lk::srcpos_t());
 		// instruction to pop value off of the stack 
-//		bc_update = (0x00000012);
-//		program_update.push_back(bc_update);
-//		debuginfo_update.push_back(lk::srcpos_t());
+		bc_update = (0x00000012);
+		program_update.push_back(bc_update);
+		debuginfo_update.push_back(lk::srcpos_t());
 
 		// add remainder of bytecode generated from script
 		for (size_t i = 0; i< bc.program.size(); i++)
