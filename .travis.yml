@@ -11,3 +11,8 @@ script:
 
 install:
   - sudo apt-get install -y libgtk-3-dev
+
+branches:
+  only:
+  - master
+  - develop
