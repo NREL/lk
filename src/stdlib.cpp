@@ -1381,14 +1381,17 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 		program_update.push_back(bc_update);
 		debuginfo_update.push_back(lk::srcpos_t());
 		// instruction to pop value off of the stack 
-		bc_update = (0x00000012);
-		program_update.push_back(bc_update);
-		debuginfo_update.push_back(lk::srcpos_t());
+//		bc_update = (0x00000012);
+//		program_update.push_back(bc_update);
+//		debuginfo_update.push_back(lk::srcpos_t());
 
 		// add remainder of bytecode generated from script
 		for (size_t i = 0; i< bc.program.size(); i++)
 		{
 			program_update.push_back(bc.program[i]);
+			bc.debuginfo[i].line = bc.debuginfo[i].line + 1;
+			bc.debuginfo[i].stmt = bc.debuginfo[i].stmt + 1;
+			bc.debuginfo[i].stmt_end = bc.debuginfo[i].stmt_end + 1;
 			debuginfo_update.push_back(bc.debuginfo[i]);
 		}
 
@@ -1589,14 +1592,17 @@ static void _async( lk::invoke_t &cxt )
 		program_update.push_back(bc_update);
 		debuginfo_update.push_back(lk::srcpos_t());
 		// instruction to pop value off of the stack 
-		bc_update = (0x00000012);
-		program_update.push_back(bc_update);
-		debuginfo_update.push_back(lk::srcpos_t());
+//		bc_update = (0x00000012);
+//		program_update.push_back(bc_update);
+//		debuginfo_update.push_back(lk::srcpos_t());
 
 		// add remainder of bytecode generated from script
 		for (size_t i = 0; i< bc.program.size(); i++)
 		{
 			program_update.push_back(bc.program[i]);
+			bc.debuginfo[i].line = bc.debuginfo[i].line + 1;
+			bc.debuginfo[i].stmt = bc.debuginfo[i].stmt + 1;
+			bc.debuginfo[i].stmt_end = bc.debuginfo[i].stmt_end + 1;
 			debuginfo_update.push_back(bc.debuginfo[i]);
 		}
 
