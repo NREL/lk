@@ -1326,8 +1326,7 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 //
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
-//	lk::env_t myenv(cxt.env()->parent());
-	lk::env_t myenv(cxt.env());
+	lk::env_t myenv(cxt.env()->parent());
 	/*
 	myenv.register_funcs(lk::stdlib_basic());
 	myenv.register_funcs(lk::stdlib_sysio());
@@ -1354,29 +1353,52 @@ lk_string async_thread( lk::invoke_t &cxt, lk::bytecode &lkbc, lk_string lk_resu
 //
 	start = std::chrono::system_clock::now();
 
-	// Get string value of "ASSIGN|VALUE|HERE" set in _async and then update to input value
-	size_t ndx_c = bc.constants.size() + 1;
-	for (size_t i = 0; i < bc.constants.size(); i++)
-	{
-		if (bc.constants[i].type() == lk::vardata_t::STRING)
+	// Get identifier to set or add to bytecode
+		size_t ndx_i = std::find(bc.identifiers.begin(), bc.identifiers.end(), input_name) - bc.identifiers.begin();
+		if (ndx_i > bc.identifiers.size()) // add
 		{
-			if (bc.constants[i].as_string() == "ASSIGN|VALUE|HERE")
-			{
-				ndx_c = i;
-				break;
-			}
+			ndx_i = bc.identifiers.size();
+			bc.identifiers.push_back(input_name);
+			//ndx_i = std::find(bc.identifiers.begin(), bc.identifiers.end(), input_name) - bc.identifiers.begin();
 		}
-	}
+
+		size_t ndx_c = bc.constants.size();
+		bc.constants.push_back(input_value);
+		// update byte code program to set input name = input value using ndx_i = ndx_c
+		std::vector<unsigned int> program_update;
+		// update debug_info to be same length
+		std::vector<lk::srcpos_t> debuginfo_update;
+		// instruction to push input_value (constant_index) onto the stack
+		unsigned int bc_update = (0x00000011 | ((unsigned int)ndx_c) << 8);
+		program_update.push_back(bc_update);
+		debuginfo_update.push_back(lk::srcpos_t());
+		// instruction to get reference to input_name (identifier_index) onto the stack
+		bc_update = (0x00000022 | ((unsigned int)ndx_i) << 8);
+		program_update.push_back(bc_update);
+		debuginfo_update.push_back(lk::srcpos_t());
+		// instruction to write stack value to reference 
+		bc_update = (0x00000020);
+		program_update.push_back(bc_update);
+		debuginfo_update.push_back(lk::srcpos_t());
+		// instruction to pop value off of the stack 
+//		bc_update = (0x00000012);
+//		program_update.push_back(bc_update);
+//		debuginfo_update.push_back(lk::srcpos_t());
+
+		// add remainder of bytecode generated from script
+		for (size_t i = 0; i< bc.program.size(); i++)
+		{
+			program_update.push_back(bc.program[i]);
+			bc.debuginfo[i].line = bc.debuginfo[i].line + 1;
+			bc.debuginfo[i].stmt = bc.debuginfo[i].stmt + 1;
+			bc.debuginfo[i].stmt_end = bc.debuginfo[i].stmt_end + 1;
+			debuginfo_update.push_back(bc.debuginfo[i]);
+		}
+
+		bc.program = program_update;
+		bc.debuginfo = debuginfo_update;
+
 		
-	if (ndx_c > bc.constants.size())
-	{
-		ret_str = "async_thread: No value found to change.";
-		return ret_str;
-	}
-	else
-		bc.constants[ndx_c] = input_value;
-
-
 
 
 		myvm.load(&bc);
@@ -1493,29 +1515,9 @@ static void _async( lk::invoke_t &cxt )
 
 
 
-// additional input time
-	start = std::chrono::system_clock::now();
-
-
-// add input value
-	// required input - changes in each thread 
-	lk_string input_name = cxt.arg(1).as_string();
-	lk_string value = "\"ASSIGN|VALUE|HERE\";\n";
-	file_contents = input_name + "=" + value + file_contents;
-
-	// optional global additional input - e.g. hash for pvrpm same for all threads
-	if (cxt.arg_count() > 5)
-	{
-		lk_string add_input_name = cxt.arg(4).as_string();
-		value = "\"ADDITIONALASSIGN|VALUE|HERE\";\n";
-		lk::vardata_t add_input_value = cxt.arg(5);					
-		file_contents = add_input_name + "=" + value + file_contents;
-	}
-
-
 // file contents parsed to node_t
 // checking for bottlenecks
-//	start = std::chrono::system_clock::now();
+	start = std::chrono::system_clock::now();
 
 	lk::input_string p(file_contents);
 	lk::parser parse(p);
@@ -1535,7 +1537,8 @@ static void _async( lk::invoke_t &cxt )
 	parse_time = " Parse time: " + std::to_string(diff) + "ms ";
 
 
-// bytecode time
+
+// tree of node_t to bytecode
 	start = std::chrono::system_clock::now();
 
 	lk::bytecode bc;
@@ -1550,40 +1553,62 @@ static void _async( lk::invoke_t &cxt )
 	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
 	bc_time = " bytecode time: " + std::to_string(diff) + "ms ";
 
-
-	start = std::chrono::system_clock::now();
-
 // additional common inputs; e.g., meta hash for pvrpm
 
+//
+	start = std::chrono::system_clock::now();
+
+
+	// global or additional input - hash for pvrpm
 	if (cxt.arg_count() > 5)
 	{
-		// replace bc.constants with updated lk:vardata_t input value
-		value = "ADDITIONALASSIGN|VALUE|HERE";
-		size_t ndx_c = bc.constants.size() + 1;
-		for (size_t i = 0; i < bc.constants.size(); i++)
+		lk_string add_input_name = cxt.arg(4).as_string();
+		lk::vardata_t add_input_value = cxt.arg(5);					
+	// Get identifier to set or add to bytecode
+		size_t ndx_i = std::find(bc.identifiers.begin(), bc.identifiers.end(), add_input_name) - bc.identifiers.begin();
+		if (ndx_i > bc.identifiers.size()) // add
 		{
-			if (bc.constants[i].type() == lk::vardata_t::STRING)
-			{
-				if (bc.constants[i].as_string() == value)
-				{
-					ndx_c = i;
-					break;
-				}
-			}
+			ndx_i = bc.identifiers.size();
+			bc.identifiers.push_back(add_input_name);
+			//ndx_i = std::find(bc.identifiers.begin(), bc.identifiers.end(), input_name) - bc.identifiers.begin();
 		}
-		
-		if (ndx_c > bc.constants.size())
+
+		size_t ndx_c = bc.constants.size();
+		bc.constants.push_back(add_input_value);
+		// update byte code program to set input name = input value using ndx_i = ndx_c
+		std::vector<unsigned int> program_update;
+		// update debug_info to be same length
+		std::vector<lk::srcpos_t> debuginfo_update;
+		// instruction to push input_value (constant_index) onto the stack
+		unsigned int bc_update = (0x00000011 | ((unsigned int)ndx_c) << 8);
+		program_update.push_back(bc_update);
+		debuginfo_update.push_back(lk::srcpos_t());
+		// instruction to get reference to input_name (identifier_index) onto the stack
+		bc_update = (0x00000022 | ((unsigned int)ndx_i) << 8);
+		program_update.push_back(bc_update);
+		debuginfo_update.push_back(lk::srcpos_t());
+		// instruction to write stack value to reference 
+		bc_update = (0x00000020);
+		program_update.push_back(bc_update);
+		debuginfo_update.push_back(lk::srcpos_t());
+		// instruction to pop value off of the stack 
+//		bc_update = (0x00000012);
+//		program_update.push_back(bc_update);
+//		debuginfo_update.push_back(lk::srcpos_t());
+
+		// add remainder of bytecode generated from script
+		for (size_t i = 0; i< bc.program.size(); i++)
 		{
-			cxt.result().vec_append("_async: No additional input value found to change.\n");
+			program_update.push_back(bc.program[i]);
+			bc.debuginfo[i].line = bc.debuginfo[i].line + 1;
+			bc.debuginfo[i].stmt = bc.debuginfo[i].stmt + 1;
+			bc.debuginfo[i].stmt_end = bc.debuginfo[i].stmt_end + 1;
+			debuginfo_update.push_back(bc.debuginfo[i]);
 		}
-		else
-		{
-			lk::vardata_t add_input_value = cxt.arg(5);					
-			bc.constants[ndx_c] = add_input_value;
-		}
+
+		bc.program = program_update;
+		bc.debuginfo = debuginfo_update;
 	}
-
-
 
 
 	end = std::chrono::system_clock::now();
@@ -1611,6 +1636,8 @@ static void _async( lk::invoke_t &cxt )
 			std::vector< std::future<lk_string> > results;
 			for (int i = 0; i< num_threads; i++)
 			{
+				// input
+				lk_string input_name = cxt.arg(1).as_string();
 				lk::vardata_t input_value =cxt.arg(2).vec()->at(i);
 				// output
 				results.push_back( std::async(std::launch::async, async_thread, cxt, bc, lk_result, input_name, input_value));
