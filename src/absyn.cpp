@@ -226,76 +226,76 @@ void lk::pretty_print(lk_string &str, node_t *root, int level)
 {
 	if (!root) return;
 
-	if (list_t *n = dynamic_cast<list_t*>(root))
+	if (list_t *n1 = dynamic_cast<list_t*>(root))
 	{
 		str += spacer(level) + "{\n";
-		for (size_t i = 0; i < n->items.size(); i++)
+		for (size_t i = 0; i < n1->items.size(); i++)
 		{
-			pretty_print(str, n->items[i], level + 1);
+			pretty_print(str, n1->items[i], level + 1);
 			str += "\n";
 		}
 		str += spacer(level) + "}";
 	}
-	else if (iter_t *n = dynamic_cast<iter_t*>(root))
+	else if (iter_t *n2 = dynamic_cast<iter_t*>(root))
 	{
 		str += spacer(level) + "loop(";
 
-		pretty_print(str, n->init, level + 1);
+		pretty_print(str, n2->init, level + 1);
 		str += "\n";
 
-		pretty_print(str, n->test, level + 1);
+		pretty_print(str, n2->test, level + 1);
 		str += "\n";
 
-		pretty_print(str, n->adv, level + 1);
+		pretty_print(str, n2->adv, level + 1);
 		str += "\n";
 
-		pretty_print(str, n->block, level + 1);
+		pretty_print(str, n2->block, level + 1);
 		str += "\n" + spacer(level) + ")";
 	}
-	else if (cond_t *n = dynamic_cast<cond_t*>(root))
+	else if (cond_t *n3 = dynamic_cast<cond_t*>(root))
 	{
 		str += spacer(level) + "cond(";
-		pretty_print(str, n->test, level + 1);
+		pretty_print(str, n3->test, level + 1);
 		str += "\n";
-		pretty_print(str, n->on_true, level + 1);
-		if (n->on_false)
+		pretty_print(str, n3->on_true, level + 1);
+		if (n3->on_false)
 			str += "\n";
-		pretty_print(str, n->on_false, level + 1);
+		pretty_print(str, n3->on_false, level + 1);
 		str += " )";
 	}
-	else if (expr_t *n = dynamic_cast<expr_t*>(root))
+	else if (expr_t *n4 = dynamic_cast<expr_t*>(root))
 	{
 		str += spacer(level) + "(";
-		str += n->operstr();
+		str += n4->operstr();
 		str += "\n";
-		pretty_print(str, n->left, level + 1);
-		if (n->right)
+		pretty_print(str, n4->left, level + 1);
+		if (n4->right)
 			str += "\n";
-		pretty_print(str, n->right, level + 1);
+		pretty_print(str, n4->right, level + 1);
 		str += ")";
 	}
-	else if (ctlstmt_t *n = dynamic_cast<ctlstmt_t*>(root))
+	else if (ctlstmt_t *n5 = dynamic_cast<ctlstmt_t*>(root))
 	{
 		str += spacer(level) + "(";
-		str += n->ctlstr();
-		if (n->rexpr)	str += "  ";
-		pretty_print(str, n->rexpr, level + 1);
+		str += n5->ctlstr();
+		if (n5->rexpr)	str += "  ";
+		pretty_print(str, n5->rexpr, level + 1);
 		str += ")";
 	}
-	else if (iden_t *n = dynamic_cast<iden_t*>(root))
+	else if (iden_t *n6 = dynamic_cast<iden_t*>(root))
 	{
-		str += spacer(level) + n->name;
+		str += spacer(level) + n6->name;
 	}
-	else if (constant_t *n = dynamic_cast<constant_t*>(root))
+	else if (constant_t *n7 = dynamic_cast<constant_t*>(root))
 	{
 		char buf[64];
-		sprintf(buf, "%lg", n->value);
+		sprintf(buf, "%lg", n7->value);
 		str += spacer(level) + buf;
 	}
-	else if (literal_t *n = dynamic_cast<literal_t*>(root))
+	else if (literal_t *n8 = dynamic_cast<literal_t*>(root))
 	{
 		str += spacer(level) + "'";
-		str += n->value;
+		str += n8->value;
 		str += "'";
 	}
 	else if (0 != dynamic_cast<null_t*>(root))

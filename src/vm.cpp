@@ -268,9 +268,9 @@ namespace lk {
 					{
 						stack[sp++].assign_fcall(fci);
 					}
-					else if (vardata_t *x = F.env.lookup(bc->identifiers[arg], op == RREF))
+					else if (vardata_t *x1 = F.env.lookup(bc->identifiers[arg], op == RREF))
 					{
-						stack[sp++].assign(x);
+						stack[sp++].assign(x1);
 					}
 					else if (op == LREF || op == LCREF || op == LGREF)
 					{
@@ -278,27 +278,27 @@ namespace lk {
 						// is in the global frame and was created as a global variable
 						// if so, then place it on the stack.  globals are editable from
 						// any context if they were flagged as such when created
-						vardata_t *x = globals.lookup(bc->identifiers[arg], false);
-						if (x && x->flagval(vardata_t::GLOBALVAL))
-							stack[sp++].assign(x);
+						vardata_t *x2 = globals.lookup(bc->identifiers[arg], false);
+						if (x2 && x2->flagval(vardata_t::GLOBALVAL))
+							stack[sp++].assign(x2);
 						else
 						{
-							x = new vardata_t;
+							x2 = new vardata_t;
 
 							// set up flags
 							if (op == LCREF)
 							{
-								x->set_flag(vardata_t::CONSTVAL);
-								x->clear_flag(vardata_t::ASSIGNED);
+								x2->set_flag(vardata_t::CONSTVAL);
+								x2->clear_flag(vardata_t::ASSIGNED);
 							}
 							else if (op == LGREF)
-								x->set_flag(vardata_t::GLOBALVAL);
+								x2->set_flag(vardata_t::GLOBALVAL);
 
 							// now insert record
-							if (op == LGREF) globals.assign(bc->identifiers[arg], x); // global frame
-							else F.env.assign(bc->identifiers[arg], x); // local frame
+							if (op == LGREF) globals.assign(bc->identifiers[arg], x2); // global frame
+							else F.env.assign(bc->identifiers[arg], x2); // local frame
 
-							stack[sp++].assign(x);
+							stack[sp++].assign(x2);
 						}
 					}
 					else
@@ -351,8 +351,8 @@ namespace lk {
 
 							if (ip > 2 && PSH == (Opcode)(unsigned char)bc->program[ip - 2])
 							{
-								size_t arg = (bc->program[ip - 2] >> 8);
-								F.id = "->" + bc->constants[arg].as_string();
+								size_t arg_tmp = (bc->program[ip - 2] >> 8);
+								F.id = "->" + bc->constants[arg_tmp].as_string();
 							}
 							else if (lhs != 0)
 							{
@@ -364,8 +364,8 @@ namespace lk {
 						{
 							if (ip > 1 && RREF == (Opcode)(unsigned char)bc->program[ip - 1])
 							{
-								size_t arg = (bc->program[ip - 1] >> 8);
-								F.id = bc->identifiers[arg];
+								size_t arg_tmp = (bc->program[ip - 1] >> 8);
+								F.id = bc->identifiers[arg_tmp];
 							}
 							else
 								F.id = "???";
@@ -731,7 +731,7 @@ namespace lk {
 				case RET:
 					if (frames.size() > 1)
 					{
-						vardata_t *result = &stack[sp - 1];
+						vardata_t *result_tmp = &stack[sp - 1];
 						frame &F = *frames.back();
 						int ncleanup = (int)(F.nargs + 1 + arg);
 						if (F.thiscall) ncleanup++;
@@ -739,7 +739,7 @@ namespace lk {
 						if (sp <= ncleanup)
 							return error((const char*)lk_string(lk_tr("stack corruption upon function return") + " (sp=%d, nc=%d)").c_str(), (int)sp, (int)ncleanup);
 						sp -= ncleanup;
-						stack[sp - 1].copy(result->deref());
+						stack[sp - 1].copy(result_tmp->deref());
 						next_ip = F.retaddr;
 
 						delete frames.back();
