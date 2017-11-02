@@ -2290,10 +2290,10 @@ void _sql_exec(lk::invoke_t &cxt)
 
 					lk_string hexstr;
 					// convert to hex chars
-					for (int i = 0; i < len; i++)
+					for (int j = 0; j < len; j++)
 					{
 						char buf[16];
-						sprintf(buf, "%02X", blob[i]);
+						sprintf(buf, "%02X", blob[j]);
 						hexstr += buf;
 					}
 

@@ -130,25 +130,25 @@ bool lk::eval::interpret(node_t *root,
 	if (!on_run(root->line()))
 		return false; /* abort script execution */
 
-	if (list_t *n = dynamic_cast<list_t*>(root))
+	if (list_t *n1 = dynamic_cast<list_t*>(root))
 	{
 		ctl_id = CTL_NONE;
 		bool ok = true;
-		for (size_t i = 0; i < n->items.size() && ctl_id == CTL_NONE; i++)
+		for (size_t i = 0; i < n1->items.size() && ctl_id == CTL_NONE; i++)
 		{
-			ok = interpret(n->items[i], cur_env, result, flags, ctl_id);
+			ok = interpret(n1->items[i], cur_env, result, flags, ctl_id);
 			if (!ok)
 			{
-				m_errors.push_back(make_error(n, (const char*)lk_string(lk_tr("eval error in statement list") + "\n").c_str()));
+				m_errors.push_back(make_error(n1, (const char*)lk_string(lk_tr("eval error in statement list") + "\n").c_str()));
 				return false;
 			}
 		}
 
 		return ok;
 	}
-	else if (iter_t *n = dynamic_cast<iter_t*>(root))
+	else if (iter_t *n2 = dynamic_cast<iter_t*>(root))
 	{
-		if (!interpret(n->init, cur_env, result, flags, ctl_id)) return false;
+		if (!interpret(n2->init, cur_env, result, flags, ctl_id)) return false;
 
 		while (1)
 		{
@@ -156,12 +156,12 @@ bool lk::eval::interpret(node_t *root,
 			vardata_t outcome;
 			outcome.assign(0.0);
 
-			if (!interpret(n->test, cur_env, outcome, flags, ctl_id)) return false;
+			if (!interpret(n2->test, cur_env, outcome, flags, ctl_id)) return false;
 
 			if (!outcome.as_boolean())
 				break;
 
-			if (!interpret(n->block, cur_env, result, flags, ctl_id)) return false;
+			if (!interpret(n2->block, cur_env, result, flags, ctl_id)) return false;
 
 			switch (ctl_id)
 			{
@@ -176,23 +176,23 @@ bool lk::eval::interpret(node_t *root,
 				ctl_id = CTL_NONE;
 			}
 
-			if (!interpret(n->adv, cur_env, result, flags, ctl_id)) return false;
+			if (!interpret(n2->adv, cur_env, result, flags, ctl_id)) return false;
 		}
 
 		return true;
 	}
-	else if (cond_t *n = dynamic_cast<cond_t*>(root))
+	else if (cond_t *n3 = dynamic_cast<cond_t*>(root))
 	{
 		vardata_t outcome;
 		outcome.assign(0.0);
-		if (!interpret(n->test, cur_env, outcome, flags, ctl_id)) return false;
+		if (!interpret(n3->test, cur_env, outcome, flags, ctl_id)) return false;
 
 		if (outcome.as_boolean())
-			return interpret(n->on_true, cur_env, result, flags, ctl_id);
+			return interpret(n3->on_true, cur_env, result, flags, ctl_id);
 		else
-			return interpret(n->on_false, cur_env, result, flags, ctl_id);
+			return interpret(n3->on_false, cur_env, result, flags, ctl_id);
 	}
-	else if (expr_t *n = dynamic_cast<expr_t*>(root))
+	else if (expr_t *n4 = dynamic_cast<expr_t*>(root))
 	{
 		try
 		{
@@ -200,11 +200,11 @@ bool lk::eval::interpret(node_t *root,
 			vardata_t l, r;
 			double newval;
 
-			switch (n->oper)
+			switch (n4->oper)
 			{
 			case expr_t::PLUS:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				if (l.deref().type() == vardata_t::STRING
 					|| r.deref().type() == vardata_t::STRING)
 				{
@@ -214,18 +214,18 @@ bool lk::eval::interpret(node_t *root,
 					result.assign(l.deref().num() + r.deref().num());
 				return ok;
 			case expr_t::MINUS:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign(l.deref().num() - r.deref().num());
 				return ok;
 			case expr_t::MULT:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign(l.deref().num() * r.deref().num());
 				return ok;
 			case expr_t::DIV:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				if (r.deref().num() == 0)
 					result.assign(std::numeric_limits<double>::quiet_NaN());
 				else
@@ -233,21 +233,21 @@ bool lk::eval::interpret(node_t *root,
 				return ok;
 
 			case expr_t::PLUSEQ:
-				do_op_eq(do_plus_eq, n, cur_env, flags, ctl_id, result, l, r);
+				do_op_eq(do_plus_eq, n4, cur_env, flags, ctl_id, result, l, r);
 				return ok;
 			case expr_t::MINUSEQ:
-				do_op_eq(do_minus_eq, n, cur_env, flags, ctl_id, result, l, r);
+				do_op_eq(do_minus_eq, n4, cur_env, flags, ctl_id, result, l, r);
 				return ok;
 			case expr_t::MULTEQ:
-				do_op_eq(do_mult_eq, n, cur_env, flags, ctl_id, result, l, r);
+				do_op_eq(do_mult_eq, n4, cur_env, flags, ctl_id, result, l, r);
 				return ok;
 			case expr_t::DIVEQ:
-				do_op_eq(do_div_eq, n, cur_env, flags, ctl_id, result, l, r);
+				do_op_eq(do_div_eq, n4, cur_env, flags, ctl_id, result, l, r);
 				return ok;
 
 			case expr_t::MINUSAT:
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
 
 				if (l.deref().type() == vardata_t::HASH)
 				{
@@ -265,7 +265,7 @@ bool lk::eval::interpret(node_t *root,
 				}
 				else
 				{
-					m_errors.push_back(make_error(n, (const char*)lk_string("-@ " +
+					m_errors.push_back(make_error(n4, (const char*)lk_string("-@ " +
 						lk_tr("operator requires a hash or vector left hand side")).c_str()));
 					return false;
 				}
@@ -273,101 +273,101 @@ bool lk::eval::interpret(node_t *root,
 				return true;
 
 			case expr_t::INCR:
-				ok = ok && interpret(n->left, cur_env, l, flags | ENV_MUTABLE, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags | ENV_MUTABLE, ctl_id);
 				newval = l.deref().num() + 1;
 				l.deref().assign(newval);
 				result.assign(newval);
 				return ok;
 			case expr_t::DECR:
-				ok = ok && interpret(n->left, cur_env, l, flags | ENV_MUTABLE, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags | ENV_MUTABLE, ctl_id);
 				newval = l.deref().num() - 1;
 				l.deref().assign(newval);
 				result.assign(newval);
 				return ok;
 			case expr_t::DEFINE:
-				result.assign(n);
+				result.assign(n4);
 				return ok;
 			case expr_t::ASSIGN:
 				// evaluate expression before the lhs identifier
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 
 				// if on the LHS of the assignment we have a special variable i.e. ${xy}, use a
 				// hack to assign the value to the storage location
-				if (lk::iden_t *iden = dynamic_cast<lk::iden_t*>(n->left))
+				if (lk::iden_t *iden = dynamic_cast<lk::iden_t*>(n4->left))
 					if (iden->special)
 						return ok && special_set(iden->name, r.deref()); // don't bother to copy rhs to result either.
 
 				// otherwise evaluate the LHS in a mutable context, as normal.
-				ok = ok && interpret(n->left, cur_env, l, flags | ENV_MUTABLE, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags | ENV_MUTABLE, ctl_id);
 				l.deref().copy(r.deref());
 				result.copy(r.deref());
 				return ok;
 			case expr_t::LOGIOR:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
 				if (((int)l.deref().num()) != 0) // short circuit evaluation
 				{
 					result.assign(1.0);
 					return ok;
 				}
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign((((int)l.deref().num()) || ((int)r.deref().num())) ? 1 : 0);
 				return ok;
 			case expr_t::LOGIAND:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
 				if (((int)l.deref().num()) == 0) // short circuit evaluation
 				{
 					result.assign(0.0);
 					return ok;
 				}
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign((((int)l.deref().num()) && ((int)r.deref().num())) ? 1 : 0);
 				return ok;
 			case expr_t::NOT:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
 				result.assign(((int)l.deref().num()) ? 0 : 1);
 				return ok;
 			case expr_t::EQ:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign(l.deref().equals(r.deref()) ? 1 : 0);
 				return ok;
 			case expr_t::NE:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign(l.deref().equals(r.deref()) ? 0 : 1);
 				return ok;
 			case expr_t::LT:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign(l.deref().lessthan(r.deref()) ? 1 : 0);
 				return ok;
 			case expr_t::LE:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign(l.deref().lessthan(r.deref()) || l.deref().equals(r.deref()) ? 1 : 0);
 				return ok;
 			case expr_t::GT:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign(!l.deref().lessthan(r.deref()) && !l.deref().equals(r.deref()) ? 1 : 0);
 				return ok;
 			case expr_t::GE:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign(!l.deref().lessthan(r.deref()) ? 1 : 0);
 				return ok;
 			case expr_t::EXP:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				result.assign(pow(l.deref().num(), r.deref().num()));
 				return ok;
 			case expr_t::NEG:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
 				result.assign(0 - l.deref().num());
 				return ok;
 			case expr_t::WHEREAT:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
-				ok = ok && interpret(n->right, cur_env, r, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, flags, ctl_id);
 				if (l.deref().type() == vardata_t::HASH)
 				{
 					lk::varhash_t *hh = l.deref().hash();
@@ -395,26 +395,26 @@ bool lk::eval::interpret(node_t *root,
 				}
 				else
 				{
-					m_errors.push_back(make_error(n,
+					m_errors.push_back(make_error(n4,
 						(const char*)lk_tr("left hand side to find operator ?@ must be a hash, vector, or string").c_str()));
 					return false;
 				}
 				return ok;
 			case expr_t::INDEX:
 			{
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
 				bool anonymous = (l.type() == vardata_t::VECTOR);
 
 				vardata_t &arr = l.deref();
 
 				if (!(flags&ENV_MUTABLE) && arr.type() != vardata_t::VECTOR)
 				{
-					m_errors.push_back(make_error(n->left,
+					m_errors.push_back(make_error(n4->left,
 						(const char*)lk_tr("cannot index non array data in non mutable context").c_str()));
 					return false;
 				}
 
-				ok = ok && interpret(n->right, cur_env, r, 0, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, 0, ctl_id);
 				size_t idx = r.deref().as_unsigned();
 
 				if ((flags&ENV_MUTABLE)
@@ -432,7 +432,7 @@ bool lk::eval::interpret(node_t *root,
 			}
 			case expr_t::HASH:
 			{
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
 				bool anonymous = (l.type() == vardata_t::HASH);
 
 				vardata_t &hash = l.deref();
@@ -441,7 +441,7 @@ bool lk::eval::interpret(node_t *root,
 					&& (hash.type() != vardata_t::HASH))
 					hash.empty_hash();
 
-				ok = ok && interpret(n->right, cur_env, r, 0, ctl_id);
+				ok = ok && interpret(n4->right, cur_env, r, 0, ctl_id);
 				vardata_t &val = r.deref();
 
 				vardata_t *x = hash.lookup(val.as_string());
@@ -465,15 +465,15 @@ bool lk::eval::interpret(node_t *root,
 			case expr_t::CALL:
 			case expr_t::THISCALL:
 			{
-				expr_t *cur_expr = n;
+				expr_t *cur_expr = n4;
 
-				if (iden_t *iden = dynamic_cast<iden_t*>(n->left))
+				if (iden_t *iden = dynamic_cast<iden_t*>(n4->left))
 				{
 					// query function table for identifier
 					if (lk::fcallinfo_t *fi = cur_env->lookup_func(iden->name))
 					{
 						lk::invoke_t cxt(cur_env, result, fi->user_data);
-						list_t *argvals = dynamic_cast<list_t*>(n->right);
+						list_t *argvals = dynamic_cast<list_t*>(n4->right);
 
 						// first determine number of arguments
 						size_t nargs = 0;
@@ -518,11 +518,11 @@ bool lk::eval::interpret(node_t *root,
 					}
 				}
 
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
 				expr_t *define = dynamic_cast<expr_t*>(l.deref().func());
 				if (!define)
 				{
-					m_errors.push_back(make_error(n, (const char*)lk_string(lk_tr("error in function call: malformed 'define'") + "\n").c_str()));
+					m_errors.push_back(make_error(n4, (const char*)lk_string(lk_tr("error in function call: malformed 'define'") + "\n").c_str()));
 					return false;
 				}
 
@@ -536,15 +536,15 @@ bool lk::eval::interpret(node_t *root,
 				size_t nargs_expected = argnames ? argnames->items.size() : 0;
 
 				// number of provided arguments
-				list_t *argvals = dynamic_cast<list_t*>(n->right);
+				list_t *argvals = dynamic_cast<list_t*>(n4->right);
 				size_t nargs_given = argvals ? argvals->items.size() : 0;
 
-				if (n->oper == expr_t::THISCALL)
+				if (n4->oper == expr_t::THISCALL)
 					nargs_given++;
 
 				if (nargs_given < nargs_expected)
 				{
-					m_errors.push_back(make_error(n,
+					m_errors.push_back(make_error(n4,
 						(const char*)lk_string(lk_tr("too few arguments provided to function call: %d expected, %d given") + "\n").c_str(),
 						nargs_expected, nargs_given));
 					return false;
@@ -622,7 +622,7 @@ bool lk::eval::interpret(node_t *root,
 			}
 			break;
 			case expr_t::SIZEOF:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
 				if (l.deref().type() == vardata_t::VECTOR)
 				{
 					result.assign((int)l.deref().length());
@@ -650,13 +650,13 @@ bool lk::eval::interpret(node_t *root,
 				}
 				else
 				{
-					m_errors.push_back(make_error(n,
+					m_errors.push_back(make_error(n4,
 						lk_tr("operand to # ('sizeof') must be a array, string, or table type\n").c_str()));
 					return false;
 				}
 				break;
 			case expr_t::KEYSOF:
-				ok = ok && interpret(n->left, cur_env, l, flags, ctl_id);
+				ok = ok && interpret(n4->left, cur_env, l, flags, ctl_id);
 				if (l.deref().type() == vardata_t::HASH)
 				{
 					varhash_t *h = l.deref().hash();
@@ -673,12 +673,12 @@ bool lk::eval::interpret(node_t *root,
 				}
 				else
 				{
-					m_errors.push_back(make_error(n, lk_tr("operand to @ (keysof) must be a table").c_str()));
+					m_errors.push_back(make_error(n4, lk_tr("operand to @ (keysof) must be a table").c_str()));
 					return false;
 				}
 				break;
 			case expr_t::TYPEOF:
-				if (lk::iden_t *iden = dynamic_cast<lk::iden_t*>(n->left))
+				if (lk::iden_t *iden = dynamic_cast<lk::iden_t*>(n4->left))
 				{
 					if (lk::vardata_t *vv = cur_env->lookup(iden->name, true)) result.assign(vv->typestr());
 					else result.assign("unknown");
@@ -686,14 +686,14 @@ bool lk::eval::interpret(node_t *root,
 				}
 				else
 				{
-					m_errors.push_back(make_error(n, lk_tr("argument to typeof(...) must be an identifier").c_str()));
+					m_errors.push_back(make_error(n4, lk_tr("argument to typeof(...) must be an identifier").c_str()));
 					return false;
 				}
 				break;
 			case expr_t::INITVEC:
 			{
 				result.empty_vector();
-				list_t *p = dynamic_cast<list_t*>(n->left);
+				list_t *p = dynamic_cast<list_t*>(n4->left);
 				if (p)
 				{
 					for (size_t i = 0; i < p->items.size(); i++)
@@ -708,7 +708,7 @@ bool lk::eval::interpret(node_t *root,
 			case expr_t::INITHASH:
 			{
 				result.empty_hash();
-				list_t *p = dynamic_cast<list_t*>(n->left);
+				list_t *p = dynamic_cast<list_t*>(n4->left);
 				if (p)
 				{
 					for (size_t i = 0; i < p->items.size(); i++)
@@ -739,12 +739,12 @@ bool lk::eval::interpret(node_t *root,
 			{
 				vardata_t switchval;
 				switchval.assign(-1.0);
-				if (!interpret(n->left, cur_env, switchval, flags, ctl_id)) return false;
-				list_t *p = dynamic_cast<list_t*>(n->right);
+				if (!interpret(n4->left, cur_env, switchval, flags, ctl_id)) return false;
+				list_t *p = dynamic_cast<list_t*>(n4->right);
 				size_t index = switchval.as_unsigned();
 				if (!p || index >= p->items.size())
 				{
-					m_errors.push_back(make_error(n, lk_tr("invalid switch statement index of %d").c_str(), index));
+					m_errors.push_back(make_error(n4, lk_tr("invalid switch statement index of %d").c_str(), index));
 					return false;
 				}
 
@@ -757,22 +757,22 @@ bool lk::eval::interpret(node_t *root,
 			}
 		}
 		catch (lk::error_t &e) {
-			m_errors.push_back(make_error(n, (const char*)lk_string(lk_tr("error") +
+			m_errors.push_back(make_error(n4, (const char*)lk_string(lk_tr("error") +
 				": %s\n").c_str(), (const char*)e.text.c_str()));
 			return false;
 		}
 	}
-	else if (ctlstmt_t *n = dynamic_cast<ctlstmt_t*>(root))
+	else if (ctlstmt_t *n5 = dynamic_cast<ctlstmt_t*>(root))
 	{
 		try {
 			vardata_t l;
 			bool ok = true;
-			switch (n->ictl)
+			switch (n5->ictl)
 			{
 			case ctlstmt_t::RETURN:
-				if (n->rexpr != 0)
+				if (n5->rexpr != 0)
 				{
-					ok = ok && interpret(n->rexpr, cur_env, l, flags, ctl_id);
+					ok = ok && interpret(n5->rexpr, cur_env, l, flags, ctl_id);
 					result.copy(l.deref());
 				}
 				ctl_id = CTL_RETURN;
@@ -792,31 +792,31 @@ bool lk::eval::interpret(node_t *root,
 			}
 		}
 		catch (lk::error_t &e) {
-			m_errors.push_back(make_error(n, (const char*)lk_string(lk_tr("error") + ": %s\n").c_str(), (const char*)e.text.c_str()));
+			m_errors.push_back(make_error(n5, (const char*)lk_string(lk_tr("error") + ": %s\n").c_str(), (const char*)e.text.c_str()));
 			return false;
 		}
 	}
-	else if (iden_t *n = dynamic_cast<iden_t*>(root))
+	else if (iden_t *n6 = dynamic_cast<iden_t*>(root))
 	{
-		if (n->special && !(flags&ENV_MUTABLE))
-			return special_get(n->name, result);
+		if (n6->special && !(flags&ENV_MUTABLE))
+			return special_get(n6->name, result);
 
-		vardata_t *x = cur_env->lookup(n->name, !(flags&ENV_MUTABLE));
+		vardata_t *x = cur_env->lookup(n6->name, !(flags&ENV_MUTABLE));
 
 		if (x)
 		{
-			if (n->constval)
+			if (n6->constval)
 			{
-				m_errors.push_back(make_error(n,
-					(const char*)lk_string(lk_tr("overriding previous non-const identifier with const-ness not allowed:") + n->name + "\n").c_str()));
+				m_errors.push_back(make_error(n6,
+					(const char*)lk_string(lk_tr("overriding previous non-const identifier with const-ness not allowed:") + n6->name + "\n").c_str()));
 				result.nullify();
 				return false;
 			}
 
-			if (n->globalval)
+			if (n6->globalval)
 			{
-				m_errors.push_back(make_error(n,
-					(const char*)lk_string(lk_tr("overriding previous non-global identifier with global-ness not allowed:") + n->name + "\n").c_str()));
+				m_errors.push_back(make_error(n6,
+					(const char*)lk_string(lk_tr("overriding previous non-global identifier with global-ness not allowed:") + n6->name + "\n").c_str()));
 				result.nullify();
 				return false;
 			}
@@ -828,7 +828,7 @@ bool lk::eval::interpret(node_t *root,
 		{
 			// check if the variable exists in the global frame
 			// and it was originally created as a global variable
-			x = cur_env->global()->lookup(n->name, false);
+			x = cur_env->global()->lookup(n6->name, false);
 			if (x && x->flagval(vardata_t::GLOBALVAL))
 			{
 				result.assign(x);
@@ -837,39 +837,39 @@ bool lk::eval::interpret(node_t *root,
 
 			x = new vardata_t;
 
-			if (n->constval)
+			if (n6->constval)
 			{
 				x->set_flag(vardata_t::CONSTVAL);
 				x->clear_flag(vardata_t::ASSIGNED);
 			}
 
-			if (n->globalval)
+			if (n6->globalval)
 			{
 				x->set_flag(vardata_t::GLOBALVAL);
-				cur_env->global()->assign(n->name, x);
+				cur_env->global()->assign(n6->name, x);
 			}
 			else
-				cur_env->assign(n->name, x);
+				cur_env->assign(n6->name, x);
 
 			result.assign(x);
 			return true;
 		}
 		else
 		{
-			m_errors.push_back(make_error(n,
-				(const char*)lk_string(lk_tr("reference to unassigned variable:") + n->name + "\n").c_str()));
+			m_errors.push_back(make_error(n6,
+				(const char*)lk_string(lk_tr("reference to unassigned variable:") + n6->name + "\n").c_str()));
 			result.nullify();
 			return false;
 		}
 	}
-	else if (constant_t *n = dynamic_cast<constant_t*>(root))
+	else if (constant_t *n7 = dynamic_cast<constant_t*>(root))
 	{
-		result.assign(n->value);
+		result.assign(n7->value);
 		return true;
 	}
-	else if (literal_t *n = dynamic_cast<literal_t*>(root))
+	else if (literal_t *n8 = dynamic_cast<literal_t*>(root))
 	{
-		result.assign(n->value);
+		result.assign(n8->value);
 		return true;
 	}
 	else if (0 != dynamic_cast<null_t*>(root))
