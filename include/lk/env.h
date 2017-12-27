@@ -43,6 +43,7 @@
 namespace lk {
 	class vardata_t;
 	struct fcallinfo_t;
+	struct bytecode;
 	typedef unordered_map< lk_string, vardata_t*, lk_string_hash, lk_string_equal > varhash_t;
 	
 /**
@@ -321,15 +322,20 @@ namespace lk {
 
 		void *m_userData;
 
+		// for threading existing bytecode
+		bytecode *m_bc;
+
 	public:
-		invoke_t(env_t *e, vardata_t &result, void *user_data = 0)
-			: m_docPtr(0), m_env(e), m_resultVal(result), m_hasError(false), m_userData(user_data) { }
+		invoke_t(env_t *e, vardata_t &result, void *user_data = 0, bytecode *bc = 0)
+			: m_docPtr(0), m_env(e), m_resultVal(result), m_hasError(false), m_userData(user_data), m_bc(bc) { }
 
 		bool doc_mode();
 		void document(doc_t d);
 		env_t *env() { return m_env; }
 		vardata_t &result() { return m_resultVal; }
 		void *user_data() { return m_userData; }
+		bytecode *bc() { return m_bc; }
+
 
 		std::vector< vardata_t > &arg_list() { return m_argList; }
 		size_t arg_count() { return m_argList.size(); }

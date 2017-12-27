@@ -35,6 +35,8 @@ namespace lk {
 	fcall_t* stdlib_sysio();
 	fcall_t* stdlib_string();
 	fcall_t* stdlib_math();
+
+	fcall_t* stdlib_thread();
 #ifdef LK_USE_WXWIDGETS
 	fcall_t* stdlib_wxui();
 #endif

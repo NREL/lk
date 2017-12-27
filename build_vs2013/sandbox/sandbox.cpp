@@ -85,6 +85,7 @@ public:
 		m_runEnv->register_funcs(lk::stdlib_math());
 		m_runEnv->register_funcs(lk::stdlib_string());
 		m_runEnv->register_funcs(lk::stdlib_wxui());
+		m_runEnv->register_funcs(lk::stdlib_thread());
 		vm.initialize(m_runEnv);
 	}
 
@@ -149,7 +150,8 @@ public:
 		vsizer->Add(tsizer, 1, wxALL | wxEXPAND, 0);
 		SetSizer(vsizer);
 
-		m_code->LoadFile(wxGetHomeDir() + "/.lk-vm-code");
+//		m_code->LoadFile(wxGetHomeDir() + "/.lk-vm-code");
+		m_code->LoadFile("C:/Projects/SAM/Documentation/lk/Parallelization/test/async_test.lk");
 		ParseAndGenerateAssembly();
 	}
 	virtual ~VMTestFrame() {
