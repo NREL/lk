@@ -28,4 +28,4 @@ branches:
   only:
   - master
   - develop
-  - Multi-thread
+
