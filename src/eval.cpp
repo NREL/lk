@@ -33,20 +33,20 @@
 static lk_string make_error(lk::node_t *n, const char *fmt, ...)
 {
 	char buf[512];
+	memset(buf, 0, sizeof(buf));
 
 	sprintf(buf, "[%d]: ", n->line());
-
 	char *p = buf + strlen(buf);
-
 	va_list list;
 	va_start(list, fmt);
-
+	if (strlen(list) != 0)
+	{
 #ifdef _WIN32
-	_vsnprintf(p, 480, fmt, list);
+		_vsnprintf(p, 480, fmt, list);
 #else
-	vsnprintf(p, 480, fmt, list);
+		vsnprintf(p, 480, fmt, list);
 #endif
-
+	}
 	va_end(list);
 
 	return lk_string(buf);
