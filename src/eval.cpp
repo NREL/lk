@@ -39,7 +39,7 @@ static lk_string make_error(lk::node_t *n, const char *fmt, ...)
 	char *p = buf + strlen(buf);
 	va_list list;
 	va_start(list, fmt);
-	if (strlen(list) != 0)
+	if (strlen((const char *)list) != 0)
 	{
 #ifdef _WIN32
 		_vsnprintf(p, 480, fmt, list);
