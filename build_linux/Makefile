@@ -1,7 +1,7 @@
 VPATH = ../src
 CC = gcc
 CXX = g++
-WARNINGS = -Wall -Werror
+WARNINGS = -Wall
 CFLAGS = -I../include -fPIC $(WARNINGS) -O2 -DLK_USE_WXWIDGETS `wx-config-3 --cflags`
 CXXFLAGS = -std=c++0x $(CFLAGS)
 #CXXFLAGS= -std=c++11 $(CFLAGS)
