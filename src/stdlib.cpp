@@ -1488,7 +1488,7 @@ static void _async( lk::invoke_t &cxt )
 
 	lk::input_string p(file_contents);
 	lk::parser parse(p);
-	std::auto_ptr<lk::node_t> tree(parse.script());
+	std::unique_ptr<lk::node_t> tree(parse.script());
 	size_t i = 0;
 	while ((int)i < parse.error_count())
 		cxt.result().vec_append(lk_string(parse.error(i++)) + "\n");
