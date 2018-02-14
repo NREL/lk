@@ -1420,7 +1420,7 @@ lk_string async_thread( lk::invoke_t cxt, lk::bytecode lkbc, lk_string lk_result
 
 
 // async thread function
-void async_thread_promise( lk_string lks, std::promise<lk_string> pobj )
+void async_thread_promise( lk_string lks, std::shared_ptr<std::promise<lk_string>> pobj )
 {
 	//pobj.set_value(  async_thread(lks));
 }
@@ -1649,9 +1649,10 @@ static void _promise( lk::invoke_t &cxt )
 			for (int i = 0; i< num_threads; i++)
 			{
 				std::promise<lk_string> p;
+				auto sh = std::make_shared<std::promise<lk_string>>(std::move(p));
 				results.push_back( p.get_future());
 				lk_string lks = cxt.arg(1).as_string() + "=" + cxt.arg(2).vec()->at(i).as_string() + ";\n" + file_contents + "\n";
-				threads.push_back(std::thread(async_thread_promise, lks, std::move(p)));
+				threads.push_back(std::thread(async_thread_promise, lks, sh));
 				threads[i].detach();
 			}
 			for (int i=0; i<num_threads; i++)
