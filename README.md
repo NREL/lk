@@ -1,4 +1,5 @@
 # LK
+[![TravisCI](https://travis-ci.org/NREL/lk.svg?branch=develop)](https://travis-ci.org/NREL/lk)
 
 LK is a scripting language originally developed for the National Renewable Energy Laboratory's [System Advisor Model (SAM)](https://sam.nrel.gov). LK is designed to be small, fast, and easily embedded in other applications, and provides a way for users to to extend an application's built-in functionality.
 
