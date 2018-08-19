@@ -241,7 +241,7 @@ public:
 static void _wx_progressbar(lk::invoke_t &cxt)
 {
 	LK_DOC("progressbar", "Shows a progress bar dialog.  "
-		"Call this function with a table of options (message,title,cancelbutton:t/f,time:t/f,max) to create a new dialog, and the reference is returned.  "
+		"Call this function with a table of options (message,title,cancelbutton:t/f,time:t/f,max,closebutton:t/f) to create a new dialog, and the reference is returned.  "
 		"Call this function with a reference and a table of options (message,value) to update the progress.  "
 		"Call this function with a reference only to destroy an existing dialog.  "
 		"Returns true if cancel button was pressed for an update call, or obj-ref when creating a new dialog.", "([obj-ref], table:options):[boolean or obj-ref]");
@@ -252,6 +252,7 @@ static void _wx_progressbar(lk::invoke_t &cxt)
 		wxString title("Progress"), message("Please wait...");
 		bool cancelbutton = false;
 		bool showtime = false;
+		bool closebutton = true;
 
 		lk::vardata_t &opt = cxt.arg(0);
 		if (lk::vardata_t *x = opt.lookup("message"))
@@ -264,10 +265,13 @@ static void _wx_progressbar(lk::invoke_t &cxt)
 			showtime = x->as_boolean();
 		if (lk::vardata_t *x = opt.lookup("max"))
 			max = x->as_integer();
+		if (lk::vardata_t *x = opt.lookup("closebutton"))
+			closebutton = x->as_boolean();
 
 		long style = wxPD_SMOOTH | wxPD_APP_MODAL;
 		if (cancelbutton) style |= wxPD_CAN_ABORT;
 		if (showtime) style |= wxPD_ELAPSED_TIME;
+		if (!closebutton) style |= wxPD_AUTO_HIDE;
 
 		prgdlg_t *ref = new prgdlg_t;
 		ref->m_dlg = new MyProgressDialog(ref, title, message, max, GetCurrentTopLevelWindow(), style);
