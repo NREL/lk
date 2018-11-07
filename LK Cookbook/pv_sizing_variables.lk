@@ -21,6 +21,7 @@ Finally, it sets the System Sizing mode to "Specify modules and inverters" and
 demonstrates how to calculate the resulting system capacities and DC/AC ratio.
 
 Written by Paul Gilman, July 22, 2016, and tested in SAM 2016.3.14 r1.
+Revised 11/6/2018 and tested in SAM 2018.11.5 Beta.
 
 */
 
@@ -49,15 +50,15 @@ outln('single inverter max Pac = ',inverter_pacmax,' W\n');
 // 2. Size the system using the "Specify desired array size" mode on the System
 // Design input page.
 
-set('size_auto_or_manual',0); // specify desired array size
+set('enable_auto_size',1); // specify desired array size
 
-dc_target = 10;
+dc_target = 100;
 ratio_target = 1.2;
 set('desired_size',dc_target); // DC kW
-set('dcac_ratio',ratio_target);
+set('desired_dcac_ratio',ratio_target);
 
-n_mod_per_str = get('modules_per_string');
-n_str_in_par = get('strings_in_parallel');
+n_mod_per_str = get('subarray1_modules_per_string');
+n_str_in_par = get('subarray1_nstrings');
 n_inverters = get('inverter_count');
 
 array_pmp = n_mod_per_str*n_str_in_par*module_pmp;
@@ -81,20 +82,17 @@ outln('actual DC/AC ratio = ',array_pmp/inverter_pac,'\n');
 // 3. Size the system using the "Specify modules and inverters" mode.
 //
 
-set('size_auto_or_manual',1); // specify modules and inverters
+set('enable_auto_size',0); // specify modules and inverters
 
 n_mod_str = 10;
 n_str_par = 4;
 n_inv = 1;
 
-// these "user" variables are different from the "actual" input variables
-// you can either set the user variables to see the values under "Specify
-// modules and inverters" on the System Design input page, or just ignore the
-// "user" variables and set the actual input variables (modules_per_string,
-// strings_in_parallel, and inverter_count) directly.
-set('user_modules_per_string',n_mod_str);
-set('user_strings_in_parallel',n_str_par);
-set('user_inverter_count',n_inv);
+// assume a single subarray, could enable additional subarrays using 
+// subarray2_enable, subarray3_enable, subarray4_enable
+set('subarray1_modules_per_string',n_mod_str);
+set('subarray1_nstrings',n_str_par);
+set('inverter_count',n_inv);
 
 array_pdc = n_mod_str*n_str_par*module_pmp;
 inverter_pac = n_inv*inverter_pacmax; 
