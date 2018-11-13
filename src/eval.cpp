@@ -30,16 +30,37 @@
 #include <lk/eval.h>
 #include <lk/invoke.h>
 
+
+char * replace_char(const char * input, char find, char replace)
+{
+
+	char * output = (char*)malloc(strlen(input));
+
+	for (size_t i = 0; i < strlen(input); i++)
+	{
+		if (input[i] == find) output[i] = replace;
+		else output[i] = input[i];
+	}
+
+	output[strlen(input)] = '\0';
+
+	return output;
+}
+
 static lk_string make_error(lk::node_t *n, const char *fmt, ...)
 {
 	char buf[512];
 	memset(buf, 0, sizeof(buf));
 
+//	char *ffmt = replace_char(fmt, '%', '_');
+
+	fmt = replace_char(fmt, '%', '_');
+
 	sprintf(buf, "[%d]: ", n->line());
 	char *p = buf + strlen(buf);
 	va_list list;
 	va_start(list, fmt);
-	if (strlen((const char *)list) != 0)
+//	if (strlen((const char *)list) != 0)
 	{
 #ifdef _WIN32
 		_vsnprintf(p, 480, fmt, list);

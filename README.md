@@ -1,4 +1,6 @@
 # LK
+[![TravisCI](https://travis-ci.org/NREL/lk.svg?branch=develop)](https://travis-ci.org/NREL/lk)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FNREL%2Flk.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FNREL%2Flk?ref=badge_shield)
 
 LK is a scripting language originally developed for the National Renewable Energy Laboratory's [System Advisor Model (SAM)](https://sam.nrel.gov). LK is designed to be small, fast, and easily embedded in other applications, and provides a way for users to to extend an application's built-in functionality.
 
@@ -33,3 +35,6 @@ If you would like to submit code to fix an issue or add a feature, you can use G
 ## License
 
 LK is licensed under an MIT [license](LICENSE.md).
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FNREL%2Flk.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FNREL%2Flk?ref=badge_large)

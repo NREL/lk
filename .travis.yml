@@ -9,14 +9,14 @@ compiler:
 
 
 before_script:
-  - wget -q https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.0/wxWidgets-3.1.0.tar.bz2
-  - tar jxf wxWidgets-3.1.0.tar.bz2
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then (cd wxWidgets-3.1.0 && ./configure --prefix=$HOME/wx-3.1.0 && make -j2 all install); fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then (cd wxWidgets-3.1.0 && ./configure --prefix=$HOME/wx-3.1.0 --enable-stl=yes --enable-debug=no --enable-shared=no --with-cocoa --enable-macosx_arch=x86_64 --enable-unicode --enable-webview --with-cxx=11 --with-macosx-version-min=10.9  --with-libjpeg=builtin --with-libpng=builtin --with-regex=builtin --with-libtiff=builtin --with-zlib=builtin --with-expat=builtin --disable-qtkit --disable-mediactrl   && make -j2 all install); fi
-  - ln -s $HOME/wx-3.1.0/bin/wx-config $HOME/wx-3.1.0/bin/wx-config-3
+  - wget -q https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.1/wxWidgets-3.1.1.tar.bz2
+  - tar jxf wxWidgets-3.1.1.tar.bz2
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then (cd wxWidgets-3.1.1 && ./configure --prefix=$HOME/wx-3.1.1 && make -j2 all install); fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then (cd wxWidgets-3.1.1 && ./configure --prefix=$HOME/wx-3.1.1 --enable-stl=yes --enable-debug=no --enable-shared=no --with-cocoa --enable-macosx_arch=x86_64 --enable-unicode --enable-webview --with-cxx=11 --with-macosx-version-min=10.9  --with-libjpeg=builtin --with-libpng=builtin --with-regex=builtin --with-libtiff=builtin --with-zlib=builtin --with-expat=builtin --disable-mediactrl   && make -j2 all install); fi
+  - ln -s $HOME/wx-3.1.1/bin/wx-config $HOME/wx-3.1.1/bin/wx-config-3
 
 script:
-  - export PATH=$PATH:$HOME/wx-3.1.0/bin
+  - export PATH=$PATH:$HOME/wx-3.1.1/bin
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make -j2 -C build_linux; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make -j2 -C build_osx; fi
 
@@ -28,6 +28,4 @@ branches:
   only:
   - master
   - develop
-  - 2017.9.5.r3
-
-
+  
