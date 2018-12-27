@@ -20,10 +20,10 @@ for(rl=0;rl<11;rl++)
 // set loan rate in active case 
 	set('loan_rate',rl);
 // get all values that determine wacc and use to set real discount rate
-// state tax rate
-	ts=get('state_tax_rate')/100;
-// federal tax rate
-	tf=get('federal_tax_rate')/100;
+// state tax rate (single-value, not schedule)
+	ts=get('state_tax_rate')[0]/100;
+// federal tax rate (single-value, not schedule)
+	tf=get('federal_tax_rate')[0]/100;
 // effective tax rate	
 	te=ts+(1-ts)*tf;
 // debt fraction

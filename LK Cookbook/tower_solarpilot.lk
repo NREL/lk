@@ -1,3 +1,4 @@
+	
 	if( get('tower_technology') != 1 )
 	{
 		flux_max = get('flux_max_mspt');
@@ -10,12 +11,13 @@
 	ssc_var(obj, "solar_resource_file",get('solar_resource_file'));
 	ssc_var(obj, "helio_width",get('helio_width'));
 	ssc_var(obj, "helio_height",get('helio_height'));
-	ssc_var(obj, "helio_optical_error",get('helio_optical_error'));
+	ssc_var(obj, "helio_optical_error",get('helio_optical_error_mrad')*1e-3);
 	ssc_var(obj, "helio_active_fraction",get('helio_active_fraction'));
 	ssc_var(obj, "dens_mirror",get('dens_mirror'));
 	ssc_var(obj, "helio_reflectance",get('helio_reflectance'));
 	ssc_var(obj, "rec_absorptance",get('rec_absorptance'));
-	ssc_var(obj, "rec_height",get('H_rec'));
+	ssc_var(obj, "rec_height",get('rec_height'));
+	ssc_var(obj, "h_tower", get('h_tower'));
 	ssc_var(obj, "rec_aspect",get('rec_aspect'));
 	ssc_var(obj, "rec_hl_perm2",get('rec_hl_perm2'));
 	ssc_var(obj, "q_design",get('Q_rec_des'));
@@ -34,18 +36,22 @@
 	ssc_var(obj, "calc_fluxmaps", 0);
 	ssc_var(obj, "tower_fixed_cost",get('csp.pt.cost.tower.fixed'));
 	ssc_var(obj, "tower_exp",get('csp.pt.cost.tower.scaling_exp'));
-	ssc_var(obj, "rec_ref_cost",get('csp.pt.cost.receiver.ref_cost'));
-	ssc_var(obj, "rec_ref_area",get('csp.pt.cost.receiver.ref_area'));
-	ssc_var(obj, "rec_cost_exp",get('csp.pt.cost.receiver.scaling_exp'));
-	ssc_var(obj, "site_spec_cost",get('csp.pt.cost.site_improvements_per_m2'));
-	ssc_var(obj, "heliostat_spec_cost",get('csp.pt.cost.heliostats_per_m2'));
+	ssc_var(obj, "rec_ref_cost",get('rec_ref_cost'));
+	ssc_var(obj, "rec_ref_area",get('rec_ref_area'));
+	ssc_var(obj, "rec_cost_exp",get('rec_cost_exp'));
+	
+	ssc_var(obj, "site_spec_cost",get('site_spec_cost'));
+	ssc_var(obj, "heliostat_spec_cost",get('heliostat_spec_cost'));
+	ssc_var(obj, "tower_fixed_cost", get('tower_fixed_cost'));
+	ssc_var(obj, "tower_exp", get('tower_exp'));
+	ssc_var(obj, "rec_ref_cost", get('rec_ref_cost'));
 	ssc_var(obj, "plant_spec_cost",get('csp.pt.cost.power_block_per_kwe'));
 	ssc_var(obj, "bop_spec_cost",get('csp.pt.cost.bop_per_kwe'));
 	ssc_var(obj, "tes_spec_cost",get('csp.pt.cost.storage_per_kwht'));
-	ssc_var(obj, "land_spec_cost",get('csp.pt.cost.plm.per_acre'));
-	ssc_var(obj, "contingency_rate",get('csp.pt.cost.contingency_percent'));
+	ssc_var(obj, "land_spec_cost",get('land_spec_cost'));
+	ssc_var(obj, "contingency_rate",get('contingency_rate'));
 	ssc_var(obj, "sales_tax_rate",get('sales_tax_rate'));
-	ssc_var(obj, "sales_tax_frac",get('csp.pt.cost.sales_tax.percent'));
+	ssc_var(obj, "sales_tax_frac",get('sales_tax_frac'));
 	ssc_var(obj, "cost_sf_fixed", get('cost_sf_fixed'));
 	
 	ssc_var(obj, "opt_flux_penalty", get('opt_flux_penalty')); // new for SAM 2016.3.14
@@ -63,7 +69,7 @@
 	//msgbox("Dumping inputs to: " + homedir() + '/solarpilot.txt');
 	
 	//save prior values as reference in case we're optimizing
-	H_rec0 = get('H_rec');
+	H_rec0 = get('rec_height');
 	D_rec0 = H_rec0/get('rec_aspect');
 	THT0 = get('THT');	
 	np0 = #get('helio_positions');
@@ -79,17 +85,6 @@
 		aspect = ssc_var(obj, "rec_aspect_opt");
 		D_rec = H_rec/aspect;
 		THT = ssc_var(obj, "h_tower_opt");
-
-		if( get('tower_technology') == 1 )
-		{
-			h_boiler = get('f_h_b')*H_rec;
-			h_sh = get('f_h_sh')*H_rec;
-			h_rh = get('f_h_rh')*H_rec;
-			
-			value("h_boiler", h_boiler);
-			value("h_sh", h_sh);
-			value("h_rh", h_rh);
-		}
 		
 		// The following code is applicable to both MSPT and DSG
 		
@@ -122,13 +117,13 @@
 				
 				if( get('tower_technology') == 1 )
 				{
-					set("H_rec", H_rec);
+					set("rec_height", H_rec);
 					set("h_tower", THT);
 					set("d_rec", D_rec);
 				}
 				else
 				{
-					set("H_rec", H_rec);
+					set("rec_height", H_rec);
 					set("THT", THT);
 					set("D_rec", D_rec);				
 				}
