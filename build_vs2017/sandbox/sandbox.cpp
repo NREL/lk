@@ -38,6 +38,7 @@
 #include <wx/app.h>
 #include <wx/busyinfo.h>
 #include <wx/stc/stc.h>
+#include <wx/display.h>
 
 #include <lk/absyn.h>
 #include <lk/env.h>
@@ -88,7 +89,7 @@ public:
 		vm.initialize(m_runEnv);
 	}
 
-	VMTestFrame() : wxFrame(NULL, wxID_ANY, "LK-VM", wxDefaultPosition, wxSize(1200, 900))
+    VMTestFrame() : wxFrame(NULL, wxID_ANY, "LK-VM", wxDefaultPosition, wxSize(wxDisplay().GetGeometry().GetWidth()/3*2, wxDisplay().GetGeometry().GetWidth()/2))
 	{
 		m_runEnv = 0;
 
