@@ -2829,7 +2829,7 @@ void _sql_exec(lk::invoke_t &cxt)
 					break;
 
 				case SQLITE_TEXT:
-					row.vec_append(lk_string(sqlite3_column_text(stmt, i)));
+                    row.vec_append(lk_string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, i))));
 					break;
 
 				case SQLITE_BLOB:
