@@ -7,11 +7,11 @@ set(CMAKE_C_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
 
 # set build configurations for VS2017
-if (MSVC)
 set(CMAKE_CONFIGURATION_TYPES='Debug;Release')
-endif(MSVC)
 
 Project(lk)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 include_directories(include src)
 
@@ -43,18 +43,15 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_link_libraries(sandboxd ${wxWidgets_LIBRARIES})
 
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}") 
-
-else()
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   add_library(lkosxwx3 STATIC ${LK_SRC})
   add_executable(sandbox ${LK_SRC} build_vs2017/sandbox/sandbox.cpp)
   target_link_libraries(sandbox ${wxWidgets_LIBRARIES})
 endif()
 
 set_property(TARGET PROPERTY
-  PREFIX ""
-  ARCHIVE_OUTPUT_DIRECTORY ..)
-
+  PREFIX "")
 
 
 if(MSVC)
