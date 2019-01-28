@@ -6,14 +6,15 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment ver
 set(CMAKE_C_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
 
-# set build configurations for VS2017
-set(CMAKE_CONFIGURATION_TYPES='Debug;Release')
+if(MSVC)
+  set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Debug and Release Builds Configured" FORCE)
+endif()
 
 Project(lk)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-include_directories(include src)
+include_directories(include)
 
 set(LK_SRC
 	src/absyn.cpp
@@ -41,17 +42,17 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_library(lkosxwx3d STATIC ${LK_SRC})
   add_executable(sandboxd ${LK_SRC} build_vs2017/sandbox/sandbox.cpp)
   target_link_libraries(sandboxd ${wxWidgets_LIBRARIES})
+  set_property(TARGET lkosxwx3d PROPERTY PREFIX "")
 
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+else()
   add_library(lkosxwx3 STATIC ${LK_SRC})
+  set_property(TARGET lkosxwx3 PROPERTY PREFIX "")
   add_executable(sandbox ${LK_SRC} build_vs2017/sandbox/sandbox.cpp)
   target_link_libraries(sandbox ${wxWidgets_LIBRARIES})
 endif()
 
-set_property(TARGET PROPERTY
-  PREFIX "")
 
 
 if(MSVC)
