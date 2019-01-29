@@ -37,12 +37,12 @@ find_package(wxWidgets COMPONENTS core base stc html xrc richtext propgrid aui g
 include(${wxWidgets_USE_FILE})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
 
-# set build types for lkosxwx3.a and sandbox
+# set build types for lk archive and sandbox
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_library(lkosxwx3d STATIC ${LK_SRC})
+  set_property(TARGET lkosxwx3d PROPERTY PREFIX "")
   add_executable(sandboxd ${LK_SRC} build_vs2017/sandbox/sandbox.cpp)
   target_link_libraries(sandboxd ${wxWidgets_LIBRARIES})
-  set_property(TARGET lkosxwx3d PROPERTY PREFIX "")
 
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
@@ -58,7 +58,7 @@ endif()
 if(MSVC)
 # need msvc optimization levels & different configs, windows sdk
   add_compile_options(/W4 /WX)
-  add_compile_definitions(LK_USE_WXWIDGETS _CRT_SECURE_NO_WARNINGS _MBCS)
+  add_compile_definitions(LK_USE_WXWIDGETS _CRT_SECURE_NO_WARNINGS _MBCS __WXMSW__)
 else(MSVC)
   add_compile_options(-Wall -O2 -arch x86_64 -fno-common)
   add_compile_definitions(LK_USE_WXWIDGETS WX_PRECOMP)
