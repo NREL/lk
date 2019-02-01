@@ -47,7 +47,7 @@
 #include <lk/codegen.h>
 
 
-#include "sqlite3.h"
+#include <lk/sqlite3.h>
 
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643
