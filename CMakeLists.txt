@@ -1,13 +1,13 @@
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
 set(CMAKE_C_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
 
 if(MSVC)
-  set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Debug and Release Builds Configured" FORCE)
+ 	set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Debug and Release Builds Configured" FORCE)
 endif()
 
 Project(lk)
@@ -28,7 +28,6 @@ set(LK_SRC
 	src/sqlite3.c
 	src/stdlib.cpp)
 
-set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # setup wxWidgets
@@ -39,28 +38,28 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
 
 # set build types for lk archive and sandbox
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_library(lkosxwx3d STATIC ${LK_SRC})
-  set_property(TARGET lkosxwx3d PROPERTY PREFIX "")
-  add_executable(sandboxd ${LK_SRC} build_vs2017/sandbox/sandbox.cpp)
-  target_link_libraries(sandboxd ${wxWidgets_LIBRARIES})
+	add_library(lkosxwx3d STATIC ${LK_SRC})
+	set_property(TARGET lkosxwx3d PROPERTY PREFIX "")
+	add_executable(sandboxd ${LK_SRC} build_vs2017/sandbox/sandbox.cpp)
+	target_link_libraries(sandboxd ${wxWidgets_LIBRARIES})
 
-  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 else()
-  add_library(lkosxwx3 STATIC ${LK_SRC})
-  set_property(TARGET lkosxwx3 PROPERTY PREFIX "")
-  add_executable(sandbox ${LK_SRC} build_vs2017/sandbox/sandbox.cpp)
-  target_link_libraries(sandbox ${wxWidgets_LIBRARIES})
+	add_library(lkosxwx3 STATIC ${LK_SRC})
+	set_property(TARGET lkosxwx3 PROPERTY PREFIX "")
+	add_executable(sandbox ${LK_SRC} build_vs2017/sandbox/sandbox.cpp)
+	target_link_libraries(sandbox ${wxWidgets_LIBRARIES})
 endif()
 
 
 
 if(MSVC)
 # need msvc optimization levels & different configs, windows sdk
-  add_compile_options(/W4 /WX)
-  add_compile_definitions(LK_USE_WXWIDGETS _CRT_SECURE_NO_WARNINGS _MBCS __WXMSW__)
+	add_compile_options(/W4 /WX)
+	add_compile_definitions(LK_USE_WXWIDGETS _CRT_SECURE_NO_WARNINGS _MBCS __WXMSW__)
 else(MSVC)
-  add_compile_options(-Wall -O2 -arch x86_64 -fno-common)
-  add_compile_definitions(LK_USE_WXWIDGETS WX_PRECOMP)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	add_compile_options(-Wall -O2 -arch x86_64 -fno-common)
+	add_compile_definitions(LK_USE_WXWIDGETS WX_PRECOMP)
 endif(MSVC)
-
