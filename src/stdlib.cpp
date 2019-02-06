@@ -1347,44 +1347,46 @@ lk_string async_thread( lk::invoke_t cxt, lk::bytecode lkbc, lk_string lk_result
 		return ret_str;
 	}
 	else
+	{
 		bc.constants[ndx_c] = input_value;
+	}
 
 
 
 
-		myvm.load(&bc);
-		myvm.initialize(&myenv);
+	myvm.load(&bc);
+	myvm.initialize(&myenv);
 //		myvm.initialize(cxt.env()->parent());
 
-		/* assigned to frame but not to identifier
-		size_t nfrms;
-		lk::vm::frame **frames = myvm.get_frames(&nfrms);
-		if (nfrms > 0)
-		{
-			lk::vardata_t vd(input_value);
-			lk::vm::frame &F = *frames[0];
-			F.env.assign(input_name, &vd);
-		}
-		*/
+	/* assigned to frame but not to identifier
+	size_t nfrms;
+	lk::vm::frame **frames = myvm.get_frames(&nfrms);
+	if (nfrms > 0)
+	{
+		lk::vardata_t vd(input_value);
+		lk::vm::frame &F = *frames[0];
+		F.env.assign(input_name, &vd);
+	}
+	*/
 
-		
-		//
+	
+	//
 	end = std::chrono::system_clock::now();
 	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
 	vminit_time = " vm init time: " + std::to_string(diff) + "ms ";
 	start = std::chrono::system_clock::now();
 
-		bool ok1 = myvm.run();
+	bool ok1 = myvm.run();
 //
 	end = std::chrono::system_clock::now();
 	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
 	vmrun_time = " vm run time: " + std::to_string(diff) + "ms ";
 
-		if (ok1)
-		{
+	if (ok1)
+	{
 
 //
-	start = std::chrono::system_clock::now();
+		start = std::chrono::system_clock::now();
 
 /*			lk::vardata_t *vd = myenv.lookup(lk_result, true);
 			if (vd)
@@ -1393,30 +1395,30 @@ lk_string async_thread( lk::invoke_t cxt, lk::bytecode lkbc, lk_string lk_result
 			}
 			else
 			{
-*/				size_t nfrm;
-				lk::vardata_t *v;
-				lk::vm::frame **frames = myvm.get_frames(&nfrm);
-				bool found = false;
-				for (size_t i = 0; i < nfrm; i++)
-				{
-					lk::vm::frame &F = *frames[nfrm - i - 1];
-					if ((v = F.env.lookup(lk_result, true)) != NULL)
-					{
-						ret_str += (v->as_string());
-						found=true;
-						break;
-					}
-				}
-				if (!found)
-					ret_str += (lk_result + " lookup error");
+*/		size_t nfrm;
+		lk::vardata_t *v;
+		lk::vm::frame **frames = myvm.get_frames(&nfrm);
+		bool found = false;
+		for (size_t i = 0; i < nfrm; i++)
+		{
+			lk::vm::frame &F = *frames[nfrm - i - 1];
+			if ((v = F.env.lookup(lk_result, true)) != NULL)
+			{
+				ret_str += (v->as_string());
+				found=true;
+				break;
 			}
+		}
+		if (!found)
+			ret_str += (lk_result + " lookup error");
+	}
 //		}
-		else
-			ret_str += ("error running vm: " + myvm.error());
+	else
+		ret_str += ("error running vm: " + myvm.error());
 
-		end = std::chrono::system_clock::now();
-		diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
-		rt_time = " result lookup time: " + std::to_string(diff) + "ms ";
+	end = std::chrono::system_clock::now();
+	diff = std::chrono::duration_cast < std::chrono::milliseconds > (end - start).count();
+	rt_time = " result lookup time: " + std::to_string(diff) + "ms ";
 	ret_str += "\n" + parse_time + env_time + bc_time + vminit_time + vmrun_time + rt_time + "\n";
 
 	return ret_str;

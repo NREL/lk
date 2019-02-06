@@ -28,7 +28,23 @@ set(LK_SRC
 	src/sqlite3.c
 	src/stdlib.cpp)
 
+# Compiler options need to be set prior to adding targets
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+if(MSVC)
+# need msvc optimization levels & different configs, windows sdk
+	add_compile_options(/W4 /WX)
+	add_compile_definitions(LK_USE_WXWIDGETS _CRT_SECURE_NO_WARNINGS _MBCS __WXMSW__)
+else(MSVC)
+	if (APPLE)
+		add_compile_options(-arch x86_64 -fno-common)
+		add_compile_definitions(WX_PRECOMP)
+	endif()
+	add_compile_options(-Wall -O2 -Werror -Wno-deprecated -Wno-deprecated-declarations)
+	add_compile_definitions(LK_USE_WXWIDGETS)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif(MSVC)
+
+
 
 # setup wxWidgets
 set(wxWidgets_CONFIG_EXECUTABLE /usr/local/bin/wx-config-3)
@@ -36,7 +52,7 @@ find_package(wxWidgets COMPONENTS core base stc html xrc richtext propgrid aui g
 include(${wxWidgets_USE_FILE})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
 
-# set build types for lk archive and sandbox
+# Create targets
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	add_library(lkd STATIC ${LK_SRC})
 	set_property(TARGET lkd PROPERTY PREFIX "")
@@ -51,19 +67,3 @@ else()
 	add_executable(sandbox ${LK_SRC} build_vs2017/sandbox/sandbox.cpp)
 	target_link_libraries(sandbox ${wxWidgets_LIBRARIES})
 endif()
-
-
-
-if(MSVC)
-# need msvc optimization levels & different configs, windows sdk
-	add_compile_options(/W4 /WX)
-	add_compile_definitions(LK_USE_WXWIDGETS _CRT_SECURE_NO_WARNINGS _MBCS __WXMSW__)
-else(MSVC)
-	if (APPLE)
-		add_compile_options(-arch x86_64 -fno-common)
-		add_compile_definitions(WX_PRECOMP)
-	endif()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-	add_compile_options(-Wall -O2 -Werror)
-	add_compile_definitions(LK_USE_WXWIDGETS)
-endif(MSVC)
