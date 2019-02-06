@@ -68,4 +68,4 @@ else()
 	set(SANDBOX_EXE sandbox)
 endif()
 
-target_link_libraries(sandbox ${wxWidgets_LIBRARIES})
+target_link_libraries(${SANDBOX_EXE} ${wxWidgets_LIBRARIES})
