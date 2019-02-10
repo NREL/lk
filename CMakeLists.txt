@@ -2,18 +2,18 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 cmake_minimum_required(VERSION 3.12)
 
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
+elseif(MSVC)
+	set(CMAKE_SYSTEM_VERSION 8.1 CACHE TYPE INTERNAL FORCE)
+endif()
 
 if(UNIX AND NOT CMAKE_C_COMPILER)
 	set(CMAKE_C_COMPILER gcc)
 	set(CMAKE_CXX_COMPILER g++)
-else()
-	set(CMAKE_SYSTEM_VERSION 8.1)
-	set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
 endif()
 
 Project(lk)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/sandbox")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 include_directories(include)
 
@@ -32,7 +32,6 @@ set(LK_SRC
 # Compiler options need to be set prior to adding targets
 if(MSVC)
 # need msvc optimization levels & different configs, windows sdk
-	set(VS_STARTUP_PROJECT ${SANDBOX_EXE})
 	add_compile_options(/W3 /wd4996)
 	if (CMAKE_BUILD_TYPE STREQUAL Debug)
 		add_compile_options(/MDd)
@@ -63,7 +62,7 @@ if (UNIX)
 else()
 	set(wxWidgets_CONFIGURATION mswu)
 	set(wxWidgets_ROOT_DIR "C:\\System Advisor Model Code\\wxWidgets-3.1.1")
-	find_package(wxWidgets COMPONENTS qa webview std aui richtext html propgrid adv net core base REQUIRED)
+	find_package(wxWidgets COMPONENTS qa webview aui richtext html propgrid adv net stc core base scintilla REQUIRED)
 endif()
 
 include(${wxWidgets_USE_FILE})
@@ -86,10 +85,18 @@ else()
 	set(SANDBOX_EXE sandbox)
 endif()
 
-set_property(TARGET ${LK_LIB} PROPERTY PREFIX "")
-target_link_libraries(${SANDBOX_EXE} ${wxWidgets_LIBRARIES})
+# Multi-configuration generators (VS, Xcode) append a per-configuration subdirectory 
+# to the specified directory unless a generator expression is used
+set_target_properties(${LK_LIB} PROPERTIES
+	PREFIX ""
+	ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>)
+set_target_properties(${SANDBOX_EXE} PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>/sandbox)
+
+target_link_libraries(${SANDBOX_EXE} ${LK_LIB} ${wxWidgets_LIBRARIES})
 if (MSVC)
-	target_compile_definitions(${SANDBOX_EXE} PUBLIC _WINDOWS)
-	target_compile_definitions(${LK_LIB} PUBLIC _LIB)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
+	target_compile_definitions(${LK_LIB} PUBLIC _LIB LK_USE_WXWIDGETS)
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${SANDBOX_EXE})
 
 endif()
