@@ -30,6 +30,10 @@
 #include <lk/env.h>
 #include <lk/eval.h>
 
+#if defined(LK_USE_WXWIDGETS)
+#include <wx/numformatter.h>
+#endif
+
 #if defined(__WINDOWS__)||defined(WIN32)||defined(_WIN32)||defined(__MINGW___)||defined(_MSC_VER)
 #include <Windows.h>
 static void *dll_open(const char *name) { return (void*) ::LoadLibraryA(name); }
@@ -112,6 +116,19 @@ int lk::vardata_t::as_integer() const
 	return (int)as_number();
 }
 
+lk_string format_double(double n, int precision){
+#if defined(LK_USE_WXWDGETS)
+	return wxNumberFormatter::ToString(n, precision, wxNumberFormatter::Style::Style_NoTrailingZeroes);
+#else
+	char buf[512];
+	sprintf(buf, "%.*f", precision, n);
+	std::string str = std::string(buf);
+	str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
+	str.erase ( str.find_last_not_of('.') + 1, std::string::npos );
+	return str;
+#endif
+}
+
 lk_string lk::vardata_t::as_string() const
 {
 	switch (type())
@@ -120,15 +137,23 @@ lk_string lk::vardata_t::as_string() const
 	case REFERENCE: return deref().as_string();
 	case NUMBER:
 	{
-		char buf[512];
-		if (((double)((int)m_u.v)) == m_u.v)
-			sprintf(buf, "%d", (int)m_u.v);
-		else if (abs(m_u.v) < 1e-5 ) {
-			sprintf(buf, "%e", m_u.v);
+		if ((abs(m_u.v) < 0.0001) || (abs(m_u.v) > 1e7)){
+			char buf[512];
+			sprintf(buf, "%.e", m_u.v);
+			return lk_string(buf);
 		}
-		else
-			sprintf(buf, "%lf", m_u.v);
-		return lk_string(buf);
+		else if (abs(m_u.v) < 0.001){
+			return format_double(m_u.v, 6);
+		}
+		else if (abs(m_u.v) < 0.01){
+			return format_double(m_u.v, 5);
+		}
+		else if (abs(m_u.v) < 0.1){
+			return format_double(m_u.v, 4);
+		}
+		else{
+			return format_double(m_u.v, 3);
+		}
 	}
 	case STRING:
 		return *reinterpret_cast<lk_string*>(m_u.p);
