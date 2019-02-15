@@ -139,7 +139,7 @@ lk_string lk::vardata_t::as_string() const
 	{
 		if ((abs(m_u.v) < 0.0001) || (abs(m_u.v) > 1e7)){
 			char buf[512];
-			sprintf(buf, "%.e", m_u.v);
+			sprintf(buf, "%.3e", m_u.v);
 			return lk_string(buf);
 		}
 		else if (abs(m_u.v) < 0.001){

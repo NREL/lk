@@ -2019,7 +2019,7 @@ static void _json_read(lk::invoke_t &cxt)
 
 static void _sprintf(lk::invoke_t &cxt)
 {
-	LK_DOC("sprintf", "Returns a formatted string using standard C printf conventions, but adding the %m and %, specifiers for monetary and comma separated real numbers.", "(string:format, ...):string");
+	LK_DOC("sprintf", "Returns a string of a number with a given precision using standard C printf specifiers, but adding the %m and %, specifiers for monetary and comma separated real numbers.", "(string:format, ...):string");
 	lk_string fmt = cxt.arg(0).as_string();
 	std::vector< lk::vardata_t * > args;
 	for (size_t i = 1; i < cxt.arg_count(); i++)
