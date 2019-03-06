@@ -34,7 +34,7 @@ If you would like to submit code to fix an issue or add a feature, you can use G
 
 ## License
 
-LK is licensed under an MIT [license](LICENSE.md).
+LK is licensed under a BDS-3-Clause [license](LICENSE.md).
 
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FNREL%2Flk.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FNREL%2Flk?ref=badge_large)
