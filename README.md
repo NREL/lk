@@ -26,7 +26,7 @@ The documentation of the LK language is written in LaTeX:
 
 ## Contributing
 
-Please check out the [DView Contribution Policy](https://github.com/NREL/wex/blob/develop/CONTRIBUTING.MD) to get started.  
+Please check out (https://github.com/NREL/lk/blob/develop/CONTRIBUTING.MD) to get started.  
 
 If you have found an issue with LK or would like to make a feature request, please let us know by adding a new issue on the [issues page](https://github.com/NREL/lk/issues).
 
