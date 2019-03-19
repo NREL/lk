@@ -148,8 +148,9 @@ bool lk::eval::interpret(node_t *root,
 {
 	if (!root) return true;
 
-	if (!on_run(root->line()))
-		return false; /* abort script execution */
+	if (!on_run(root->line())){
+		return false;
+	} /* abort script execution */
 
 	if (list_t *n1 = dynamic_cast<list_t*>(root))
 	{
@@ -169,7 +170,9 @@ bool lk::eval::interpret(node_t *root,
 	}
 	else if (iter_t *n2 = dynamic_cast<iter_t*>(root))
 	{
-		if (!interpret(n2->init, cur_env, result, flags, ctl_id)) return false;
+		if (!interpret(n2->init, cur_env, result, flags, ctl_id)){
+			return false;
+		}
 
 		while (1)
 		{
@@ -177,12 +180,16 @@ bool lk::eval::interpret(node_t *root,
 			vardata_t outcome;
 			outcome.assign(0.0);
 
-			if (!interpret(n2->test, cur_env, outcome, flags, ctl_id)) return false;
+			if (!interpret(n2->test, cur_env, outcome, flags, ctl_id)){
+				return false;
+			}
 
 			if (!outcome.as_boolean())
 				break;
 
-			if (!interpret(n2->block, cur_env, result, flags, ctl_id)) return false;
+			if (!interpret(n2->block, cur_env, result, flags, ctl_id)){
+			    return false;
+			}
 
 			switch (ctl_id)
 			{
@@ -197,7 +204,9 @@ bool lk::eval::interpret(node_t *root,
 				ctl_id = CTL_NONE;
 			}
 
-			if (!interpret(n2->adv, cur_env, result, flags, ctl_id)) return false;
+			if (!interpret(n2->adv, cur_env, result, flags, ctl_id)){
+			    return false;
+			}
 		}
 
 		return true;
@@ -206,7 +215,9 @@ bool lk::eval::interpret(node_t *root,
 	{
 		vardata_t outcome;
 		outcome.assign(0.0);
-		if (!interpret(n3->test, cur_env, outcome, flags, ctl_id)) return false;
+		if (!interpret(n3->test, cur_env, outcome, flags, ctl_id)){
+		    return false;
+		}
 
 		if (outcome.as_boolean())
 			return interpret(n3->on_true, cur_env, result, flags, ctl_id);
@@ -760,7 +771,9 @@ bool lk::eval::interpret(node_t *root,
 			{
 				vardata_t switchval;
 				switchval.assign(-1.0);
-				if (!interpret(n4->left, cur_env, switchval, flags, ctl_id)) return false;
+				if (!interpret(n4->left, cur_env, switchval, flags, ctl_id)){
+					return false;
+				}
 				list_t *p = dynamic_cast<list_t*>(n4->right);
 				size_t index = switchval.as_unsigned();
 				if (!p || index >= p->items.size())
@@ -769,7 +782,9 @@ bool lk::eval::interpret(node_t *root,
 					return false;
 				}
 
-				if (!interpret(p->items[index], cur_env, result, flags, ctl_id)) return false;
+				if (!interpret(p->items[index], cur_env, result, flags, ctl_id)){
+					return false;
+				}
 
 				return ok;
 			}
@@ -819,8 +834,9 @@ bool lk::eval::interpret(node_t *root,
 	}
 	else if (iden_t *n6 = dynamic_cast<iden_t*>(root))
 	{
-		if (n6->special && !(flags&ENV_MUTABLE))
+		if (n6->special && !(flags&ENV_MUTABLE)){
 			return special_get(n6->name, result);
+		}
 
 		vardata_t *x = cur_env->lookup(n6->name, !(flags&ENV_MUTABLE));
 

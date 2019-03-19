@@ -349,6 +349,7 @@ namespace lk {
 		void error(const lk_string &text) { m_error = text; m_hasError = true; }
 		lk_string error() { return m_error; }
 		bool has_error() { return m_hasError; }
+		void clear_error() { m_hasError = false; m_error = "";}
 	};
 	
 /**
@@ -376,7 +377,7 @@ namespace lk {
 			lk_invokable *functions;
 		};
 
-	private:
+	protected:
 		env_t *m_parent;
 
 		varhash_t m_varHash;

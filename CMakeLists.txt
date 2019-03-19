@@ -48,7 +48,7 @@ else(MSVC)
 		add_compile_options(-arch x86_64 -fno-common)
 		add_compile_definitions(WX_PRECOMP)
 	endif()
-	add_compile_options(-Wall -O2 -Werror -Wno-deprecated -Wno-deprecated-declarations)
+	add_compile_options(-Wall -O2 -Werror -Wno-deprecated -Wno-unused-function -Wno-deprecated-declarations)
 	add_compile_definitions(LK_USE_WXWIDGETS)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif(MSVC)
@@ -99,4 +99,10 @@ if (MSVC)
 	target_compile_definitions(${LK_LIB} PUBLIC _LIB LK_USE_WXWIDGETS)
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${SANDBOX_EXE})
 
+endif()
+
+
+
+if (${CMAKE_PROJECT_NAME} STREQUAL export_config)
+	target_compile_definitions(${LK_LIB} PUBLIC _export_config_ )
 endif()
