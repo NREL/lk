@@ -61,7 +61,7 @@ if (UNIX)
 	find_package(wxWidgets COMPONENTS xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base REQUIRED)
 else()
 	set(wxWidgets_CONFIGURATION mswu)
-	set(wxWidgets_ROOT_DIR "C:\\System Advisor Model Code\\wxWidgets-3.1.1")
+	set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
 	find_package(wxWidgets COMPONENTS qa webview aui richtext html propgrid adv net stc core base scintilla REQUIRED)
 endif()
 
