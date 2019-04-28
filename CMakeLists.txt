@@ -1,3 +1,9 @@
+#####################################################################################################################
+#
+# CMake and System Settings
+#
+#####################################################################################################################
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 cmake_minimum_required(VERSION 3.12)
@@ -12,6 +18,13 @@ if(UNIX AND NOT CMAKE_C_COMPILER)
 	set(CMAKE_C_COMPILER gcc)
 	set(CMAKE_CXX_COMPILER g++)
 endif()
+
+
+#####################################################################################################################
+#
+# Project Sources 
+#
+#####################################################################################################################
 
 Project(lk)
 
@@ -29,9 +42,14 @@ set(LK_SRC
 	src/sqlite3.c
 	src/stdlib.cpp)
 
-# Compiler options need to be set prior to adding targets
+
+#####################################################################################################################
+#
+# Compile Options per Platform
+#
+#####################################################################################################################
+
 if(MSVC)
-# need msvc optimization levels & different configs, windows sdk
 	add_compile_options(/W3 /wd4996)
 	if (CMAKE_BUILD_TYPE STREQUAL Debug)
 		add_compile_options(/MDd)
@@ -54,6 +72,12 @@ else(MSVC)
 endif(MSVC)
 
 
+#####################################################################################################################
+#
+# WxWidgets Package
+#
+#####################################################################################################################
+
 
 # setup wxWidgets
 if (UNIX)
@@ -68,7 +92,13 @@ endif()
 include(${wxWidgets_USE_FILE})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
 
-# Create targets
+
+#####################################################################################################################
+# 
+# CMake Targets
+#
+#####################################################################################################################
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	add_library(lkd STATIC ${LK_SRC})
 	set(LK_LIB lkd)
@@ -93,15 +123,19 @@ set_target_properties(${LK_LIB} PROPERTIES
 set_target_properties(${SANDBOX_EXE} PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>/sandbox)
 
+
+#####################################################################################################################
+#
+# Link Libraries and Options
+#
+#####################################################################################################################
+
 target_link_libraries(${SANDBOX_EXE} ${LK_LIB} ${wxWidgets_LIBRARIES})
 if (MSVC)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
 	target_compile_definitions(${LK_LIB} PUBLIC _LIB LK_USE_WXWIDGETS)
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${SANDBOX_EXE})
-
 endif()
-
-
 
 if (${CMAKE_PROJECT_NAME} STREQUAL export_config)
 	target_compile_definitions(${LK_LIB} PUBLIC _export_config_ )
