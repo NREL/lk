@@ -49,6 +49,8 @@ set(LK_SRC
 #
 #####################################################################################################################
 
+set(CMAKE_CXX_STANDARD 11)
+
 if(MSVC)
 	add_compile_options(/W3 /wd4996)
 	if (CMAKE_BUILD_TYPE STREQUAL Debug)
@@ -78,21 +80,7 @@ endif(MSVC)
 #
 #####################################################################################################################
 
-if (UNIX)
-	set(wxWidgets_CONFIG_EXECUTABLE /usr/local/bin/wx-config-3)
-	find_package(wxWidgets COMPONENTS xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base REQUIRED)
-else()
-	set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
-	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-		set(wxWidgets_CONFIGURATION mswud)
-	else()
-		set(wxWidgets_CONFIGURATION mswu)
-	endif()
-	find_package(wxWidgets COMPONENTS qa webview aui richtext html propgrid adv net stc core base scintilla REQUIRED)
-endif()
 
-include(${wxWidgets_USE_FILE})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
 
 
 #####################################################################################################################
@@ -132,7 +120,6 @@ set_target_properties(${SANDBOX_EXE} PROPERTIES
 #
 #####################################################################################################################
 
-target_link_libraries(${SANDBOX_EXE} ${LK_LIB} ${wxWidgets_LIBRARIES})
 if (MSVC)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
 	target_compile_definitions(${LK_LIB} PUBLIC _LIB LK_USE_WXWIDGETS)
