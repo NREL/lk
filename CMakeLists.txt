@@ -6,7 +6,7 @@
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.12)
 
 if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
@@ -80,7 +80,21 @@ endif(MSVC)
 #
 #####################################################################################################################
 
+if (UNIX)
+	set(wxWidgets_CONFIG_EXECUTABLE /usr/local/bin/wx-config-3)
+	find_package(wxWidgets COMPONENTS xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base REQUIRED)
+else()
+	set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
+	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set(wxWidgets_CONFIGURATION mswud)
+	else()
+		set(wxWidgets_CONFIGURATION mswu)
+	endif()
+	find_package(wxWidgets COMPONENTS qa webview aui richtext html propgrid adv net stc core base scintilla REQUIRED)
+endif()
 
+include(${wxWidgets_USE_FILE})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
 
 
 #####################################################################################################################
@@ -120,6 +134,7 @@ set_target_properties(${SANDBOX_EXE} PROPERTIES
 #
 #####################################################################################################################
 
+target_link_libraries(${SANDBOX_EXE} ${LK_LIB} ${wxWidgets_LIBRARIES})
 if (MSVC)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
 	target_compile_definitions(${LK_LIB} PUBLIC _LIB LK_USE_WXWIDGETS)
