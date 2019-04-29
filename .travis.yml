@@ -1,3 +1,6 @@
+dist: trusty
+sudo: required
+
 language: c++
 
 os:
@@ -7,6 +10,12 @@ os:
 compiler:
   - gcc
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - cmake
 
 before_script:
   - wget -q https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.1/wxWidgets-3.1.1.tar.bz2
@@ -17,8 +26,8 @@ before_script:
 
 script:
   - export PATH=$PATH:$HOME/wx-3.1.1/bin
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make -j2 -C build_linux; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make -j2 -C build_osx; fi
+  - cmake . -DCMAKE_BUILD_TYPE=Release
+  - make -j2; fi
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install -y libgtk-3-dev; fi
