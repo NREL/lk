@@ -16,11 +16,11 @@ before_script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then (cd wxWidgets-3.1.1 && ./configure --prefix=$HOME/wx-3.1.1 && make -j2 all install); fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then (cd wxWidgets-3.1.1 && ./configure --prefix=$HOME/wx-3.1.1 --enable-stl=yes --enable-debug=no --enable-shared=no --with-cocoa --enable-macosx_arch=x86_64 --enable-unicode --enable-webview --with-cxx=11 --with-macosx-version-min=10.9  --with-libjpeg=builtin --with-libpng=builtin --with-regex=builtin --with-libtiff=builtin --with-zlib=builtin --with-expat=builtin --disable-mediactrl   && make -j2 all install); fi
   - sudo ln -s $HOME/wx-3.1.1/bin/wx-config /usr/local/bin/wx-config-3
-  - sudo ln -s $HOME/wx-3.1.1/bin/wx-config $HOME/wx-3.1.1/bin/wx-config
-  
+
 
 script:
   - export PATH=$PATH:$HOME/wx-3.1.1/bin
+  - export PATH=$PATH:/usr/local/bin/
   - cmake . -DCMAKE_BUILD_TYPE=Release -DwxWidgets_CONFIG_EXECUTABLE=$HOME/wx-3.1.1/bin
   - make -j2
 
