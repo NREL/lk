@@ -19,9 +19,7 @@ before_script:
   - sudo ln -s $HOME/wx-3.1.1/bin/wx-config /usr/local/bin/wx-config-3
 
 script:
-  - cd ..
-  - cmake . -DCMAKE_BUILD_TYPE=Release
-  - make -j2
+  - cd ../lk && cmake . -DCMAKE_BUILD_TYPE=Release && make -j2
 
 install:
   # - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install -y libgtk-3-dev; fi
