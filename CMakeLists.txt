@@ -6,7 +6,7 @@
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.11)
 
 if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
@@ -84,7 +84,7 @@ if (UNIX)
 	if (NOT DEFINED wxWidgets_CONFIG_EXECUTABLE)
 		set(wxWidgets_CONFIG_EXECUTABLE /usr/local/bin/wx-config-3)
 	endif()
-	find_package(wxWidgets COMPONENTS xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base REQUIRED)
+	find_package(wxWidgets COMPONENTS core base REQUIRED)
 else()
 	set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
