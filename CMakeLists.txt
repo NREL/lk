@@ -6,7 +6,7 @@
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.11)
 
 if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
@@ -49,6 +49,8 @@ set(LK_SRC
 #
 #####################################################################################################################
 
+set(CMAKE_CXX_STANDARD 11)
+
 if(MSVC)
 	add_compile_options(/W3 /wd4996)
 	if (CMAKE_BUILD_TYPE STREQUAL Debug)
@@ -80,7 +82,7 @@ endif(MSVC)
 
 if (UNIX)
 	set(wxWidgets_CONFIG_EXECUTABLE /usr/local/bin/wx-config-3)
-	find_package(wxWidgets COMPONENTS xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base REQUIRED)
+	find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base )
 else()
 	set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -88,7 +90,7 @@ else()
 	else()
 		set(wxWidgets_CONFIGURATION mswu)
 	endif()
-	find_package(wxWidgets COMPONENTS qa webview aui richtext html propgrid adv net stc core base scintilla REQUIRED)
+	find_package(wxWidgets REQUIRED qa webview aui richtext html propgrid adv net stc core base scintilla)
 endif()
 
 include(${wxWidgets_USE_FILE})
@@ -141,4 +143,8 @@ endif()
 
 if (${CMAKE_PROJECT_NAME} STREQUAL export_config)
 	target_compile_definitions(${LK_LIB} PUBLIC _export_config_ )
+endif()
+
+if (UNIX)
+	target_link_libraries(${SANDBOX_EXE} -ldl)
 endif()
