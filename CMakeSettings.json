@@ -1,22 +1,28 @@
 {
   "configurations": [
     {
-      "name": "x64-Release",
-      "generator": "Visual Studio 15 2017 Win64",
-      "configurationType": "Release",
-      "buildRoot": "C:\\System Advisor Model Code\\lk\\build",
-      "installRoot": "C:\\System Advisor Model Code\\lk\\build",
-      "cmakeCommandArgs": "-DCMAKE_SYSTEM_VERSION=8.1 -T v141 -DCMAKE_BUILD_TYPE=Release",
+      "name": "x64-Debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "inheritEnvironments": [
+        "msvc_x64_x64"
+      ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+      "cmakeCommandArgs": "-DCMAKE_BUILD_TYPE=Debug",
       "buildCommandArgs": "-m:4 -v:normal",
       "ctestCommandArgs": ""
     },
     {
-      "name": "x64-Debug",
-      "generator": "Visual Studio 15 2017 Win64",
-      "configurationType": "Debug",
-      "buildRoot": "C:\\System Advisor Model Code\\lk\\build",
-      "installRoot": "C:\\System Advisor Model Code\\lk\\build",
-      "cmakeCommandArgs": "-DCMAKE_SYSTEM_VERSION=8.1 -T v141 -DCMAKE_BUILD_TYPE=Debug",
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "inheritEnvironments": [
+        "msvc_x64_x64"
+      ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+      "cmakeCommandArgs": "-DCMAKE_BUILD_TYPE=Release",
       "buildCommandArgs": "-m:4 -v:normal",
       "ctestCommandArgs": ""
     }
