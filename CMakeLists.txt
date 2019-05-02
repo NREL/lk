@@ -123,9 +123,11 @@ endif()
 # to the specified directory unless a generator expression is used
 set_target_properties(${LK_LIB} PROPERTIES
 	PREFIX ""
-	ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>)
+	ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>
+	LINK_FLAGS /SUBSYSTEM:CONOLE)
 set_target_properties(${SANDBOX_EXE} PROPERTIES
-	RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>/sandbox)
+	RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>/sandbox
+	LINK_FLAGS /SUBSYSTEM:WINDOWS)
 
 
 #####################################################################################################################
@@ -136,7 +138,6 @@ set_target_properties(${SANDBOX_EXE} PROPERTIES
 
 target_link_libraries(${SANDBOX_EXE} ${LK_LIB} ${wxWidgets_LIBRARIES})
 if (MSVC)
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
 	target_compile_definitions(${LK_LIB} PUBLIC _LIB LK_USE_WXWIDGETS)
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${SANDBOX_EXE})
 endif()
