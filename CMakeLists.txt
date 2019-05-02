@@ -126,8 +126,11 @@ set_target_properties(${LK_LIB} PROPERTIES
 	ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>
 	LINK_FLAGS /SUBSYSTEM:CONOLE)
 set_target_properties(${SANDBOX_EXE} PROPERTIES
-	RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>/sandbox
-	LINK_FLAGS /SUBSYSTEM:WINDOWS)
+	RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>/sandbox)
+
+if (MSVC)
+	set_target_properties(${SANDBOX_EXE} PROPERTIES LINK_FLAGS /SUBSYSTEM:WINDOWS)
+endif()
 
 
 #####################################################################################################################
