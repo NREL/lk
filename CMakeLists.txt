@@ -52,7 +52,7 @@ set(LK_SRC
 set(CMAKE_CXX_STANDARD 11)
 
 if(MSVC)
-	add_compile_options(/W3 /wd4996)
+	add_compile_options(/W3 /wd4996 /MP)
 	if (CMAKE_BUILD_TYPE STREQUAL Debug)
 		add_compile_options(/MDd)
 		add_compile_definitions(_DEBUG)
