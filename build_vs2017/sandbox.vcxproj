@@ -10,6 +10,9 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\sandbox\sandbox.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{283B049A-0650-4981-87CA-A37B146442F9}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -136,9 +139,6 @@
       <AdditionalDependencies>wxbase31u_xml.lib;wxbase31u_net.lib;wxmsw31u_webview.lib;wxmsw31u_adv.lib;wxmsw31u_html.lib;wxmsw31u_aui.lib;wxmsw31u_stc.lib;wxmsw31u_core.lib;wxbase31u.lib;wxscintilla.lib;wxtiff.lib;wxjpeg.lib;wxpng.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;winspool.lib;winmm.lib;shell32.lib;comctl32.lib;ole32.lib;oleaut32.lib;uuid.lib;rpcrt4.lib;advapi32.lib;wsock32.lib;wininet.lib;..\lkx64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="sandbox.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
