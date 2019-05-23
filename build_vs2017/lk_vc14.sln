@@ -5,6 +5,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lk_vc14", "lk_vc14.vcxproj", "{E3DE13A6-8FAD-4ED4-AB73-A330BFC5C74C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sandbox", "sandbox.vcxproj", "{283B049A-0650-4981-87CA-A37B146442F9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E3DE13A6-8FAD-4ED4-AB73-A330BFC5C74C} = {E3DE13A6-8FAD-4ED4-AB73-A330BFC5C74C}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
