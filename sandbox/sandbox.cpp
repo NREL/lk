@@ -38,6 +38,7 @@
 #include <wx/app.h>
 #include <wx/busyinfo.h>
 #include <wx/stc/stc.h>
+#include <wx/display.h>
 
 #include <lk/absyn.h>
 #include <lk/env.h>
@@ -49,7 +50,7 @@
 #include <lk/codegen.h>
 #include <lk/vm.h>
 
-#include "mtrand.h"
+#include <lk/mtrand.h>
 
 enum {
 	ID_CODE = wxID_HIGHEST + 149, ID_SAVE, ID_PARSE, ID_IBRK, ID_ASM, ID_BYTECODE, ID_OUTPUT,
@@ -88,7 +89,7 @@ public:
 		vm.initialize(m_runEnv);
 	}
 
-	VMTestFrame() : wxFrame(NULL, wxID_ANY, "LK-VM", wxDefaultPosition, wxSize(1200, 900))
+    VMTestFrame() : wxFrame(NULL, wxID_ANY, "LK-VM", wxDefaultPosition, wxSize(wxDisplay().GetGeometry().GetWidth()/3*2, wxDisplay().GetGeometry().GetWidth()/2))
 	{
 		m_runEnv = 0;
 
@@ -158,7 +159,7 @@ public:
 
 	void SetupCodeEditorStyle()
 	{
-		static  char *LKWordlist1 =
+		static  char const *LKWordlist1 =
 			"if while for return exit break continue "
 			"function const enum else elseif define "
 			"this typeof global true false null import";
@@ -308,7 +309,6 @@ public:
 			int line = bc.debuginfo[ip].stmt;
 			if (line > 0 && line <= m_code->GetNumberOfLines())
 			{
-				int ifirst = m_code->GetFirstVisibleLine();
 				int nnl = m_code->LinesOnScreen();
 
 				int ln_to_scroll = line - nnl / 2 - 1;

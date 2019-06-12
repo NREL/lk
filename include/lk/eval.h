@@ -58,7 +58,7 @@ namespace lk {
 		vardata_t &result() { return m_result; }
 
 	protected:
-		bool interpret(node_t *root,
+		virtual bool interpret(node_t *root,
 			lk::env_t *cur_env,
 			vardata_t &result,
 			unsigned int flags, /* normally 0 */
