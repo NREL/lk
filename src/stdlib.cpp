@@ -896,7 +896,10 @@ static void _write(lk::invoke_t &cxt)
 static void _to_int(lk::invoke_t &cxt)
 {
 	LK_DOC("to_int", "Converts the argument to an integer value.", "(any):integer");
-	cxt.result().assign((double)((int)cxt.arg(0).as_number()));
+//	cxt.result().assign((double)((int)cxt.arg(0).as_number()));
+	double f3;
+	double f2 = std::modf(cxt.arg(0).as_number(), &f3);
+	cxt.result().assign(f3);
 }
 
 static void _to_real(lk::invoke_t &cxt)
