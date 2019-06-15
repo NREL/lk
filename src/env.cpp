@@ -131,6 +131,8 @@ lk_string format_double(double n, int precision){
 
 lk_string lk::vardata_t::as_string() const
 {
+	double intpart;
+	char buf[512];
 	switch (type())
 	{
 	case NULLVAL: return "<null>";
@@ -138,7 +140,6 @@ lk_string lk::vardata_t::as_string() const
 	case NUMBER:
 	{
 		if ((abs(m_u.v) < 0.0001) || (abs(m_u.v) > 1e7)){
-			char buf[512];
 			sprintf(buf, "%.3e", m_u.v);
 			return lk_string(buf);
 		}
@@ -151,6 +152,12 @@ lk_string lk::vardata_t::as_string() const
 		else if (abs(m_u.v) < 0.1){
 			return format_double(m_u.v, 4);
 		}
+		else if (std::modf(m_u.v, &intpart) == 0.0) // integer
+		{
+			sprintf(buf, "%d", (int)m_u.v);
+			return lk_string(buf);
+		}
+
 		else{
 			return format_double(m_u.v, 3);
 		}
