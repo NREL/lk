@@ -106,8 +106,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	add_library(lkd STATIC ${LK_SRC})
 	set(LK_LIB lkd)
-	add_executable(sandboxd ${LK_SRC} sandbox/sandbox.cpp)
-	set(SANDBOX_EXE sandboxd)
 
 	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
@@ -115,21 +113,6 @@ else()
 	add_library(lk STATIC ${LK_SRC})
 	set(LK_LIB lk)
 
-	add_executable(sandbox ${LK_SRC} sandbox/sandbox.cpp)
-	set(SANDBOX_EXE sandbox)
-endif()
-
-# Multi-configuration generators (VS, Xcode) append a per-configuration subdirectory 
-# to the specified directory unless a generator expression is used
-set_target_properties(${LK_LIB} PROPERTIES
-	PREFIX ""
-	ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>
-	LINK_FLAGS /SUBSYSTEM:CONOLE)
-set_target_properties(${SANDBOX_EXE} PROPERTIES
-	RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>/sandbox)
-
-if (MSVC)
-	set_target_properties(${SANDBOX_EXE} PROPERTIES LINK_FLAGS /SUBSYSTEM:WINDOWS)
 endif()
 
 
