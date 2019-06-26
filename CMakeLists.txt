@@ -51,15 +51,12 @@ set(LK_SRC
 
 set(CMAKE_CXX_STANDARD 11)
 
+foreach (flag_var CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG)
+     set(${flag_var} "${${flag_var}} /D_DEBUG" CACHE TYPE INTERNAL FORCE)
+endforeach()
+
 if(MSVC)
 	add_compile_options(/W3 /wd4996 /MP)
-	if (CMAKE_BUILD_TYPE STREQUAL Debug)
-		add_compile_options(/MDd)
-		add_compile_definitions(_DEBUG)
-	else()
-		add_compile_options(/MD /O2)
-		add_compile_definitions(NDEBUG )
-	endif()
 	add_compile_definitions( WIN32 _CRT_SECURE_NO_DEPRECATE=1 _CRT_NON_CONFORMING_SWPRINTFS=1 
 		_SCL_SECURE_NO_WARNINGS=1 __WXMSW__ _UNICODE NOPCH)
 else(MSVC)
@@ -85,7 +82,7 @@ if (UNIX)
 	find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base )
 else()
 	set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
-	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	if (DEBUG_WXWIDGETS)
 		set(wxWidgets_CONFIGURATION mswud)
 	else()
 		set(wxWidgets_CONFIGURATION mswu)
@@ -103,33 +100,26 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
 #
 #####################################################################################################################
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	add_library(lkd STATIC ${LK_SRC})
-	set(LK_LIB lkd)
-	add_executable(lk_sandboxd ${LK_SRC} sandbox/sandbox.cpp)
-	set(LKSANDBOX_EXE lk_sandboxd)
-
-	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-else()
-	add_library(lk STATIC ${LK_SRC})
-	set(LK_LIB lk)
-
-	add_executable(lk_sandbox ${LK_SRC} sandbox/sandbox.cpp)
-	set(LKSANDBOX_EXE lk_sandbox)
-endif()
+add_library(lk STATIC ${LK_SRC})
+add_executable(lk_sandbox ${LK_SRC} sandbox/sandbox.cpp)
+set_target_properties(lk
+    PROPERTIES
+    DEBUG_POSTFIX "d")
+set_target_properties(lk_sandbox
+    PROPERTIES
+    DEBUG_POSTFIX "d")
 
 # Multi-configuration generators (VS, Xcode) append a per-configuration subdirectory 
 # to the specified directory unless a generator expression is used
-set_target_properties(${LK_LIB} PROPERTIES
+set_target_properties(lk PROPERTIES
 	PREFIX ""
 	ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>
 	LINK_FLAGS /SUBSYSTEM:CONOLE)
-set_target_properties(${LKSANDBOX_EXE} PROPERTIES
+set_target_properties(lk_sandbox PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>/sandbox)
 
 if (MSVC)
-	set_target_properties(${LKSANDBOX_EXE} PROPERTIES LINK_FLAGS /SUBSYSTEM:WINDOWS)
+	set_target_properties(lk_sandbox PROPERTIES LINK_FLAGS /SUBSYSTEM:WINDOWS)
 endif()
 
 
@@ -139,16 +129,15 @@ endif()
 #
 #####################################################################################################################
 
-target_link_libraries(${LKSANDBOX_EXE} ${LK_LIB} ${wxWidgets_LIBRARIES})
+target_link_libraries(lk_sandbox lk ${wxWidgets_LIBRARIES})
 if (MSVC)
-	target_compile_definitions(${LK_LIB} PUBLIC _LIB LK_USE_WXWIDGETS)
-	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${SANDBOX_EXE})
+	target_compile_definitions(lk PUBLIC _LIB LK_USE_WXWIDGETS)
 endif()
 
 if (${CMAKE_PROJECT_NAME} STREQUAL export_config)
-	target_compile_definitions(${LK_LIB} PUBLIC _export_config_ )
+	target_compile_definitions(lk PUBLIC _export_config_ )
 endif()
 
 if (UNIX)
-	target_link_libraries(${LKSANDBOX_EXE} -ldl)
+	target_link_libraries(lk_sandbox -ldl)
 endif()
