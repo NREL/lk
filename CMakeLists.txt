@@ -51,14 +51,13 @@ set(LK_SRC
 
 set(CMAKE_CXX_STANDARD 11)
 
-foreach (flag_var CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG)
-     set(${flag_var} "${${flag_var}} /D_DEBUG" CACHE TYPE INTERNAL FORCE)
-endforeach()
-
 if(MSVC)
 	add_compile_options(/W3 /wd4996 /MP)
 	add_compile_definitions( WIN32 _CRT_SECURE_NO_DEPRECATE=1 _CRT_NON_CONFORMING_SWPRINTFS=1 
 		_SCL_SECURE_NO_WARNINGS=1 __WXMSW__ _UNICODE NOPCH)
+	foreach (flag_var CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG)
+		set(${flag_var} "${${flag_var}} /D_DEBUG" CACHE STRING "compile flags" FORCE)
+	endforeach()
 else(MSVC)
 	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 	if (APPLE)
@@ -66,7 +65,7 @@ else(MSVC)
 		add_definitions(-DWX_PRECOMP)
 	endif()
 	add_compile_options(-Wall -O2 -Werror -Wno-deprecated -Wno-unused-function -Wno-deprecated-declarations)
-	add_definitions(-DLK_USE_WXWIDGETS)
+	add_definitions(-DLK_USE_WXWIDGETS -D_DEBUG)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif(MSVC)
 
