@@ -54,7 +54,7 @@ set(CMAKE_CXX_STANDARD 11)
 if(MSVC)
 	add_compile_options(/W3 /wd4996 /MP)
 	add_compile_definitions( WIN32 _CRT_SECURE_NO_DEPRECATE=1 _CRT_NON_CONFORMING_SWPRINTFS=1 
-		_SCL_SECURE_NO_WARNINGS=1 __WXMSW__ _UNICODE NOPCH)
+		_SCL_SECURE_NO_WARNINGS=1 __WXMSW__ _UNICODE NOPCH LK_USE_WXWIDGETS)
 	foreach (flag_var CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG)
 		set(${flag_var} "${${flag_var}} /D_DEBUG" CACHE STRING "compile flags" FORCE)
 	endforeach()
@@ -99,26 +99,29 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
 #
 #####################################################################################################################
 
+# lk library
 add_library(lk STATIC ${LK_SRC})
-add_executable(lk_sandbox ${LK_SRC} sandbox/sandbox.cpp)
 set_target_properties(lk
     PROPERTIES
-    DEBUG_POSTFIX "d")
+    DEBUG_POSTFIX "d"
+	PREFIX ""
+	ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>)
+if (MSVC)
+	set_target_properties(lk
+		PROPERTIES
+		LINK_FLAGS /SUBSYSTEM:CONSOLE)
+endif()
+
+# sandbox executable
+add_executable(lk_sandbox ${LK_SRC} sandbox/sandbox.cpp)
 set_target_properties(lk_sandbox
     PROPERTIES
-    DEBUG_POSTFIX "d")
-
-# Multi-configuration generators (VS, Xcode) append a per-configuration subdirectory 
-# to the specified directory unless a generator expression is used
-set_target_properties(lk PROPERTIES
-	PREFIX ""
-	ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>
-	LINK_FLAGS /SUBSYSTEM:CONOLE)
-set_target_properties(lk_sandbox PROPERTIES
+    DEBUG_POSTFIX "d"
 	RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>/sandbox)
-
 if (MSVC)
-	set_target_properties(lk_sandbox PROPERTIES LINK_FLAGS /SUBSYSTEM:WINDOWS)
+	set_target_properties(lk_sandbox
+		PROPERTIES
+		LINK_FLAGS /SUBSYSTEM:WINDOWS)
 endif()
 
 
@@ -128,15 +131,14 @@ endif()
 #
 #####################################################################################################################
 
-target_link_libraries(lk_sandbox lk ${wxWidgets_LIBRARIES})
-if (MSVC)
-	target_compile_definitions(lk PUBLIC _LIB LK_USE_WXWIDGETS)
-endif()
-
+# lk library
 if (${CMAKE_PROJECT_NAME} STREQUAL export_config)
 	target_compile_definitions(lk PUBLIC _export_config_ )
 endif()
 
+# sandbox executable
 if (UNIX)
 	target_link_libraries(lk_sandbox -ldl)
 endif()
+
+target_link_libraries(lk_sandbox lk ${wxWidgets_LIBRARIES})
