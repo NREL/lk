@@ -70,7 +70,7 @@ else(MSVC)
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 		add_compile_definitions(_DEBUG)
 	else()
-		add_compile_options(-03)
+		add_compile_options(-O3)
 	endif()
 endif(MSVC)
 
