@@ -26,6 +26,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <limits>
+#include <cmath>
 
 #include <lk/env.h>
 #include <lk/eval.h>
