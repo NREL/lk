@@ -73,7 +73,7 @@ void lk::vardata_t::set_type(unsigned char ty)
 }
 
 /// checks if value has been assigned and is constant
-void lk::vardata_t::assert_modify() throw( error_t )
+void lk::vardata_t::assert_modify()
 {
 	if ( flagval( CONSTVAL )
 		&& flagval( ASSIGNED ) )
@@ -266,7 +266,7 @@ void lk::vardata_t::deep_localize()
 	}
 }
 
-bool lk::vardata_t::copy(vardata_t &rhs) throw(error_t)
+bool lk::vardata_t::copy(vardata_t &rhs)
 {
 	switch (rhs.type())
 	{
@@ -459,7 +459,7 @@ void lk::vardata_t::nullify()
 	set_type(NULLVAL);
 }
 
-void lk::vardata_t::assign(double d) throw(error_t)
+void lk::vardata_t::assign(double d)
 {
 	assert_modify();
 
@@ -468,7 +468,7 @@ void lk::vardata_t::assign(double d) throw(error_t)
 	m_u.v = d;
 }
 
-void lk::vardata_t::assign(const char *s) throw(error_t)
+void lk::vardata_t::assign(const char *s)
 {
 	assert_modify();
 
@@ -485,7 +485,7 @@ void lk::vardata_t::assign(const char *s) throw(error_t)
 }
 
 /// function for associating an lk_string pointer to a vardata_t
-void lk::vardata_t::assign( const lk_string &s ) throw( error_t )
+void lk::vardata_t::assign( const lk_string &s )
 {
 	assert_modify();
 
@@ -502,7 +502,7 @@ void lk::vardata_t::assign( const lk_string &s ) throw( error_t )
 	}
 }
 
-void lk::vardata_t::empty_vector()  throw(error_t)
+void lk::vardata_t::empty_vector() 
 {
 	assert_modify();
 
@@ -511,7 +511,7 @@ void lk::vardata_t::empty_vector()  throw(error_t)
 	m_u.p = new std::vector<vardata_t>;
 }
 
-void lk::vardata_t::empty_hash() throw(error_t)
+void lk::vardata_t::empty_hash()
 {
 	assert_modify();
 
@@ -520,7 +520,7 @@ void lk::vardata_t::empty_hash() throw(error_t)
 	m_u.p = new varhash_t;
 }
 
-void lk::vardata_t::assign(const lk_string &key, vardata_t *val) throw(error_t)
+void lk::vardata_t::assign(const lk_string &key, vardata_t *val)
 {
 	assert_modify();
 
@@ -534,7 +534,7 @@ void lk::vardata_t::assign(const lk_string &key, vardata_t *val) throw(error_t)
 	(*reinterpret_cast<varhash_t*>(m_u.p))[key] = val;
 }
 
-void lk::vardata_t::unassign(const lk_string &key) throw(error_t)
+void lk::vardata_t::unassign(const lk_string &key)
 {
 	assert_modify();
 
@@ -550,7 +550,7 @@ void lk::vardata_t::unassign(const lk_string &key) throw(error_t)
 	}
 }
 
-void lk::vardata_t::assign(expr_t *func) throw(error_t)
+void lk::vardata_t::assign(expr_t *func)
 {
 	assert_modify();
 
@@ -559,7 +559,7 @@ void lk::vardata_t::assign(expr_t *func) throw(error_t)
 	m_u.p = func;
 }
 
-void lk::vardata_t::assign(vardata_t *ref) throw(error_t)
+void lk::vardata_t::assign(vardata_t *ref)
 {
 	assert_modify();
 
@@ -571,7 +571,7 @@ void lk::vardata_t::assign(vardata_t *ref) throw(error_t)
 }
 
 /// assigns as EXTFUNC type whose value points to the function's fci
-void lk::vardata_t::assign_fcall( fcallinfo_t *fci ) throw( error_t )
+void lk::vardata_t::assign_fcall( fcallinfo_t *fci )
 {
 	assert_modify();
 
@@ -580,7 +580,7 @@ void lk::vardata_t::assign_fcall( fcallinfo_t *fci ) throw( error_t )
 	m_u.p = fci;
 }
 
-void lk::vardata_t::assign_faddr(size_t ip) throw(error_t)
+void lk::vardata_t::assign_faddr(size_t ip)
 {
 	assert_modify();
 
@@ -589,7 +589,7 @@ void lk::vardata_t::assign_faddr(size_t ip) throw(error_t)
 	m_u.p = (void*)ip;
 }
 
-void lk::vardata_t::resize(size_t n) throw(error_t)
+void lk::vardata_t::resize(size_t n)
 {
 	assert_modify();
 
@@ -603,13 +603,13 @@ void lk::vardata_t::resize(size_t n) throw(error_t)
 	reinterpret_cast<std::vector<vardata_t>*>(m_u.p)->resize(n);
 }
 
-double lk::vardata_t::num() const throw(error_t)
+double lk::vardata_t::num() const
 {
 	if (type() != NUMBER) throw error_t(lk_tr("access violation: expected numeric, but found") + " " + typestr());
 	return m_u.v;
 }
 
-lk_string lk::vardata_t::str() const throw(error_t)
+lk_string lk::vardata_t::str() const
 {
 	if (type() != STRING) throw error_t(lk_tr("access violation: expected string, but found") + " " + typestr());
 	return *reinterpret_cast<lk_string*>(m_u.p);
@@ -623,13 +623,13 @@ lk::vardata_t *lk::vardata_t::ref() const
 		return reinterpret_cast<vardata_t*>(m_u.p);
 }
 
-std::vector<lk::vardata_t> *lk::vardata_t::vec() const throw(error_t)
+std::vector<lk::vardata_t> *lk::vardata_t::vec() const
 {
 	if (type() != VECTOR) throw error_t(lk_tr("access violation: expected array, but found ") + " " + typestr());
 	return reinterpret_cast<std::vector<vardata_t>*>(m_u.p);
 }
 
-void lk::vardata_t::vec_append(double d) throw(error_t)
+void lk::vardata_t::vec_append(double d)
 {
 	assert_modify();
 
@@ -638,7 +638,7 @@ void lk::vardata_t::vec_append(double d) throw(error_t)
 	vec()->push_back(v);
 }
 
-void lk::vardata_t::vec_append(const lk_string &s) throw(error_t)
+void lk::vardata_t::vec_append(const lk_string &s)
 {
 	assert_modify();
 
@@ -658,31 +658,31 @@ size_t lk::vardata_t::length() const
 	}
 }
 
-lk::expr_t *lk::vardata_t::func() const throw(error_t)
+lk::expr_t *lk::vardata_t::func() const
 {
 	if (type() != FUNCTION) throw error_t(lk_tr("access violation: expected code expression pointer, but found") + " " + typestr());
 	return reinterpret_cast<expr_t*>(m_u.p);
 }
 
-lk::fcallinfo_t *lk::vardata_t::fcall() const throw(error_t)
+lk::fcallinfo_t *lk::vardata_t::fcall() const
 {
 	if (type() != EXTFUNC) throw error_t(lk_tr("access violation: expected external function pointer, but found") + " " + typestr());
 	return reinterpret_cast<fcallinfo_t*>(m_u.p);
 }
 
-size_t lk::vardata_t::faddr() const throw(error_t)
+size_t lk::vardata_t::faddr() const
 {
 	if (type() != INTFUNC) throw error_t(lk_tr("access violation: expected internal function pointer, but found") + " " + typestr());
 	return reinterpret_cast<size_t>(m_u.p);
 }
 
-lk::varhash_t *lk::vardata_t::hash() const throw(error_t)
+lk::varhash_t *lk::vardata_t::hash() const
 {
 	if (type() != HASH) throw error_t(lk_tr("access violation: expected hash table, but found") + " " + typestr());
 	return reinterpret_cast<varhash_t*> (m_u.p);
 }
 
-void lk::vardata_t::hash_item(const lk_string &key, double d) throw(error_t)
+void lk::vardata_t::hash_item(const lk_string &key, double d)
 {
 	assert_modify();
 
@@ -698,7 +698,7 @@ void lk::vardata_t::hash_item(const lk_string &key, double d) throw(error_t)
 	}
 }
 
-void lk::vardata_t::hash_item(const lk_string &key, const lk_string &s) throw(error_t)
+void lk::vardata_t::hash_item(const lk_string &key, const lk_string &s)
 {
 	assert_modify();
 
@@ -714,7 +714,7 @@ void lk::vardata_t::hash_item(const lk_string &key, const lk_string &s) throw(er
 	}
 }
 
-void lk::vardata_t::hash_item(const lk_string &key, const vardata_t &v) throw(error_t)
+void lk::vardata_t::hash_item(const lk_string &key, const vardata_t &v)
 {
 	assert_modify();
 
@@ -730,7 +730,7 @@ void lk::vardata_t::hash_item(const lk_string &key, const vardata_t &v) throw(er
 	}
 }
 
-lk::vardata_t &lk::vardata_t::hash_item(const lk_string &key) throw(error_t)
+lk::vardata_t &lk::vardata_t::hash_item(const lk_string &key)
 {
 	assert_modify();
 
@@ -749,7 +749,7 @@ lk::vardata_t &lk::vardata_t::hash_item(const lk_string &key) throw(error_t)
 	}
 }
 
-lk::vardata_t *lk::vardata_t::index(size_t idx) const throw(error_t)
+lk::vardata_t *lk::vardata_t::index(size_t idx) const
 {
 	if (type() != VECTOR) throw error_t(lk_tr("access violation: expected array for indexing, but found") + " " + typestr());
 	std::vector<vardata_t> &m = *reinterpret_cast<std::vector<vardata_t>*>(m_u.p);
@@ -758,7 +758,7 @@ lk::vardata_t *lk::vardata_t::index(size_t idx) const throw(error_t)
 	return &m[idx];
 }
 
-lk::vardata_t *lk::vardata_t::lookup(const lk_string &key) const throw(error_t)
+lk::vardata_t *lk::vardata_t::lookup(const lk_string &key) const
 {
 	if (type() != HASH) throw error_t(lk_tr("access violation: expected hash table, but found") + " " + typestr());
 	varhash_t &h = *reinterpret_cast<varhash_t*>(m_u.p);
@@ -1040,7 +1040,7 @@ lk::objref_t *lk::env_t::query_object(size_t ref)
 	else return 0;
 }
 
-void lk::env_t::call(const lk_string &name, std::vector< vardata_t > &args, vardata_t &) throw(lk::error_t)
+void lk::env_t::call(const lk_string &name, std::vector< vardata_t > &args, vardata_t &)
 {
 	vardata_t *f = lookup(name, true);
 	if (!f)	throw lk::error_t(lk_tr("could not locate function name in environment: ") + name);
