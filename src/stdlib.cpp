@@ -4316,7 +4316,7 @@ double lk::gammln(double xx)
 	return -tmp + log(2.5066282746310005*ser / x);
 }
 
-double lk::betacf(double a, double b, double x) throw(lk::error_t)
+double lk::betacf(double a, double b, double x) 
 {
 #define MAXIT 100
 #define EPS 3.0e-7
@@ -4361,7 +4361,7 @@ double lk::betacf(double a, double b, double x) throw(lk::error_t)
 #undef FPMIN
 }
 
-double lk::betai(double a, double b, double x) throw(lk::error_t)
+double lk::betai(double a, double b, double x) 
 {
 	void nrerror(char error_text[]);
 	double bt;

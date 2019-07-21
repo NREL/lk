@@ -84,11 +84,6 @@ if (UNIX)
 	find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base )
 else()
 	set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
-	if (DEBUG_WXWIDGETS)
-		set(wxWidgets_CONFIGURATION mswud)
-	else()
-		set(wxWidgets_CONFIGURATION mswu)
-	endif()
 	find_package(wxWidgets REQUIRED qa webview aui richtext html propgrid adv net stc core base scintilla)
 endif()
 
@@ -108,7 +103,7 @@ set_target_properties(lk
     PROPERTIES
     DEBUG_POSTFIX "d"
 	PREFIX ""
-	ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>)
+	)
 if (MSVC)
 	set_target_properties(lk
 		PROPERTIES
@@ -120,7 +115,7 @@ add_executable(lk_sandbox ${LK_SRC} sandbox/sandbox.cpp)
 set_target_properties(lk_sandbox
     PROPERTIES
     DEBUG_POSTFIX "d"
-	RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_SOURCE_DIR}>/sandbox)
+	)
 if (MSVC)
 	set_target_properties(lk_sandbox
 		PROPERTIES

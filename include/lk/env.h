@@ -100,7 +100,7 @@ namespace lk {
 		} m_u;
 
 		void set_type( unsigned char ty );
-		void assert_modify() throw( error_t );
+		void assert_modify();
 		
 	public:
 		/// Data Types
@@ -146,14 +146,14 @@ namespace lk {
 		
 		void deep_localize();
 
-		bool copy(vardata_t &rhs) throw(error_t);
-		vardata_t &operator=(const vardata_t &rhs) throw(error_t)
+		bool copy(vardata_t &rhs);
+		vardata_t &operator=(const vardata_t &rhs)
 		{
 			copy(const_cast<vardata_t&>(rhs));
 			return *this;
 		}
 		/// return referenced vardata_t
-		inline vardata_t &deref() const throw (error_t) {
+		inline vardata_t &deref() const {
 			vardata_t *p = const_cast<vardata_t*>(this);
 			while (p->type() == REFERENCE) {
 				vardata_t *pref = reinterpret_cast<vardata_t*>(p->m_u.p);
@@ -164,40 +164,40 @@ namespace lk {
 			return *p;
 		}
 				
-		void assign( double d ) throw( error_t );
-		void assign( const char *s ) throw( error_t );
-		void assign( const lk_string &s ) throw( error_t );
-		void empty_vector() throw( error_t );
-		void empty_hash() throw( error_t );
-		void assign( const lk_string &key, vardata_t *val ) throw( error_t );
-		void unassign( const lk_string &key ) throw( error_t );
-		void assign( expr_t *func ) throw( error_t ); ///< does NOT take ownership (expr_t must be deleted by the environment
-		void assign( vardata_t *ref ) throw( error_t ); ///< makes this vardata_t a reference to the object 'ref'
+		void assign( double d );
+		void assign( const char *s );
+		void assign( const lk_string &s );
+		void empty_vector();
+		void empty_hash();
+		void assign( const lk_string &key, vardata_t *val );
+		void unassign( const lk_string &key );
+		void assign( expr_t *func ); ///< does NOT take ownership (expr_t must be deleted by the environment
+		void assign( vardata_t *ref ); ///< makes this vardata_t a reference to the object 'ref'
 
-		void assign_fcall( fcallinfo_t *fci ) throw (error_t);
-		void assign_faddr( size_t bcip ) throw(error_t);
+		void assign_fcall( fcallinfo_t *fci );
+		void assign_faddr( size_t bcip );
 
-		void resize( size_t n ) throw( error_t );
+		void resize( size_t n );
 
 		vardata_t *ref() const;
-		double num() const throw(error_t);
-		lk_string str() const throw(error_t);
-		expr_t *func() const throw(error_t);
-		vardata_t *index(size_t idx) const throw(error_t); ///< returned variable inherits const-ness of parent
+		double num() const;
+		lk_string str() const;
+		expr_t *func() const;
+		vardata_t *index(size_t idx) const; ///< returned variable inherits const-ness of parent
 		size_t length() const ;
-		vardata_t *lookup( const lk_string &key ) const throw(error_t); ///< returned variable inherits const-ness of parent
-		fcallinfo_t *fcall() const throw(error_t);
-		size_t faddr() const throw(error_t);
+		vardata_t *lookup( const lk_string &key ) const; ///< returned variable inherits const-ness of parent
+		fcallinfo_t *fcall() const;
+		size_t faddr() const;
 
-		std::vector<vardata_t> *vec() const throw(error_t);
-		void vec_append( double d ) throw(error_t);
-		void vec_append( const lk_string &s ) throw(error_t);
+		std::vector<vardata_t> *vec() const;
+		void vec_append( double d );
+		void vec_append( const lk_string &s );
 
-		varhash_t *hash() const throw(error_t);
-		void hash_item( const lk_string &key, double d ) throw(error_t);
-		void hash_item( const lk_string &key, const lk_string &s ) throw(error_t);
-		void hash_item( const lk_string &key, const vardata_t &v ) throw(error_t);
-		vardata_t &hash_item( const lk_string &key ) throw(error_t);
+		varhash_t *hash() const;
+		void hash_item( const lk_string &key, double d );
+		void hash_item( const lk_string &key, const lk_string &s );
+		void hash_item( const lk_string &key, const vardata_t &v );
+		vardata_t &hash_item( const lk_string &key );
 
 	};
 	
@@ -341,7 +341,7 @@ namespace lk {
 		size_t arg_count() { return m_argList.size(); }
 
 		/// returns the values of user-defined inputs for use as arguments to functions
-		vardata_t &arg(size_t idx) throw( error_t ) {
+		vardata_t &arg(size_t idx) {
 			if (idx < m_argList.size())	return m_argList[idx].deref();
 			else throw error_t( "invalid access to function argument %d, only %d given", idx, m_argList.size());
 		}
@@ -427,7 +427,7 @@ namespace lk {
 
 		void call( const lk_string &name,
 				   std::vector< vardata_t > &args,
-				   vardata_t &result ) throw( error_t );
+				   vardata_t &result );
 		
 	};
 	

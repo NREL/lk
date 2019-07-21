@@ -104,8 +104,8 @@ namespace lk {
 	double besk1(double x);
 
 	double gammln(double xx);
-	double betacf(double a, double b, double x) throw(lk::error_t);
-	double betai(double a, double b, double x) throw(lk::error_t);
+	double betacf(double a, double b, double x);
+	double betai(double a, double b, double x);
 
 	double pearson(double *x, double *y, size_t len);
 
