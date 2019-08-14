@@ -26,8 +26,6 @@ endif()
 
 Project(lk)
 
-include_directories(include)
-
 set(LK_SRC
 	src/absyn.cpp
 	src/eval.cpp
@@ -110,6 +108,8 @@ if (MSVC)
 		LINK_FLAGS /SUBSYSTEM:CONSOLE)
 endif()
 
+target_include_directories(lk PUBLIC include)
+
 # sandbox executable
 add_executable(lk_sandbox ${LK_SRC} sandbox/sandbox.cpp)
 set_target_properties(lk_sandbox
@@ -121,6 +121,8 @@ if (MSVC)
 		PROPERTIES
 		LINK_FLAGS /SUBSYSTEM:WINDOWS)
 endif()
+
+target_include_directories(lk_sandbox PUBLIC include)
 
 
 #####################################################################################################################
