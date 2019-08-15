@@ -108,7 +108,7 @@ if (MSVC)
 		LINK_FLAGS /SUBSYSTEM:CONSOLE)
 endif()
 
-target_include_directories(lk PUBLIC include)
+target_include_directories(lk PRIVATE include)
 
 # sandbox executable
 add_executable(lk_sandbox ${LK_SRC} sandbox/sandbox.cpp)
