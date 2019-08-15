@@ -1,0 +1,4 @@
+C:/SAM-Development/sam/lk/build_msvc/CMakeFiles/lk.dir
+C:/SAM-Development/sam/lk/build_msvc/CMakeFiles/lk_sandbox.dir
+C:/SAM-Development/sam/lk/build_msvc/CMakeFiles/ALL_BUILD.dir
+C:/SAM-Development/sam/lk/build_msvc/CMakeFiles/ZERO_CHECK.dir
