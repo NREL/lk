@@ -215,7 +215,7 @@ static wxWindow *GetCurrentTopLevelWindow()
     wxWindowList &wl = ::wxTopLevelWindows;
     for (wxWindowList::iterator it = wl.begin(); it != wl.end(); ++it)
         if (wxTopLevelWindow *tlw = dynamic_cast<wxTopLevelWindow*>(*it))
-            if (tlw->IsActive())
+            if (tlw->IsShown() && tlw->IsActive())
                 return tlw;
 
     return 0;
