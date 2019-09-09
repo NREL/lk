@@ -25,6 +25,8 @@
 #ifndef __lk_stdlib_h
 #define __lk_stdlib_h
 
+#include <wx/wx.h>
+
 #include <lk/env.h>
 
 namespace lk {
@@ -116,5 +118,107 @@ namespace lk {
 	double erf(double x);
 	double erfc(double x);
 };
+
+class MyMessageDialog : public wxDialog
+{
+public:
+    MyMessageDialog(wxWindow *parent,
+                    const wxString &message,
+                    const wxString &title,
+                    long buttons,
+                    const wxPoint &pos = wxDefaultPosition,
+                    const wxSize &size = wxDefaultSize)
+            : wxDialog(parent, wxID_ANY, title, pos, size, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+    {
+        SetEscapeId(wxID_NONE);
+
+        wxPanel *panel = new wxPanel(this);
+        panel->SetBackgroundColour(*wxWHITE);
+
+        wxBoxSizer *szpnl = new wxBoxSizer(wxVERTICAL);
+
+        int wrap = 600;
+        if (size != wxDefaultSize && size.x > 100)
+            wrap = size.x - 40;
+
+        int nlpos = message.Find('\n');
+        if (nlpos > 0)
+        {
+            wxStaticText *label1 = new wxStaticText(panel, wxID_ANY, message.Left(nlpos), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT);
+            wxFont font(label1->GetFont());
+            font.SetPointSize(font.GetPointSize() + 2);
+            label1->SetFont(font);
+            label1->SetForegroundColour(wxColour(0, 0, 120));
+            label1->Wrap(wrap);
+
+            wxStaticText *label2 = new wxStaticText(panel, wxID_ANY, message.Mid(nlpos + 1), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT);
+            label2->Wrap(wrap);
+
+            szpnl->Add(label1, 0, wxTOP | wxLEFT | wxRIGHT | wxEXPAND, 20);
+            szpnl->Add(label2, 1, wxALL | wxEXPAND, 20);
+        }
+        else
+        {
+            wxStaticText *label = new wxStaticText(panel, wxID_ANY, message, wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT);
+            label->Wrap(wrap);
+
+            szpnl->Add(label, 1, wxALL | wxEXPAND, 20);
+        }
+
+        panel->SetSizer(szpnl);
+
+        wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
+        sizer->Add(panel, 1, wxALL | wxEXPAND, 0);
+        sizer->Add(CreateButtonSizer(buttons), 0, wxALL | wxEXPAND, 11);
+        SetSizerAndFit(sizer);
+
+        if (size != wxDefaultSize)
+            SetClientSize(size);
+        else
+        {
+            wxSize sz = GetClientSize();
+            if (sz.x < 340) sz.x = 340;
+            if (sz.y < 120) sz.y = 120;
+            SetClientSize(sz);
+        }
+
+        if (pos == wxDefaultPosition)
+        {
+            if (parent)
+                CenterOnParent();
+            else
+                CenterOnScreen();
+        }
+    }
+
+    void OnClose(wxCloseEvent &)
+    {
+        EndModal(wxID_CANCEL);
+    }
+
+    void OnCharHook(wxKeyEvent &evt)
+    {
+        if (evt.GetKeyCode() == WXK_ESCAPE)
+            EndModal(wxID_CANCEL);
+    }
+
+    void OnCommand(wxCommandEvent &evt)
+    {
+        EndModal(evt.GetId());
+    }
+
+DECLARE_EVENT_TABLE();
+};
+
+static wxWindow *GetCurrentTopLevelWindow()
+{
+    wxWindowList &wl = ::wxTopLevelWindows;
+    for (wxWindowList::iterator it = wl.begin(); it != wl.end(); ++it)
+        if (wxTopLevelWindow *tlw = dynamic_cast<wxTopLevelWindow*>(*it))
+            if (tlw->IsActive())
+                return tlw;
+
+    return 0;
+}
 
 #endif

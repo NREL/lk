@@ -647,6 +647,13 @@ void lk::vardata_t::vec_append(const lk_string &s)
 	vec()->push_back(v);
 }
 
+void lk::vardata_t::vec_append(const vardata_t vd)
+{
+    assert_modify();
+
+    vec()->push_back(vd);
+}
+
 size_t lk::vardata_t::length() const
 {
 	switch (type())

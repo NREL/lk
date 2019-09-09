@@ -192,8 +192,9 @@ namespace lk {
 		std::vector<vardata_t> *vec() const;
 		void vec_append( double d );
 		void vec_append( const lk_string &s );
+        void vec_append(const vardata_t vd);
 
-		varhash_t *hash() const;
+        varhash_t *hash() const;
 		void hash_item( const lk_string &key, double d );
 		void hash_item( const lk_string &key, const lk_string &s );
 		void hash_item( const lk_string &key, const vardata_t &v );
