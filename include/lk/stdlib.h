@@ -210,15 +210,6 @@ public:
 DECLARE_EVENT_TABLE();
 };
 
-static wxWindow *GetCurrentTopLevelWindow()
-{
-    wxWindowList &wl = ::wxTopLevelWindows;
-    for (wxWindowList::iterator it = wl.begin(); it != wl.end(); ++it)
-        if (wxTopLevelWindow *tlw = dynamic_cast<wxTopLevelWindow*>(*it))
-            if (tlw->IsShown() && tlw->IsActive())
-                return tlw;
-
-    return 0;
-}
+wxWindow *GetCurrentTopLevelWindow();
 
 #endif
