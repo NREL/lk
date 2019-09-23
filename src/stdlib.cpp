@@ -4407,6 +4407,17 @@ double lk::erfc(double x)
 	return x < 0.0 ? 1.0 + gammp(0.5, x*x) : gammq(0.5, x*x);
 }
 
+wxWindow *GetCurrentTopLevelWindow()
+{
+    wxWindowList &wl = ::wxTopLevelWindows;
+    for (wxWindowList::iterator it = wl.begin(); it != wl.end(); ++it)
+        if (wxTopLevelWindow *tlw = dynamic_cast<wxTopLevelWindow*>(*it))
+            if (tlw->IsShown() && tlw->IsActive())
+                return tlw;
+
+    return 0;
+}
+
 #ifdef WIN32
 
 /*
@@ -4527,17 +4538,6 @@ void rewinddir(DIR *dir)
 	{
 		errno = EBADF;
 	}
-}
-
-wxWindow *GetCurrentTopLevelWindow()
-{
-	wxWindowList &wl = ::wxTopLevelWindows;
-	for (wxWindowList::iterator it = wl.begin(); it != wl.end(); ++it)
-		if (wxTopLevelWindow *tlw = dynamic_cast<wxTopLevelWindow*>(*it))
-			if (tlw->IsShown() && tlw->IsActive())
-				return tlw;
-
-	return 0;
 }
 
 #endif // WIN32 (for DIR,dirent)
