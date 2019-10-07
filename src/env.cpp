@@ -127,7 +127,10 @@ lk_string lk::vardata_t::as_string() const
 	case REFERENCE: return deref().as_string();
 	case NUMBER:
 	{
-		sprintf(buf, "%f", m_u.v);
+		if (((double)((int)m_u.v)) == m_u.v)
+			sprintf(buf, "%d", (int)m_u.v);
+		else
+			sprintf(buf, "%lf", m_u.v);
 		return lk_string(buf);
 	}
 	case STRING:
