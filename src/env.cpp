@@ -119,7 +119,7 @@ int lk::vardata_t::as_integer() const
 
 lk_string lk::vardata_t::as_string() const
 {
-	double intpart;
+//	double intpart;
 	char buf[512];
 	switch (type())
 	{
