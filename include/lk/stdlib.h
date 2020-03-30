@@ -169,7 +169,8 @@ public:
                     const wxString &title,
                     long buttons,
                     const wxPoint &pos = wxDefaultPosition,
-                    const wxSize &size = wxDefaultSize)
+                    const wxSize &size = wxDefaultSize,
+                    bool addButtonClose = false)
             : wxDialog(parent, wxID_ANY, title, pos, size, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
         SetEscapeId(wxID_NONE);
 
@@ -206,11 +207,17 @@ public:
             szpnl->Add(label, 1, wxALL | wxEXPAND, 20);
         }
 
+        if (addButtonClose) {
+            wxButton *buttonClose = new wxButton(this, wxID_OK, wxT("OK"));
+            szpnl->Add(buttonClose, 1, wxCENTER);
+        }
+
         panel->SetSizer(szpnl);
 
         wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
         sizer->Add(panel, 1, wxALL | wxEXPAND, 0);
         sizer->Add(CreateButtonSizer(buttons), 0, wxALL | wxEXPAND, 11);
+
         SetSizerAndFit(sizer);
 
         if (size != wxDefaultSize)
