@@ -8,7 +8,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 cmake_minimum_required(VERSION 3.11)
 
-option(skip_tools "Skips the lk sandbox" OFF)
+option(SAM_SKIP_TOOLS "Skips the lk sandbox" OFF)
 
 if (APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
@@ -113,7 +113,7 @@ endif ()
 target_include_directories(lk PRIVATE include)
 
 # sandbox executable
-if (NOT skip_tools)
+if (NOT SAM_SKIP_TOOLS)
     add_executable(lk_sandbox ${LK_SRC} sandbox/sandbox.cpp)
     set_target_properties(lk_sandbox
             PROPERTIES
@@ -141,7 +141,7 @@ if (${CMAKE_PROJECT_NAME} STREQUAL export_config)
 endif ()
 
 # sandbox executable
-if (NOT skip_tools)
+if (NOT SAM_SKIP_TOOLS)
     if (UNIX)
         target_link_libraries(lk_sandbox -ldl)
     endif ()
