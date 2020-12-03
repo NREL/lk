@@ -165,7 +165,6 @@ public:
 
         m_code->SetScrollWidthTracking(true);
 
-        m_code->SetStyleBits(8);
         m_code->SetLayoutCache(wxSTC_CACHE_PAGE);
         m_code->SetLexer(wxSTC_LEX_NULL);
 

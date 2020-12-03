@@ -8,6 +8,8 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 cmake_minimum_required(VERSION 3.11)
 
+option(SAM_SKIP_TOOLS "Skips the lk sandbox" OFF)
+
 if (APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
 endif ()
@@ -61,7 +63,7 @@ else (MSVC)
         add_compile_options(-arch x86_64 -fno-common)
         add_definitions(-DWX_PRECOMP)
     endif ()
-    add_compile_options(-Wall -O2 -Werror -Wno-deprecated -Wno-unused-function -Wno-deprecated-declarations)
+    add_compile_options(-Wall -O2 -Werror)
     add_definitions(-DLK_USE_WXWIDGETS)
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_definitions(_DEBUG)
@@ -78,8 +80,13 @@ endif (MSVC)
 #####################################################################################################################
 
 if (UNIX)
-    set(wxWidgets_CONFIG_EXECUTABLE /usr/local/bin/wx-config-3)
-    find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base)
+    if(EXISTS /usr/local/bin/wx-config-3)
+        set(wxWidgets_CONFIG_EXECUTABLE /usr/local/bin/wx-config-3)
+        find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base)
+    else ()
+        set(wxWidgets_CONFIG_EXECUTABLE $ENV{WXMSW3}/bin/wx-config)
+        find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base)
+    endif ()
 else ()
     set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
     find_package(wxWidgets REQUIRED qa webview aui richtext html propgrid adv net stc core base scintilla)
@@ -111,18 +118,20 @@ endif ()
 target_include_directories(lk PRIVATE include)
 
 # sandbox executable
-add_executable(lk_sandbox ${LK_SRC} sandbox/sandbox.cpp)
-set_target_properties(lk_sandbox
-        PROPERTIES
-        DEBUG_POSTFIX "d"
-        )
-if (MSVC)
+if (NOT SAM_SKIP_TOOLS)
+    add_executable(lk_sandbox ${LK_SRC} sandbox/sandbox.cpp)
     set_target_properties(lk_sandbox
             PROPERTIES
-            LINK_FLAGS /SUBSYSTEM:WINDOWS)
-endif ()
+            DEBUG_POSTFIX "d"
+            )
+    if (MSVC)
+        set_target_properties(lk_sandbox
+                PROPERTIES
+                LINK_FLAGS /SUBSYSTEM:WINDOWS)
+    endif ()
 
-target_include_directories(lk_sandbox PUBLIC include)
+    target_include_directories(lk_sandbox PUBLIC include)
+endif()
 
 
 #####################################################################################################################
@@ -137,8 +146,10 @@ if (${CMAKE_PROJECT_NAME} STREQUAL export_config)
 endif ()
 
 # sandbox executable
-if (UNIX)
-    target_link_libraries(lk_sandbox -ldl)
-endif ()
+if (NOT SAM_SKIP_TOOLS)
+    if (UNIX)
+        target_link_libraries(lk_sandbox -ldl)
+    endif ()
 
-target_link_libraries(lk_sandbox lk ${wxWidgets_LIBRARIES})
+    target_link_libraries(lk_sandbox lk ${wxWidgets_LIBRARIES})
+endif()
