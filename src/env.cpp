@@ -127,7 +127,8 @@ lk_string lk::vardata_t::as_string() const {
             if (((double) ((int) m_u.v)) == m_u.v)
                 sprintf(buf, "%d", (int) m_u.v);
             else
-                sprintf(buf, "%lf", m_u.v);
+                sprintf(buf, "%g", m_u.v);
+//            sprintf(buf, "%lf", m_u.v);
             return lk_string(buf);
         }
         case STRING:
