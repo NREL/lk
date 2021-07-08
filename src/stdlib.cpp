@@ -349,7 +349,7 @@ static void _wx_html_dialog(lk::invoke_t &cxt) {
 
     wxWindow *parent = GetCurrentTopLevelWindow();
     wxFrame *frm = new wxFrame(parent, wxID_ANY, title, pos, size,
-                               (wxCAPTION | wxCLOSE_BOX | wxCLIP_CHILDREN | wxRESIZE_BORDER | wxFRAME_TOOL_WINDOW)
+                               (wxCAPTION | wxCLOSE_BOX | wxCLIP_CHILDREN | wxRESIZE_BORDER | wxFRAME_TOOL_WINDOW | wxSTAY_ON_TOP)
                                | (parent != 0 ? wxFRAME_FLOAT_ON_PARENT : 0));
     wxHtmlWindow *html = new wxHtmlWindow(frm, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                                           wxHW_DEFAULT_STYLE | wxBORDER_NONE);
