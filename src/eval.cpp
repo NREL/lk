@@ -466,11 +466,10 @@ bool lk::eval::interpret(node_t *root,
 
                                     lk::vardata_t &argval = cxt.arg_list()[iarg];
                                     if (!interpret(argvals->items[iarg], cur_env, argval, flags, c)) {
-                                        m_errors.push_back(
-                                                make_error(argvals,
-                                                           (const char *) lk_string(
-                                                                   lk_tr("failed to evaluate function call argument %d to '%s()'\n")).c_str(),
-                                                           (int) iarg));
+                                        lk_string err;
+                                        err << "[" << argvals->line() << "]:failed to evaluate function call argument number " << iarg  << ", value = " << dynamic_cast<iden_t*>(argvals->items[iarg])->name;
+                                        m_errors.push_back(err +"\n");
+//                                        make_error(argvals, (const char*)lk_string(lk_tr("failed to evaluate function call argument %d to '%s()'\n")).c_str(), (int)iarg));
                                         return false;
                                     }
                                 }
@@ -479,8 +478,7 @@ bool lk::eval::interpret(node_t *root,
                             try {
                                 if (fi->f) (*(fi->f))(cxt);
                                 else if (fi->f_ext) lk::external_call(fi->f_ext, cxt);
-                                else cxt.error(lk_tr("invalid internal reference to function callback") + " " +
-                                               iden->name);
+                                else cxt.error(lk_tr("invalid internal reference to function callback") + " " +  iden->name);
                             }
                             catch (std::exception &e) {
                                 cxt.error(e.what());
