@@ -328,8 +328,11 @@ static void _wx_scrnres(lk::invoke_t &cxt) {
 
 static void _wx_html_dialog(lk::invoke_t &cxt) {
     LK_DOC("html_dialog", "Show a dialog with an HTML viewer.",
-           "(string:html source, [string:title], [array:window size [w,h] or geometry [x,y,w,h]]):none");
+           "(string:html source, [string:title], [array:window size [w,h] or geometry [x,y,w,h]], [boolean:stay on top true/false]):none");
     wxString title("HTML Viewer");
+
+    bool on_top = false;
+
     if (cxt.arg_count() > 1)
         title = cxt.arg(1).as_string();
 
@@ -339,20 +342,23 @@ static void _wx_html_dialog(lk::invoke_t &cxt) {
         if (cxt.arg(2).length() == 2) {
             size.x = (int) cxt.arg(2).index(0)->as_number();
             size.y = (int) cxt.arg(2).index(1)->as_number();
-        } else if (cxt.arg(2).length() == 4) {
+        }
+        else if (cxt.arg(2).length() == 4) {
             pos.x = (int) cxt.arg(2).index(0)->as_number();
             pos.y = (int) cxt.arg(2).index(1)->as_number();
             size.x = (int) cxt.arg(2).index(2)->as_number();
             size.y = (int) cxt.arg(2).index(3)->as_number();
         }
     }
+    if (cxt.arg_count() > 3 && cxt.arg(3).as_boolean())
+        on_top = true;
 
     wxWindow *parent = GetCurrentTopLevelWindow();
     wxFrame *frm = new wxFrame(parent, wxID_ANY, title, pos, size,
-                               (wxCAPTION | wxCLOSE_BOX | wxCLIP_CHILDREN | wxRESIZE_BORDER | wxFRAME_TOOL_WINDOW | wxSTAY_ON_TOP)
-                               | (parent != 0 ? wxFRAME_FLOAT_ON_PARENT : 0));
-    wxHtmlWindow *html = new wxHtmlWindow(frm, wxID_ANY, wxDefaultPosition, wxDefaultSize,
-                                          wxHW_DEFAULT_STYLE | wxBORDER_NONE);
+            (wxCAPTION | wxCLOSE_BOX | wxCLIP_CHILDREN | wxRESIZE_BORDER | wxFRAME_TOOL_WINDOW | (on_top ? wxSTAY_ON_TOP : 0))
+            | (parent != 0 ? wxFRAME_FLOAT_ON_PARENT : 0));
+
+    wxHtmlWindow *html = new wxHtmlWindow(frm, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_DEFAULT_STYLE | wxBORDER_NONE);
     html->SetPage(cxt.arg(0).as_string());
     frm->Show();
 }
