@@ -6,7 +6,7 @@
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.19)
 
 option(SAM_SKIP_TOOLS "Skips the lk sandbox" OFF)
 
@@ -60,7 +60,8 @@ else (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     if (APPLE)
-        add_compile_options(-arch x86_64 -fno-common)
+#       add_compile_options( -arch x86_64 -arch arm64  -fno-common)
+        add_compile_options( -fno-common)
         add_definitions(-DWX_PRECOMP)
     endif ()
     add_compile_options(-Wall -O2 -Werror)
