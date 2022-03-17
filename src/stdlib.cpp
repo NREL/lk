@@ -4100,6 +4100,7 @@ double lk::erfc(double x) {
     return x < 0.0 ? 1.0 + gammp(0.5, x * x) : gammq(0.5, x * x);
 }
 
+#ifdef LK_USE_WXWIDGETS
 wxWindow *GetCurrentTopLevelWindow() {
     wxWindowList &wl = ::wxTopLevelWindows;
     for (wxWindowList::iterator it = wl.begin(); it != wl.end(); ++it)
@@ -4109,6 +4110,7 @@ wxWindow *GetCurrentTopLevelWindow() {
 
     return 0;
 }
+#endif
 
 #ifdef WIN32
 
