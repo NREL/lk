@@ -40,6 +40,7 @@ lk::input_string::input_string(const lk_string &in) {
     m_buf = 0;
 
     std::string utf8 = lk::to_utf8(in);
+    utf8 = in;
     allocate(utf8.length() + 1);
     if (m_buf != 0) {
         strcpy(m_buf, utf8.c_str());
@@ -520,8 +521,12 @@ int lk::lexer::next() {
 
                     m_error = lk_tr("newline found within string literal");
                     return INVALID;
-                } else
-                    m_buf += *p;
+                }
+                else {
+//                    auto test = lk::from_utf8((const char*)*p);
+//                    m_buf += test;
+                   m_buf += *p;
+                }
 
                 p++;
             }
