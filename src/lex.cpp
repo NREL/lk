@@ -30,6 +30,7 @@
 #include <limits>
 
 #include <lk/lex.h>
+#include <wx/strconv.h>
 
 lk::input_string::input_string() {
     m_buf = m_p = 0;
@@ -38,12 +39,35 @@ lk::input_string::input_string() {
 /// lk_string is converted to UTF8 encoding before being stored as char*
 lk::input_string::input_string(const lk_string &in) {
     m_buf = 0;
-
+/*
     std::string utf8 = lk::to_utf8(in);
-    utf8 = in;
+ allocate(utf8.length() + 1);
+ if (m_buf != 0) {
+     strcpy(m_buf, utf8.c_str());
+     m_buf[utf8.length()] = 0;
+ }
+
+ */
+// following same with no encoding
+//    wxString test = in.ToUTF8(); // no encoding
+//    wxString test2 = in.wx_str();
+//    wxString test3 = in.mb_str();
+//    std::string utf8 = test.utf8_string();
+//    wxString test4 = in.FromUTF8(utf8);
+//    utf8 = in;
+//    wxString str(in.To8BitData(), wxConvUTF8); // empty
+
+//    wxString str((const char *)in.c_str(), wxConvUTF8); // not encoded
+//    std::string utf8 = lk::to_utf8(str);
+
+    //wxString step1 = in.wx_str();
+    wxString step1 = wxString::FromUTF8(in.c_str());
+    wxCharBuffer utf8 = step1.ToUTF8();
+    
+    
     allocate(utf8.length() + 1);
     if (m_buf != 0) {
-        strcpy(m_buf, utf8.c_str());
+        strcpy(m_buf, utf8.data());
         m_buf[utf8.length()] = 0;
     }
 
@@ -453,7 +477,7 @@ int lk::lexer::next() {
 
             p++;
 
-            while (*p && *p != qclose) {
+   while (*p && *p != qclose) {
                 if (*p == '\\' && p.peek() != 0) {
                     char cerr = 0;
                     switch (p.peek()) {
@@ -523,9 +547,12 @@ int lk::lexer::next() {
                     return INVALID;
                 }
                 else {
-//                    auto test = lk::from_utf8((const char*)*p);
-//                    m_buf += test;
-                   m_buf += *p;
+ //                   auto test = lk::from_utf8();
+ //                   m_buf += test;
+ //                   m_buf += *p;
+                    auto test = lk_char(*p);
+                    m_buf += test;
+//                    m_buf += wxUniChar(*p);
                 }
 
                 p++;

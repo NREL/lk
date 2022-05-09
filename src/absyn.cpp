@@ -62,7 +62,7 @@ lk_string lk::to_string(lk_char c) {
 }
 
 std::string lk::to_utf8(const lk_string &str) {
-    return std::string((const char *) str.ToUTF8());
+   return std::string((const char *) str.ToUTF8());
 }
 
 lk_string lk::from_utf8(const std::string &str) {
