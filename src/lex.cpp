@@ -39,15 +39,16 @@ lk::input_string::input_string() {
 /// lk_string is converted to UTF8 encoding before being stored as char*
 lk::input_string::input_string(const lk_string &in) {
     m_buf = 0;
-/*
-    std::string utf8 = lk::to_utf8(in);
- allocate(utf8.length() + 1);
- if (m_buf != 0) {
-     strcpy(m_buf, utf8.c_str());
-     m_buf[utf8.length()] = 0;
- }
 
- */
+ //   std::string utf8 = lk::to_utf8(in);
+    std::string utf8 = in;
+    allocate(utf8.length() + 1);
+    if (m_buf != 0) {
+        strcpy(m_buf, utf8.c_str());
+        m_buf[utf8.length()] = 0;
+    }
+
+
 // following same with no encoding
 //    wxString test = in.ToUTF8(); // no encoding
 //    wxString test2 = in.wx_str();
@@ -59,7 +60,7 @@ lk::input_string::input_string(const lk_string &in) {
 
 //    wxString str((const char *)in.c_str(), wxConvUTF8); // not encoded
 //    std::string utf8 = lk::to_utf8(str);
-
+/*
     //wxString step1 = in.wx_str();
     wxString step1 = wxString::FromUTF8(in.c_str());
     wxCharBuffer utf8 = step1.ToUTF8();
@@ -70,7 +71,7 @@ lk::input_string::input_string(const lk_string &in) {
         strcpy(m_buf, utf8.data());
         m_buf[utf8.length()] = 0;
     }
-
+*/
     m_p = m_buf;
 }
 
@@ -549,9 +550,9 @@ int lk::lexer::next() {
                 else {
  //                   auto test = lk::from_utf8();
  //                   m_buf += test;
- //                   m_buf += *p;
-                    auto test = lk_char(*p);
-                    m_buf += test;
+                    m_buf += *p;
+ //                   auto test = lk_char(*p);
+ //                   m_buf += test;
 //                    m_buf += wxUniChar(*p);
                 }
 
