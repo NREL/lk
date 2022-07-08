@@ -1781,7 +1781,7 @@ static void _sprintf(lk::invoke_t &cxt) {
 }
 
 static void _strpos(lk::invoke_t &cxt) {
-    LK_DOC("strpos", "Locates the first instance of a character or substring in a string.", "(string, string):integer");
+    LK_DOC("strpos", "Locates the first instance of a character or substring (s2) in a string (s1).", "(string:s1, string:s2):integer");
     lk_string s = cxt.arg(0).as_string();
     lk_string f = cxt.arg(1).as_string();
     lk_string::size_type idx = s.find(f);
