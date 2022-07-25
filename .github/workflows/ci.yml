@@ -10,12 +10,17 @@ jobs:
     env:
       RUNS_ON: ubuntu1804
     steps:
+    - name: Setup cmake
+      uses: jwlawson/actions-setup-cmake@v1.12
+      with:
+        cmake-version: '3.24.x'
+    - name: Test cmake version
+      run: cmake --version
     - name: Install OS dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y \
           build-essential \
-          cmake \
           freeglut3-dev \
           g++ \
           libcurl4-openssl-dev \
@@ -56,12 +61,17 @@ jobs:
     env:
       RUNS_ON: ubuntu2004
     steps:
+    - name: Setup cmake
+      uses: jwlawson/actions-setup-cmake@v1.12
+      with:
+        cmake-version: '3.24.x'
+    - name: Test cmake version
+      run: cmake --version
     - name: Install OS dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y \
           build-essential \
-          cmake \
           freeglut3-dev \
           g++ \
           libcurl4-openssl-dev \
