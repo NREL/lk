@@ -49,6 +49,7 @@ jobs:
         cmake --build build_linux -- -j
 
     - name: Save static lib & lksandbox
+      if: ${{ !env.ACT }}
       uses: actions/upload-artifact@v2
       with:
         name: LK-${{ env.RUNS_ON }}-x86_64
@@ -100,6 +101,7 @@ jobs:
         cmake --build build_linux -- -j
 
     - name: Save static lib & lksandbox
+      if: ${{ !env.ACT }}
       uses: actions/upload-artifact@v2
       with:
         name: LK-${{ env.RUNS_ON }}-x86_64
