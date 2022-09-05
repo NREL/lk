@@ -18,8 +18,8 @@ jobs:
       run: cmake --version
     - name: Install OS dependencies
       run: |
-        apt-get update
-        apt-get install -y \
+        sudo apt-get update
+        sudo apt-get install -y \
           build-essential \
           freeglut3-dev \
           g++ \
@@ -36,8 +36,8 @@ jobs:
 
     - name: Install wxWidgets
       run: |
-        apt-get install -y libwxgtk*-dev
-        ln -s $(which wx-config) /usr/local/bin/wx-config-3
+        sudo apt-get install -y libwxgtk*-dev
+        sudo ln -s $(which wx-config) /usr/local/bin/wx-config-3
         wx-config-3 --cflags | grep I
 
     - name: Checkout
@@ -69,8 +69,8 @@ jobs:
       run: cmake --version
     - name: Install OS dependencies
       run: |
-        apt-get update
-        apt-get install -y \
+        sudo apt-get update
+        sudo apt-get install -y \
           build-essential \
           freeglut3-dev \
           g++ \
@@ -87,8 +87,8 @@ jobs:
 
     - name: Install wxWidgets
       run: |
-        apt-get install -y libwxgtk*-dev
-        ln -s $(which wx-config) /usr/local/bin/wx-config-3
+        sudo apt-get install -y libwxgtk*-dev
+        sudo ln -s $(which wx-config) /usr/local/bin/wx-config-3
         wx-config-3 --cflags | grep I
 
     - name: Checkout
