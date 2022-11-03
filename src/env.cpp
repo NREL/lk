@@ -675,7 +675,7 @@ lk::vardata_t *lk::vardata_t::index(size_t idx) const {
 }
 
 lk::vardata_t *lk::vardata_t::lookup(const lk_string &key) const {
-    if (this == 0) throw error_t(lk_tr("access violation: expected hash table, but found null")); // Check nullptr before the next line throws uncatchable errors
+//    if (this == 0) throw error_t(lk_tr("access violation: expected hash table, but found null")); // Check nullptr before the next line throws uncatchable errors
     if (type() != HASH) throw error_t(lk_tr("access violation: expected hash table, but found") + " " + typestr());
     varhash_t &h = *reinterpret_cast<varhash_t *>(m_u.p);
     varhash_t::iterator it = h.find(key);
