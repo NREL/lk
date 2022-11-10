@@ -35,7 +35,6 @@
 #include <future>
 #include <chrono>
 
-//#include <float.h>
 #include <string.h>
 
 #include <lk/stdlib.h>
