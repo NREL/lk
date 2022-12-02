@@ -6,12 +6,12 @@
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.24)
 
 option(SAM_SKIP_TOOLS "Skips the lk sandbox" OFF)
 
 if (APPLE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 endif ()
 
 if (UNIX AND NOT CMAKE_C_COMPILER)
@@ -60,10 +60,10 @@ else (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     if (APPLE)
-        add_compile_options(-arch x86_64 -fno-common)
+        add_compile_options( -fno-common)
         add_definitions(-DWX_PRECOMP)
     endif ()
-    add_compile_options(-Wall -O2 -Werror)
+    add_compile_options(-Wall -O2 )
     add_definitions(-DLK_USE_WXWIDGETS)
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_definitions(_DEBUG)
