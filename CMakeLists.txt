@@ -6,7 +6,7 @@
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.24)
 
 option(SAM_SKIP_TOOLS "Skips the lk sandbox" OFF)
 
@@ -63,7 +63,7 @@ else (MSVC)
         add_compile_options( -fno-common)
         add_definitions(-DWX_PRECOMP)
     endif ()
-    add_compile_options(-Wall -O2 -Werror)
+    add_compile_options(-Wall -O2 )
     add_definitions(-DLK_USE_WXWIDGETS)
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_definitions(_DEBUG)

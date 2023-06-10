@@ -1,26 +1,33 @@
-/***********************************************************************************************************************
-*  LK, Copyright (c) 2008-2017, Alliance for Sustainable Energy, LLC. All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
-*  following conditions are met:
-*
-*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
-*  disclaimer.
-*
-*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
-*  following disclaimer in the documentation and/or other materials provided with the distribution.
-*
-*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote
-*  products derived from this software without specific prior written permission from the respective party.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
-*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER, THE UNITED STATES GOVERNMENT, OR ANY CONTRIBUTORS BE LIABLE FOR
-*  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-*  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
-*  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-*  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-**********************************************************************************************************************/
+/*
+BSD 3-Clause License
+
+Copyright (c) Alliance for Sustainable Energy, LLC. See also https://github.com/NREL/lk/blob/develop/LICENSE 
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 #include <cstdio>
 #include <cstdarg>
@@ -35,8 +42,6 @@
 #include <future>
 #include <chrono>
 
-#include <cmath>
-#include <float.h>
 #include <string.h>
 
 #include <lk/stdlib.h>
@@ -2213,7 +2218,7 @@ static void _mpi(lk::invoke_t &cxt) {
 
 static void _mabs(lk::invoke_t &cxt) {
     LK_DOC("abs", "Returns the absolute value of a number.", "(real:x):real");
-    cxt.result().assign(::fabs(cxt.arg(0).as_number()));
+    cxt.result().assign(std::abs(cxt.arg(0).as_number()));
 }
 
 static void _msgn(lk::invoke_t &cxt) {
@@ -3704,7 +3709,7 @@ double lk::besj0(double x) {
     double ax, z;
     double xx, y, ans, ans1, ans2;
 
-    if ((ax = fabs(x)) < 8.0) {
+    if ((ax = std::abs(x)) < 8.0) {
         y = x * x;
         ans1 = 57568490574.0 + y * (-13362590354.0 + y * (651619640.7
                                                           +
@@ -3730,7 +3735,7 @@ double lk::besj1(double x) {
     double ax, z;
     double xx, y, ans, ans1, ans2;
 
-    if ((ax = fabs(x)) < 8.0) {
+    if ((ax = std::abs(x)) < 8.0) {
         y = x * x;
         ans1 = x * (72362614232.0 + y * (-7895059235.0 + y * (242396853.1
                                                               + y * (-2972611.439 +
@@ -3813,7 +3818,7 @@ double lk::besi0(double x) {
     double ax, ans;
     double y;
 
-    if ((ax = fabs(x)) < 3.75) {
+    if ((ax = std::abs(x)) < 3.75) {
         y = x / 3.75;
         y *= y;
         ans = 1.0 + y * (3.5156229 + y * (3.0899424 + y * (1.2067492
@@ -3863,7 +3868,7 @@ double lk::besi1(double x) {
     double ax, ans;
     double y;
 
-    if ((ax = fabs(x)) < 3.75) {
+    if ((ax = std::abs(x)) < 3.75) {
         y = x / 3.75;
         y *= y;
         ans = ax * (0.5 + y * (0.87890594 + y * (0.51498869 + y * (0.15084934
@@ -3933,27 +3938,27 @@ double lk::betacf(double a, double b, double x) {
     qam = a - 1.0;
     c = 1.0;
     d = 1.0 - qab * x / qap;
-    if (fabs(d) < FPMIN) d = FPMIN;
+    if (std::abs(d) < FPMIN) d = FPMIN;
     d = 1.0 / d;
     h = d;
     for (m = 1; m <= MAXIT; m++) {
         m2 = 2 * m;
         aa = m * (b - m) * x / ((qam + m2) * (a + m2));
         d = 1.0 + aa * d;
-        if (fabs(d) < FPMIN) d = FPMIN;
+        if (std::abs(d) < FPMIN) d = FPMIN;
         c = 1.0 + aa / c;
-        if (fabs(c) < FPMIN) c = FPMIN;
+        if (std::abs(c) < FPMIN) c = FPMIN;
         d = 1.0 / d;
         h *= d * c;
         aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
         d = 1.0 + aa * d;
-        if (fabs(d) < FPMIN) d = FPMIN;
+        if (std::abs(d) < FPMIN) d = FPMIN;
         c = 1.0 + aa / c;
-        if (fabs(c) < FPMIN) c = FPMIN;
+        if (std::abs(c) < FPMIN) c = FPMIN;
         d = 1.0 / d;
         del = d * c;
         h *= del;
-        if (fabs(del - 1.0) < EPS) break;
+        if (std::abs(del - 1.0) < EPS) break;
     }
 
     if (m > MAXIT) throw lk::error_t("a or b too big, or MAXIT too small in betacf");
@@ -4021,7 +4026,7 @@ void lk::gser(double *gamser, double a, double x, double *gln) {
             ++ap;
             del *= x / ap;
             sum += del;
-            if (fabs(del) < fabs(sum) * EPS) {
+            if (std::abs(del) < std::abs(sum) * EPS) {
                 *gamser = sum * exp(-x + a * log(x) - (*gln));
                 return;
             }
@@ -4051,13 +4056,13 @@ void lk::gcf(double *gammcf, double a, double x, double *gln) {
         an = -i * (i - a);
         b += 2.0;
         d = an * d + b;
-        if (fabs(d) < FPMIN) d = FPMIN;
+        if (std::abs(d) < FPMIN) d = FPMIN;
         c = b + an / c;
-        if (fabs(c) < FPMIN) c = FPMIN;
+        if (std::abs(c) < FPMIN) c = FPMIN;
         d = 1.0 / d;
         del = d * c;
         h *= del;
-        if (fabs(del - 1.0) < EPS) break;
+        if (std::abs(del - 1.0) < EPS) break;
     }
     if (i > ITMAX) throw lk::error_t("a too large, ITMAX too small in gcf");
     *gammcf = exp(-x + a * log(x) - (*gln)) * h;
