@@ -32,7 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __lk_stdlib_h
 #define __lk_stdlib_h
 
+#ifdef LK_USE_WXWIDGETS
 #include <wx/wx.h>
+#endif
 
 #include <lk/env.h>
 
@@ -169,6 +171,8 @@ namespace lk {
     double erfc(double x);
 };
 
+#ifdef LK_USE_WXWIDGETS
+
 class MyMessageDialog : public wxDialog {
 public:
     MyMessageDialog(wxWindow *parent,
@@ -261,5 +265,6 @@ DECLARE_EVENT_TABLE();
 };
 
 wxWindow *GetCurrentTopLevelWindow();
+#endif
 
 #endif

@@ -61,12 +61,41 @@ typedef wxStringEqual lk_string_equal;
 
 #else
 #include <string>
+#include <sstream>
 
 typedef std::string::value_type lk_char;
 typedef std::string lk_string;
 
 typedef std::hash<std::string> lk_string_hash;
 typedef std::equal_to<std::string> lk_string_equal;
+
+inline lk_string& operator << (lk_string& a, const lk_string& lstr)
+{
+    a += lstr;
+    return a;
+}
+
+inline lk_string& operator << (lk_string& a, const char* s)
+{
+    a += s;
+    return a;
+}
+
+inline lk_string& operator << (lk_string& a, int i)
+{
+    std::stringstream sstr;
+    sstr << i;
+    a += sstr.str();
+    return a;
+}
+
+inline lk_string& operator << (lk_string& a, size_t i)
+{
+    std::stringstream sstr;
+    sstr << i;
+    a += sstr.str();
+    return a;
+}
 
 #endif
 
