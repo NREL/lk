@@ -81,7 +81,7 @@ void _CC_document3(struct __lk_invoke_t *_lk, const char *fn, const char *notes,
 }
 
 void _CC_error(struct __lk_invoke_t *_lk, const char *errmsg) {
-    strncpy((char *) _lk->__errbuf, errmsg, 255);
+    strncpy_s((char *) _lk->__errbuf, 255, errmsg, 255);
 }
 
 int _CC_arg_count(struct __lk_invoke_t *_lk) {

@@ -45,7 +45,7 @@ namespace lk {
         char buf[512];
         va_list args;
         va_start(args, fmt);
-        vsprintf(buf, fmt, args);
+        vsprintf_s(buf, 512, fmt, args);
         va_end(args);
         m_errStr = buf;
         return false;
@@ -96,7 +96,7 @@ namespace lk {
                  it != m_labelAddr.end();
                  ++it)
                 if ((int) i == it->second) {
-                    sprintf(buf, "%4s:", (const char *) it->first.c_str());
+                    sprintf_s(buf, 128, "%4s:", (const char *) it->first.c_str());
                     assembly += buf;
                     has_label = true;
                 }
@@ -108,7 +108,7 @@ namespace lk {
             size_t j = 0;
             while (op_table[j].name != 0) {
                 if (ip.op == op_table[j].op) {
-                    sprintf(buf, "%4d{%4d} %4s ", ip.pos.line, ip.pos.stmt, op_table[j].name);
+                    sprintf_s(buf,128, "%4d{%4d} %4s ", ip.pos.line, ip.pos.stmt, op_table[j].name);
                     assembly += buf;
 
                     if (ip.label) {
@@ -126,14 +126,14 @@ namespace lk {
                                || ip.op == LREF || ip.op == LCREF || ip.op == LGREF || ip.op == ARG) {
                         assembly += m_idList[ip.arg];
                     } else if (ip.op == TCALL || ip.op == CALL || ip.op == VEC || ip.op == HASH || ip.op == SWI) {
-                        sprintf(buf, "(%d)", ip.arg);
+                        sprintf_s(buf, 128,"(%d)", ip.arg);
                         assembly += buf;
                     }
 
                     assembly += '\n';
 
                     unsigned int bc = (((unsigned int) ip.op) & 0x000000FF) | (((unsigned int) ip.arg) << 8);
-                    sprintf(buf, "0x%08X\n", bc);
+                    sprintf_s(buf, 128, "0x%08X\n", bc);
                     bytecode += buf;
                     break;
                 }
@@ -199,7 +199,7 @@ namespace lk {
 
     lk_string codegen::new_label() {
         char buf[128];
-        sprintf(buf, "L%d", m_labelCounter++);
+        sprintf_s(buf, 128, "L%d", m_labelCounter++);
         return lk_string(buf);
     }
 

@@ -119,7 +119,7 @@ void lk::parser::error(const char *fmt, ...) {
     va_list list;
     va_start(list, fmt);
 #ifdef _WIN32
-    _vsnprintf(buf, 480, fmt, list);
+    _vsnprintf_s(buf, 480, fmt, list);
 #else
     vsnprintf(buf, 480, fmt, list);
 #endif
@@ -134,9 +134,9 @@ void lk::parser::error(const lk_string &s) {
     char buf[512];
 
     if (!m_name.empty())
-        sprintf(buf, "[%s] %d: ", (const char *) m_name.c_str(), m_lastLine);
+        sprintf_s(buf, 512, "[%s] %d: ", (const char *) m_name.c_str(), m_lastLine);
     else
-        sprintf(buf, "%d: ", m_lastLine);
+        sprintf_s(buf, 512, "%d: ", m_lastLine);
 
     errinfo e;
     e.text = lk_string(buf) + s;
@@ -276,7 +276,9 @@ lk::node_t *lk::parser::statement() {
         lk_string src_text;
 
         for (size_t i = 0; i < attempted_paths.size(); i++) {
-            if (FILE *fp = fopen((const char *) attempted_paths[i].c_str(), "r")) {
+            FILE* fp;
+            fopen_s(&fp, (const char*)attempted_paths[i].c_str(), "r");
+            if (fp) {
                 expanded_path = attempted_paths[i];
                 import_found = true;
                 char c;

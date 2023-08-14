@@ -131,9 +131,9 @@ lk_string lk::vardata_t::as_string() const {
             return deref().as_string();
         case NUMBER: {
             if (((double) ((int) m_u.v)) == m_u.v)
-                sprintf(buf, "%d", (int) m_u.v);
+                sprintf_s(buf,512, "%d", (int) m_u.v);
             else
-                sprintf(buf, "%lg", m_u.v);
+                sprintf_s(buf, 512, "%lg", m_u.v);
             return lk_string(buf);
         }
         case STRING:
