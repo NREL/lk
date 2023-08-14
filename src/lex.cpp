@@ -49,7 +49,7 @@ lk::input_string::input_string(const lk_string &in) {
     std::string utf8 = lk::to_utf8(in);
     allocate(utf8.length() + 1);
     if (m_buf != 0) {
-        strcpy(m_buf, utf8.c_str());
+        strcpy_s(m_buf, utf8.length() + 1, utf8.c_str());
         m_buf[utf8.length()] = 0;
     }
 
@@ -88,7 +88,8 @@ char lk::input_string::peek() {
 lk::input_file::input_file(const lk_string &file)
         : input_string() {
     int len;
-    FILE *f = fopen(file.c_str(), "r");
+    FILE* f;
+    fopen_s(&f,file.c_str(), "r");
     if (!f) return;
 
     if (0 != fseek(f, 0, SEEK_END)) {
@@ -545,7 +546,7 @@ int lk::lexer::next() {
     m_error += *p;
     m_error += "'  ascii: ";
     char buf[16];
-    sprintf(buf, "%d", (int) *p);
+    sprintf_s(buf, 16, "%d", (int) *p);
     m_error += buf;
 
     return INVALID;

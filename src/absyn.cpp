@@ -297,7 +297,7 @@ void lk::pretty_print(lk_string &str, node_t *root, int level) {
         str += spacer(level) + n6->name;
     } else if (constant_t *n7 = dynamic_cast<constant_t *>(root)) {
         char buf[64];
-        sprintf(buf, "%lg", n7->value);
+        sprintf_s(buf, 64, "%lg", n7->value);
         str += spacer(level) + buf;
     } else if (literal_t *n8 = dynamic_cast<literal_t *>(root)) {
         str += spacer(level) + "'";

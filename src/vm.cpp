@@ -780,12 +780,12 @@ namespace lk {
         const srcpos_t &spos = (bc && ip < bc->debuginfo.size()) ? bc->debuginfo[ip] : srcpos_t::npos;
 
         char buf[512];
-        sprintf(buf, "[%d] ", spos.stmt);
+        sprintf_s(buf, 512, "[%d] ", spos.stmt);
         errStr = buf;
 
         va_list args;
         va_start(args, fmt);
-        vsprintf(buf, fmt, args);
+        vsprintf_s(buf, 512, fmt, args);
         va_end(args);
         errStr += buf;
 

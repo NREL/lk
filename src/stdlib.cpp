@@ -580,7 +580,7 @@ public:
         if (mode == APPEND) chmode[0] = 'a';
         chmode[1] = 0;
 
-        m_fp = fopen((const char *) name.c_str(), chmode);
+        fopen_s(&m_fp,(const char *) name.c_str(), chmode);
         if (m_fp != 0) {
             m_fileName = name;
             return true;
@@ -893,7 +893,8 @@ static void _write_text_file(lk::invoke_t &cxt) {
     lk_string file = cxt.arg(0).as_string();
     lk_string data = cxt.arg(1).as_string();
 
-    FILE *fp = fopen((const char *) file.c_str(), "w");
+    FILE* fp;
+    fopen_s(&fp,(const char*)file.c_str(), "w");
     if (!fp) {
         cxt.result().assign(0.0);
         return;
@@ -1253,7 +1254,8 @@ static void _async(lk::invoke_t &cxt) {
 
 
     lk_string fn = cxt.arg(0).as_string();
-    FILE *fp = fopen(fn.c_str(), "r");
+    FILE* fp;
+    fopen_s(&fp, fn.c_str(), "r");
     if (!fp)
         cxt.result().vec_append("No valid input file specified\n");
     else {
@@ -1412,7 +1414,8 @@ static void _promise(lk::invoke_t &cxt) {
 
 
     lk_string fn = cxt.arg(0).as_string();
-    FILE *fp = fopen(fn.c_str(), "r");
+    FILE* fp;
+    fopen_s(&fp, fn.c_str(), "r");
     if (!fp)
         cxt.result().assign("No valid input file specified");
     else {
@@ -1751,7 +1754,9 @@ static void _json_file(lk::invoke_t &cxt) {
         if (!lk::json_read(lk::read_file(file), cxt.result(), &err))
             cxt.result().assign("<json-error> " + err);
     } else {
-        if (FILE *fp = fopen(file.c_str(), "w")) {
+        FILE* fp;
+        fopen_s(&fp, file.c_str(), "w");
+        if (fp) {
             lkJSONwriterFile wr(fp);
             cxt.result().assign(wr.write(cxt.arg(1)) ? 1.0 : 0.0);
             fclose(fp);
@@ -1948,7 +1953,7 @@ static void _stricmp(lk::invoke_t &cxt) {
     int result = cxt.arg(0).as_string().CmpNoCase(cxt.arg(1).as_string());
 #else
                                                                                                                             #ifdef _MSC_VER
-	int result = stricmp(cxt.arg(0).as_string().c_str(), cxt.arg(1).as_string().c_str());
+	int result = _stricmp(cxt.arg(0).as_string().c_str(), cxt.arg(1).as_string().c_str());
 #else
 	int result = strcasecmp(cxt.arg(0).as_string().c_str(), cxt.arg(1).as_string().c_str());
 #endif
@@ -2935,7 +2940,8 @@ bool lk::set_cwd(const lk_string &path) {
 lk_string lk::read_file(const lk_string &file) {
     lk_string buf;
     char c;
-    FILE *fp = fopen((const char *) file.c_str(), "r");
+    FILE* fp;
+    fopen_s(&fp,(const char*)file.c_str(), "r");
     if (fp) {
         while ((c = fgetc(fp)) != EOF)
             buf += c;
@@ -3180,7 +3186,7 @@ lk_string lk::format_vl(const lk_string &fmt, const std::vector<vardata_t *> &ar
     size_t argidx = 0;
     char *pfmt = new char[fmt.length() + 1];
     char *p = pfmt;
-    strcpy(p, (const char *) fmt.c_str());
+    strcpy_s(p, fmt.length() + 1, (const char *) fmt.c_str());
     lk_string s;
 
     char temp[TEMPLEN];
@@ -3264,7 +3270,7 @@ lk_string lk::format_vl(const lk_string &fmt, const std::vector<vardata_t *> &ar
 
                         *tp = '\0'; // end format string
 
-                        snprintf(temp, TEMPLEN, tempfmt, arg_double);
+                        _snprintf_s(temp, TEMPLEN, tempfmt, arg_double);
 
                         i = 0;
                         if (with_comma) {
@@ -3304,9 +3310,9 @@ lk_string lk::format_vl(const lk_string &fmt, const std::vector<vardata_t *> &ar
                     if (argidx < args.size()) {
                         double arg_double = args[argidx++]->as_number();
                         if (*p == ',') {
-                            snprintf(temp, TEMPLEN, "%lf", arg_double);
-                            if (strchr(temp, 'e') != NULL) snprintf(temp, TEMPLEN, "%d", (int) arg_double);
-                        } else snprintf(temp, TEMPLEN, "%.2lf", arg_double);
+                            _snprintf_s(temp, TEMPLEN, "%lf", arg_double);
+                            if (strchr(temp, 'e') != NULL) _snprintf_s(temp, TEMPLEN, "%d", (int) arg_double);
+                        } else _snprintf_s(temp, TEMPLEN, "%.2lf", arg_double);
                         decpt = strchr(temp, '.');
                         if (!decpt) ndigit = strlen(temp);
                         else ndigit = (int) (decpt - temp);
@@ -3374,7 +3380,7 @@ size_t lk::format_vn(char *buffer, int maxlen, const char *fmt, va_list arglist)
                     /* handle simple signed integer format */
                     p++;
                     arg_int = va_arg(arglist, int);
-                    sprintf(temp, "%d", arg_int);
+                    sprintf_s(temp, TEMPLEN, "%d", arg_int);
                     tp = temp;
                     while (*tp && bp < bpmax)
                         *bp++ = *tp++;
@@ -3385,7 +3391,7 @@ size_t lk::format_vn(char *buffer, int maxlen, const char *fmt, va_list arglist)
                     /* handle simple unsigned integer format */
                     p++;
                     arg_uint = va_arg(arglist, unsigned int);
-                    sprintf(temp, "%u", arg_uint);
+                    sprintf_s(temp, TEMPLEN,"%u", arg_uint);
                     tp = temp;
                     while (*tp && bp < bpmax)
                         *bp++ = *tp++;
@@ -3396,7 +3402,7 @@ size_t lk::format_vn(char *buffer, int maxlen, const char *fmt, va_list arglist)
                     /* handle hexadecimal unsigned integer format */
                     p++;
                     arg_uint = va_arg(arglist, unsigned int);
-                    sprintf(temp, "%x", arg_uint);
+                    sprintf_s(temp, TEMPLEN,"%x", arg_uint);
                     tp = temp;
                     while (*tp && bp < bpmax)
                         *bp++ = *tp++;
@@ -3455,7 +3461,7 @@ size_t lk::format_vn(char *buffer, int maxlen, const char *fmt, va_list arglist)
                     *tp = '\0'; // end format string
                     arg_double = va_arg(arglist, double);
 
-                    sprintf(temp, tempfmt, (double) arg_double);
+                    sprintf_s(temp, TEMPLEN, tempfmt, (double) arg_double);
 
                     i = 0;
                     if (with_comma) {
@@ -3495,9 +3501,9 @@ size_t lk::format_vn(char *buffer, int maxlen, const char *fmt, va_list arglist)
                 case ',':
                     arg_double = va_arg(arglist, double);
                     if (*p == ',') {
-                        sprintf(temp, "%lf", arg_double);
-                        if (strchr(temp, 'e') != NULL) sprintf(temp, "%d", (int) arg_double);
-                    } else sprintf(temp, "%.2lf", arg_double);
+                        sprintf_s(temp, TEMPLEN,"%lf", arg_double);
+                        if (strchr(temp, 'e') != NULL) sprintf_s(temp, TEMPLEN, "%d", (int) arg_double);
+                    } else sprintf_s(temp, TEMPLEN, "%.2lf", arg_double);
 
                     decpt = strchr(temp, '.');
                     if (!decpt) ndigit = strlen(temp);
@@ -3636,7 +3642,8 @@ lk_string lk::html_doc(fcall_t f) {
 bool lk::tex_doc(const lk_string &file,
                  const lk_string &title,
                  fcall_t *lib) {
-    FILE *fp = fopen((const char *) file.c_str(), "w");
+    FILE* fp;
+    fopen_s(&fp,(const char*)file.c_str(), "w");
     if (!fp)
         return false;
 
@@ -4154,7 +4161,9 @@ DIR *opendir(const char *name)
 		if ((dir = (DIR *)malloc(sizeof *dir)) != 0 &&
 			(dir->name = (char *)malloc(base_length + strlen(all) + 1)) != 0)
 		{
-			strcat(strcpy(dir->name, name), all);
+ //           strcat(strcpy(dir->name, name), all);
+            strcpy_s(dir->name, base_length + strlen(all) + 1, name);
+            strcat_s(dir->name, base_length + strlen(all) + 1, all);
 
 			if ((dir->handle = _findfirst(dir->name, &dir->info)) != -1)
 			{

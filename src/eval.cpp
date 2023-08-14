@@ -60,14 +60,14 @@ static lk_string make_error(lk::node_t *n, const char *fmt, ...) {
 
     fmt = replace_char(fmt, '%', '_');
 
-    sprintf(buf, "[%d]: ", n->line());
+    sprintf_s(buf, 512, "[%d]: ", n->line());
     char *p = buf + strlen(buf);
     va_list list;
     va_start(list, fmt);
 //	if (strlen((const char *)list) != 0)
     {
 #ifdef _WIN32
-        _vsnprintf(p, 480, fmt, list);
+        _vsnprintf_s(p, 512, 480, fmt, list);
 #else
         vsnprintf(p, 480, fmt, list);
 #endif
