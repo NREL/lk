@@ -83,23 +83,23 @@ jobs:
         cmake-version: '3.24.x'
 
     - name: Build LK
-      shell: bash
       run: |
         ls ${WXMSW3}
 
     - name: Build LK
-      shell: bash
       run: |
-        cmake -Bbuild_win
-        cmake --build build_win --config Release -j4
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 17 2022" -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_SYSTEM_VERSION=10.0 ..
+        MSBuild.exe .\lk.sln /t:Build /p:Configuration=Release
 
     - name: Save static lib & lksandbox
       uses: actions/upload-artifact@v2
       with:
         name: LK-${{ env.RUNS_ON }}-x86_64
         path: |
-          build_win/lk_sandbox*
-          build_win/lk*.a
+          build/Release/lk_sandbox*
+          build/Release/lk*.a
 
   build-on-mac:
     runs-on: ${{ matrix.os }}
