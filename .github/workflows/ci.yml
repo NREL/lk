@@ -74,7 +74,7 @@ jobs:
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxMSW-3.2.3_vc14x_Dev.7z -o wxMSW-3.2.3_vc14x_Dev.7z
         mkdir wxMSW-3.2.3_vc14x_Dev
         7z x wxMSW-3.2.3_vc14x_Dev.7z -o${WXMSW3}
-        ls ${WXMSW3}
+        echo ${WXMSW3}/bin >> $GITHUB_PATH
 
     # - name: Install wxWidgets
     #   run: |
@@ -140,14 +140,14 @@ jobs:
 
     - name: Build LK
       run: |
-        cmake -Bbuild_linux -DCMAKE_BUILD_TYPE=Release
-        cmake --build build_linux -- -j -j 4
+        cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
+        cmake --build build -- -j -j 4
 
     - name: Save static lib & lksandbox
       uses: actions/upload-artifact@v2
       with:
         name: LK-${{ env.RUNS_ON }}-x86_64
         path: |
-          build_linux/lk_sandbox*
-          build_linux/lk*.a
+          build/lk_sandbox*
+          build/lk*.a
         
