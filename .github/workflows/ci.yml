@@ -82,6 +82,12 @@ jobs:
     #     msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
     #     dir ${WXMSW3}
 
+    - name: Test wx
+      shell: bash
+      run: |
+        export WXMSW3=/d/a/lk/lk/wxMSW-3.2.3_vc14x_Dev
+        ls ${WXMSW3}
+
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
       with:
@@ -93,6 +99,8 @@ jobs:
     - name: Build LK
       shell: bash
       run: |
+        export WXMSW3=/d/a/lk/lk/wxMSW-3.2.3_vc14x_Dev
+        ls ${WXMSW3}
         cmake -Bbuild_win -DCMAKE_BUILD_TYPE=Release
         cmake --build build_win --config Release -j4
 
