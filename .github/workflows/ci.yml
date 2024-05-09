@@ -72,7 +72,7 @@ jobs:
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxMSW-3.2.3_vc14x_Dev.7z -o wxMSW-3.2.3_vc14x_Dev.7z
         mkdir wxMSW-3.2.3_vc14x_Dev
         7z x wxMSW-3.2.3_vc14x_Dev.7z -o${WXMSW3}
-        echo ${WXMSW3}/bin >> $GITHUB_PATH
+        ls ${WXMSW3}
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
@@ -83,7 +83,6 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build LK
-      shell: bash
       run: |
         ls ${WXMSW3}
 
