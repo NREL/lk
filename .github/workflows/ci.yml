@@ -69,18 +69,10 @@ jobs:
     - name: Download wxWidgets
       shell: bash
       run: |
-        # curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
-        # tar jxf wxWidgets-3.2.3.tar.bz2
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxMSW-3.2.3_vc14x_Dev.7z -o wxMSW-3.2.3_vc14x_Dev.7z
         mkdir wxMSW-3.2.3_vc14x_Dev
         7z x wxMSW-3.2.3_vc14x_Dev.7z -o${WXMSW3}
         echo ${WXMSW3}/bin >> $GITHUB_PATH
-
-    # - name: Install wxWidgets
-    #   run: |
-    #     cd wxWidgets-3.2.3
-    #     msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
-    #     dir ${WXMSW3}
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
@@ -93,7 +85,11 @@ jobs:
     - name: Build LK
       shell: bash
       run: |
-        cmake -Bbuild_win -DCMAKE_BUILD_TYPE=Release
+        ls ${WXMSW3}
+
+    - name: Build LK
+      run: |
+        cmake -Bbuild_win
         cmake --build build_win --config Release -j4
 
     - name: Save static lib & lksandbox
