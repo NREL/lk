@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Setup cmake
-      uses: jwlawson/actions-setup-cmake@v1.12
+      uses: jwlawson/actions-setup-cmake@v2
       with:
         cmake-version: '3.24.x'
     - name: Test cmake version
@@ -53,3 +53,36 @@ jobs:
         path: |
           build_linux/lk_sandbox*
           build_linux/lk*.a
+
+  build-on-windows:
+    runs-on: windows-latest
+    steps:
+    - name: Setup cmake
+      uses: jwlawson/actions-setup-cmake@v2
+      with:
+        cmake-version: '3.24.x'
+
+    - name: Install wxWidgets
+      shell: bash
+      run: |
+        wget -q https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2
+        tar jxf wxWidgets-3.2.3.tar.bz2
+        cd wxWidgets-3.2.3
+        msbuild.exe build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Build LK
+      run: |
+        cmake -Bbuild_win -DCMAKE_BUILD_TYPE=Release
+        cmake --build build_win --config Release -j4
+
+    - name: Save static lib & lksandbox
+      uses: actions/upload-artifact@v2
+      with:
+        name: LK-${{ env.RUNS_ON }}-x86_64
+        path: |
+          build_win/lk_sandbox*
+          build_win/lk*.a
+        
