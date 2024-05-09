@@ -69,7 +69,7 @@ jobs:
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxMSW-3.2.3_vc14x_Dev.7z -o wxMSW-3.2.3_vc14x_Dev.7z
         mkdir wxMSW-3.2.3_vc14x_Dev
         7z x wxMSW-3.2.3_vc14x_Dev.7z -o$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_Dev
-        WXMSW3=$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_Dev
+        WXMSW3=$GITHUB_WORKSPACE\wxMSW-3.2.3_vc14x_Dev
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Setup cmake
@@ -79,8 +79,8 @@ jobs:
 
     - name: Build LK
       run: |
-        echo ${WXMSW3}
-        ls ${WXMSW3}
+        echo $env:WXMSW3
+        ls $env:WXMSW3
 
     - name: Build LK
       run: |
