@@ -72,7 +72,7 @@ jobs:
         # curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
         # tar jxf wxWidgets-3.2.3.tar.bz2
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxMSW-3.2.3_vc14x_Dev.7z -o wxMSW-3.2.3_vc14x_Dev.7z
-        7z wxMSW-3.2.3_vc14x_Dev
+        7z wxMSW-3.2.3_vc14x_Dev.7z
         ls wxMSW-3.2.3_vc14x_Dev
 
     # - name: Install wxWidgets
