@@ -71,7 +71,7 @@ jobs:
     - name: Install wxWidgets
       shell: bash
       run: |
-        curl https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o $GITHUB_WORKSPACE/wxWidgets-3.2.3.tar.bz2
+        curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
         ls
         tar jxf wxWidgets-3.2.3.tar.bz2
         cd wxWidgets-3.2.3
