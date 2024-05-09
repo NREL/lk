@@ -65,6 +65,9 @@ jobs:
       run: | 
         WXMSW3=$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_Dev
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
+
+    - name: Checkout
+      uses: actions/checkout@v2
       
     - name: Download wxWidgets
       shell: bash
@@ -78,15 +81,14 @@ jobs:
       uses: jwlawson/actions-setup-cmake@v2
       with:
         cmake-version: '3.24.x'
-        
-    - name: Checkout
-      uses: actions/checkout@v2
 
     - name: Build LK
+      shell: bash
       run: |
         ls ${WXMSW3}
 
     - name: Build LK
+      shell: bash
       run: |
         cmake -Bbuild_win
         cmake --build build_win --config Release -j4
