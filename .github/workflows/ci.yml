@@ -96,6 +96,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: LK-${{ env.RUNS_ON }}-x86_64
+        path: |
           build_win/lk_sandbox*
           build_win/lk*.a
 
@@ -116,7 +117,7 @@ jobs:
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
         ls
         tar jxf wxWidgets-3.2.3.tar.bz2
-        cd build
+        cd wxWidgets-3.2.3.tar.bz2/build
         ../configure --prefix=${WXMSW3}/install --enable-stl=yes --enable-shared=no --disable-debug_flag --with-cocoa --enable-universal_binary=x86_64,arm64 --enable-unicode --enable-webview --disable-mediactrl --with-cxx=11 --with-macosx-version-min=10.15  --with-libjpeg=builtin --with-libpng=builtin --with-regex=builtin --with-libtiff=builtin --with-zlib=builtin --with-expat=builtin
         make
         make install
