@@ -62,18 +62,27 @@ jobs:
       with:
         cmake-version: '3.24.x'
 
+    - name: Set relative paths
+      shell: bash
+      run: | 
+        WXMSW3=$GITHUB_WORKSPACE/wxWidgets-3.2.3
+        echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
+
     - name: Install wxWidgets
       run: |
+        $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -OutFile wxWidgets-3.2.3.tar.bz2
         tar jxf wxWidgets-3.2.3.tar.bz2
         cd wxWidgets-3.2.3
-        msbuild.exe build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
+        C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild.exe build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
 
     - name: Checkout
       uses: actions/checkout@v2
 
     - name: Build LK
+      shell: bash
       run: |
+        ls ${WXMSW3}/build/msw
         cmake -Bbuild_win -DCMAKE_BUILD_TYPE=Release
         cmake --build build_win --config Release -j4
 
