@@ -70,6 +70,8 @@ jobs:
         ls
         tar jxf wxWidgets-3.2.3.tar.bz2
         cd wxWidgets-3.2.3
+        ls "C:\Program Files\Microsoft Visual Studio"
+        ls "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
         MSBuild.exe build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
       
     - name: Setup cmake
