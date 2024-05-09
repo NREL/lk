@@ -74,11 +74,10 @@ jobs:
         tar jxf wxWidgets-3.2.3.tar.bz2
 
     - name: Install wxWidgets
-      shell: bash
       run: |
         cd wxWidgets-3.2.3
         msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
-        ls ${WXMSW3}
+        dir ${WXMSW3}
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
@@ -91,6 +90,7 @@ jobs:
     - name: Build LK
       shell: bash
       run: |
+        ls ${WXMSW3}
         cmake -Bbuild_win -DCMAKE_BUILD_TYPE=Release
         cmake --build build_win --config Release -j4
 
