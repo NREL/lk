@@ -60,12 +60,6 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
 
-    - name: Set relative paths
-      shell: bash
-      run: | 
-        WXMSW3=$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_Dev
-        echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
-
     - name: Checkout
       uses: actions/checkout@v2
       
@@ -74,8 +68,9 @@ jobs:
       run: |
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxMSW-3.2.3_vc14x_Dev.7z -o wxMSW-3.2.3_vc14x_Dev.7z
         mkdir wxMSW-3.2.3_vc14x_Dev
-        7z x wxMSW-3.2.3_vc14x_Dev.7z -o${WXMSW3}
-        ls ${WXMSW3}
+        7z x wxMSW-3.2.3_vc14x_Dev.7z -o$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_Dev
+        WXMSW3=$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_Dev
+        echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
@@ -84,6 +79,7 @@ jobs:
 
     - name: Build LK
       run: |
+        echo ${WXMSW3}
         ls ${WXMSW3}
 
     - name: Build LK
