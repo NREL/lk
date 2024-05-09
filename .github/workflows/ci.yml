@@ -63,21 +63,23 @@ jobs:
     - name: Set relative paths
       shell: bash
       run: | 
-        WXMSW3=$GITHUB_WORKSPACE/wxWidgets-3.2.3
+        WXMSW3=$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_Dev
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
       
     - name: Download wxWidgets
       shell: bash
       run: |
-        curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
-        ls
-        tar jxf wxWidgets-3.2.3.tar.bz2
+        # curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
+        # tar jxf wxWidgets-3.2.3.tar.bz2
+        curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxMSW-3.2.3_vc14x_Dev.7z -o wxMSW-3.2.3_vc14x_Dev.7z
+        7z wxMSW-3.2.3_vc14x_Dev
+        ls wxMSW-3.2.3_vc14x_Dev
 
-    - name: Install wxWidgets
-      run: |
-        cd wxWidgets-3.2.3
-        msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
-        dir ${WXMSW3}
+    # - name: Install wxWidgets
+    #   run: |
+    #     cd wxWidgets-3.2.3
+    #     msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
+    #     dir ${WXMSW3}
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
