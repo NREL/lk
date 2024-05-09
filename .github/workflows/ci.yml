@@ -63,9 +63,8 @@ jobs:
         cmake-version: '3.24.x'
 
     - name: Install wxWidgets
-      shell: bash
       run: |
-        wget -q https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2
+        Invoke-WebRequest https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2
         tar jxf wxWidgets-3.2.3.tar.bz2
         cd wxWidgets-3.2.3
         msbuild.exe build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
