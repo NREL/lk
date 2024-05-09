@@ -89,6 +89,7 @@ if (UNIX)
     endif ()
 else ()
     set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
+    message("wx dir $ENV{WXMSW3} and ${wxWidgets_ROOT_DIR}")
     find_package(wxWidgets REQUIRED qa webview aui richtext html propgrid adv net stc core base scintilla)
 endif ()
 
