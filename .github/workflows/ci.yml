@@ -74,6 +74,7 @@ jobs:
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxMSW-3.2.3_vc14x_Dev.7z -o wxMSW-3.2.3_vc14x_Dev.7z
         7z x wxMSW-3.2.3_vc14x_Dev.7z -owxMSW-3.2.3_vc14x_Dev
         ls wxMSW-3.2.3_vc14x_Dev
+        pwd
 
     # - name: Install wxWidgets
     #   run: |
@@ -92,7 +93,6 @@ jobs:
     - name: Build LK
       shell: bash
       run: |
-        ls ${WXMSW3}
         cmake -Bbuild_win -DCMAKE_BUILD_TYPE=Release
         cmake --build build_win --config Release -j4
 
