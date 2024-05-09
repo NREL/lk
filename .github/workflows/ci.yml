@@ -69,12 +69,13 @@ jobs:
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Install wxWidgets
+      shell: bash
       run: |
-        (New-Object Net.WebClient).DownloadFile("https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2", "wxWidgets-3.2.3.tar.bz2")
-        dir
+        curl https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
+        ls
         tar jxf wxWidgets-3.2.3.tar.bz2
         cd wxWidgets-3.2.3
-        C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild.exe build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
+        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild.exe" build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
 
     - name: Checkout
       uses: actions/checkout@v2
