@@ -69,10 +69,15 @@ jobs:
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxMSW-3.2.3_vc14x_Dev.7z -o wxMSW-3.2.3_vc14x_Dev.7z
         mkdir wxMSW-3.2.3_vc14x_Dev
         7z x wxMSW-3.2.3_vc14x_Dev.7z -o$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_Dev
+        curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxMSW-3.2.3_vc14x_ReleaseDLL.7z -o wxMSW-3.2.3_vc14x_ReleaseDLL.7z
+        7z x wxMSW-3.2.3_vc14x_ReleaseDLL.7z -o$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_ReleaseDLL
+        mv $GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_ReleaseDLL/lib/vc14x_dll/* -o$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_Dev/lib/vc14x_dll
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3-headers.7z -o wxWidgets-3.2.3-headers.7z
         7z x wxWidgets-3.2.3-headers.7z -o$GITHUB_WORKSPACE/wxMSW-3.2.3_vc14x_Dev
         WXMSW3=$GITHUB_WORKSPACE\\wxMSW-3.2.3_vc14x_Dev
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
+        WXWIN=$GITHUB_WORKSPACE\\wxMSW-3.2.3_vc14x_Dev
+        echo "WXWIN=$WXWIN" >> $GITHUB_ENV
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
