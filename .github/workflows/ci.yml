@@ -105,11 +105,11 @@ jobs:
       matrix:
         os: [macos-14-large, macos-latest]
     steps:
-    - name: Set relative paths
-      shell: bash
-      run: | 
-        WXMSW3=$GITHUB_WORKSPACE/wxWidgets-3.2.3
-        echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
+    # - name: Set relative paths
+    #   shell: bash
+    #   run: | 
+    #     WXMSW3=$GITHUB_WORKSPACE/wxWidgets-3.2.3
+    #     echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Install wxWidgets
       if: ${{ matrix.os == 'macos-14-large'}}
@@ -127,7 +127,8 @@ jobs:
         # echo ${HOME}/wx-3.2.3/bin >> $GITHUB_PATH
         brew install wxmac
         /usr/local/Cellar/wxwidgets/3.2.5/bin/wx-config --cflags
-        sudo ln -s /usr/local/Cellar/wxwidgets/3.2.5/bin/wx-config /usr/local/Cellar/wxwidgets/3.2.5/bin/wx-config-3
+        WXMSW3=/usr/local/Cellar/wxwidgets/3.2.5
+        echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
         echo /usr/local/Cellar/wxwidgets/3.2.5/bin >> $GITHUB_PATH
 
     - name: Install wxWidgets
@@ -135,8 +136,9 @@ jobs:
       run: |
         brew install wxmac
         /opt/homebrew/Cellar/wxwidgets/3.2.4/bin/wx-config --cflags
-        sudo ln -s /opt/homebrew/Cellar/wxwidgets/3.2.4/bin/wx-config /opt/homebrew/Cellar/wxwidgets/3.2.4/bin/wx-config-3
         echo /opt/homebrew/Cellar/wxwidgets/3.2.4/bin >> $GITHUB_PATH
+        WXMSW3=/opt/homebrew/Cellar/wxwidgets/3.2.4
+        echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
