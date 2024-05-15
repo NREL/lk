@@ -88,12 +88,14 @@ if (UNIX)
         find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base)
     endif ()
 else ()
-    set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
-    find_package(wxWidgets REQUIRED qa webview aui richtext html propgrid adv net stc core base scintilla)
+
+   # set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
+    #find_package(wxWidgets REQUIRED qa webview aui richtext html propgrid adv net stc core base scintilla)
 endif ()
 
-include(${wxWidgets_USE_FILE})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
+#include(${wxWidgets_USE_FILE})
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 
 #####################################################################################################################
@@ -151,5 +153,16 @@ if (NOT SAM_SKIP_TOOLS)
         target_link_libraries(lk_sandbox -ldl)
     endif ()
 
-    target_link_libraries(lk_sandbox lk ${wxWidgets_LIBRARIES})
+    target_link_libraries(lk_sandbox lk)
+
+    
+    set_property(
+      TARGET lk_sandbox
+      PROPERTY VS_USER_PROPS "$ENV{WXMSW3}/wxwidgets.props"
+    )
 endif()
+
+    set_property(
+      TARGET lk
+      PROPERTY VS_USER_PROPS "$ENV{WXMSW3}/wxwidgets.props"
+    )
