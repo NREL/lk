@@ -89,7 +89,7 @@ jobs:
         mkdir build
         cd build
         cmake -G "Visual Studio 17 2022" -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_SYSTEM_VERSION=10.0 ..
-        Rename-Item "$env:WXMSW3\lib\vc14x_dll vc14x_x64_dll"
+        Rename-Item "$env:WXMSW3\lib\vc14x_dll" vc14x_x64_dll
         dir $env:WXMSW3\lib
         MSBuild.exe .\lk.sln /t:Build /p:Configuration=Release
 
