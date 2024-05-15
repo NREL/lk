@@ -88,7 +88,7 @@ if (UNIX)
         find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base)
     endif ()
 else ()
-    if(NOT EXISTS "$ENV{WXMSW3}/lib/wxwidgets.props")
+    if(NOT EXISTS "$ENV{WXMSW3}/wxwidgets.props")
         set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
         find_package(wxWidgets REQUIRED qa webview aui richtext html propgrid adv net stc core base scintilla)
         include(${wxWidgets_USE_FILE})
@@ -156,7 +156,7 @@ if (NOT SAM_SKIP_TOOLS)
 
     target_link_libraries(lk_sandbox lk)
 
-    if (MSVC and EXISTS "$ENV{WXMSW3}/lib/wxwidgets.props")    
+    if (MSVC AND EXISTS "$ENV{WXMSW3}/wxwidgets.props")    
         set_property(
           TARGET lk_sandbox
           PROPERTY VS_USER_PROPS "$ENV{WXMSW3}/wxwidgets.props"
@@ -166,7 +166,7 @@ if (NOT SAM_SKIP_TOOLS)
     endif()
 endif()
 
-if (MSVC AND EXISTS "$ENV{WXMSW3}/lib/wxwidgets.props")    
+if (MSVC AND EXISTS "$ENV{WXMSW3}/wxwidgets.props")    
     set_property(
         TARGET lk
         PROPERTY VS_USER_PROPS "$ENV{WXMSW3}/wxwidgets.props"
