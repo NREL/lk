@@ -82,11 +82,10 @@ endif (MSVC)
 if (UNIX)
     if(EXISTS /usr/local/bin/wx-config-3)
         set(wxWidgets_CONFIG_EXECUTABLE /usr/local/bin/wx-config-3)
-        find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base)
     else ()
         set(wxWidgets_CONFIG_EXECUTABLE $ENV{WXMSW3}/bin/wx-config)
-        find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base)
     endif ()
+    find_package(wxWidgets REQUIRED xrc stc richtext ribbon propgrid aui gl html qa adv core xml net base)
     include(${wxWidgets_USE_FILE})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
 else ()
@@ -95,8 +94,6 @@ else ()
         find_package(wxWidgets REQUIRED qa webview aui richtext html propgrid adv net stc core base scintilla)
         include(${wxWidgets_USE_FILE})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
-    else()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     endif()
 endif ()
 
@@ -156,22 +153,20 @@ if (NOT SAM_SKIP_TOOLS)
         target_link_libraries(lk_sandbox -ldl)
     endif ()
 
-    target_link_libraries(lk_sandbox lk)
-
-    if (MSVC AND EXISTS "$ENV{WXMSW3}/wxwidgets.props")    
+    if (MSVC AND EXISTS "$ENV{WXWIN}/wxwidgets.props")    
         set_property(
           TARGET lk_sandbox
-          PROPERTY VS_USER_PROPS "$ENV{WXMSW3}/wxwidgets.props"
+          PROPERTY VS_USER_PROPS "$ENV{WXWIN}/wxwidgets.props"
         )
     else()
         target_link_libraries(lk_sandbox ${wxWidgets_LIBRARIES})
     endif()
 endif()
 
-if (MSVC AND EXISTS "$ENV{WXMSW3}/wxwidgets.props")    
+if (MSVC AND EXISTS "$ENV{WXWIN}/wxwidgets.props")    
     set_property(
         TARGET lk
-        PROPERTY VS_USER_PROPS "$ENV{WXMSW3}/wxwidgets.props"
+        PROPERTY VS_USER_PROPS "$ENV{WXWIN}/wxwidgets.props"
     )
 else()
     target_link_libraries(lk ${wxWidgets_LIBRARIES})
