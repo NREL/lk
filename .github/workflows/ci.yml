@@ -112,6 +112,7 @@ jobs:
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Install wxWidgets
+      if: ${{ matrix.os == 'macos-14-large'}}
       run: |
         # curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
         # ls
@@ -128,6 +129,14 @@ jobs:
         ls /usr/local/Cellar/wxwidgets/3.2.5
         ls /usr/local/Cellar/wxwidgets/3.2.5/bin
         /usr/local/Cellar/wxwidgets/3.2.5/bin/wx-config --cflags
+
+    - name: Install wxWidgets
+      if: ${{ matrix.os == 'macos-latest'}}
+      run: |
+        brew install wxmac
+        ls /opt/homebrew/Cellar/wxwidgets/3.2.4
+        ls /opt/homebrew/Cellar/wxwidgets/3.2.4/bin
+        /opt/homebrew/Cellar/wxwidgets/3.2.4/bin/wx-config --cflags
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
