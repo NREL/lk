@@ -119,17 +119,19 @@ jobs:
 
     - name: Install wxWidgets
       run: |
-        curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
-        ls
-        tar jxf wxWidgets-3.2.3.tar.bz2
-        cd wxWidgets-3.2.3
-        ./configure --prefix=$HOME/wx-3.2.3 --enable-stl=yes --enable-shared=no --disable-debug_flag --with-cocoa --enable-universal_binary=x86_64,arm64 --enable-unicode --enable-webview --disable-mediactrl --with-cxx=11 --with-macosx-version-min=10.15  --with-libjpeg=builtin --with-libpng=builtin --with-regex=builtin --with-libtiff=builtin --with-zlib=builtin --with-expat=builtin
-        make
-        make install
-        sudo ln -s $HOME/wx-3.2.3/bin/wx-config /usr/local/bin/wx-config-3
-        ls $HOME/wx-3.2.3/bin
+        # curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
+        # ls
+        # tar jxf wxWidgets-3.2.3.tar.bz2
+        # cd wxWidgets-3.2.3
+        # ./configure --prefix=$HOME/wx-3.2.3 --enable-stl=yes --enable-shared=no --disable-debug_flag --with-cocoa --enable-universal_binary=x86_64,arm64 --enable-unicode --enable-webview --disable-mediactrl --with-cxx=11 --with-macosx-version-min=10.15  --with-libjpeg=builtin --with-libpng=builtin --with-regex=builtin --with-libtiff=builtin --with-zlib=builtin --with-expat=builtin
+        # make
+        # make install
+        # sudo ln -s $HOME/wx-3.2.3/bin/wx-config /usr/local/bin/wx-config-3
+        # ls $HOME/wx-3.2.3/bin
+        # wx-config-3 --cflags
+        # echo ${HOME}/wx-3.2.3/bin >> $GITHUB_PATH
+        brew install wxmac
         wx-config-3 --cflags
-        echo ${HOME}/wx-3.2.3/bin >> $GITHUB_PATH
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
