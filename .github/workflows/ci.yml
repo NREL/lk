@@ -125,8 +125,8 @@ jobs:
         # wx-config-3 --cflags
         # echo ${HOME}/wx-3.2.3/bin >> $GITHUB_PATH
         brew install wxmac
-        ls /usr/local/Cellar/wxwidgets/3.2.5
-        /usr/local/Cellar/wxwidgets/3.2.5/wx-config-3 --cflags
+        ls /usr/local/Cellar/wxwidgets/3.2.5/bin
+        /usr/local/Cellar/wxwidgets/3.2.5/bin/wx-config-3 --cflags
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
