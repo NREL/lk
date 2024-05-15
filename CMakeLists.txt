@@ -166,7 +166,7 @@ if (NOT SAM_SKIP_TOOLS)
     endif()
 endif()
 
-if (MSVC and EXISTS "$ENV{WXMSW3}/lib/wxwidgets.props")    
+if (MSVC AND EXISTS "$ENV{WXMSW3}/lib/wxwidgets.props")    
     set_property(
         TARGET lk
         PROPERTY VS_USER_PROPS "$ENV{WXMSW3}/wxwidgets.props"
