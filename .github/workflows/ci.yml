@@ -55,7 +55,7 @@ jobs:
     - name: Save wxWidgets build
       uses: actions/upload-artifact@v4
       with:
-        name: wxWidgets-${{ matrix.os }}
+        name: wxWidgets-linux
         path: |
           wx3.2.3.7z
 
@@ -67,7 +67,7 @@ jobs:
     - name: Save static lib & lksandbox
       uses: actions/upload-artifact@v4
       with:
-        name: LK-${{ matrix.os }}-x86_64
+        name: LK-linux
         path: |
           build_linux/lk_sandbox*
           build_linux/lk*.a
@@ -112,7 +112,7 @@ jobs:
     - name: Save wxWidgets build
       uses: actions/upload-artifact@v4
       with:
-        name: wxWidgets-${{ matrix.os }}
+        name: wxWidgets-windows
         path: |
           wx3.2.3.7z
 
@@ -131,7 +131,7 @@ jobs:
     - name: Save static lib & lksandbox
       uses: actions/upload-artifact@v4
       with:
-        name: LK-${{ matrix.os }}-x86_64
+        name: LK-windows
         path: |
           build/Release/lk_sandbox*
           build/Release/lk*.a
@@ -186,7 +186,7 @@ jobs:
       - name: Save static lib & lksandbox
         uses: actions/upload-artifact@v4
         with:
-          name: LK-${{ matrix.os }}-x86_64
+          name: LK-${{ matrix.os }}
           path: |
             build/lk_sandbox*
             build/lk*.a
