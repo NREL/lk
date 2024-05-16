@@ -95,7 +95,11 @@ jobs:
     - name: Make wxWidgets archive
       shell: bash
       run: |
-        cd 
+        mkdir wx-3.2.3
+        cp -r wxWidgets-3.2.3/bin wx-3.2.3
+        cp -r wxWidgets-3.2.3/include wx-3.2.3
+        cp -r wxWidgets-3.2.3/lib wx-3.2.3
+        cp -r wxWidgets-3.2.3/share wx-3.2.3
         7z a wx3.2.3.7z wx-3.2.3
 
     - name: Save wxWidgets build
