@@ -34,7 +34,7 @@ jobs:
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install wxWidgets
       run: |
@@ -85,7 +85,7 @@ jobs:
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Download wxWidgets
       shell: bash
@@ -148,7 +148,7 @@ jobs:
           echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
   
       - name: Install wxWidgets
         run: |
