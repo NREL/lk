@@ -47,7 +47,6 @@ jobs:
         sudo ln -s $GITHUB_WORKSPACE/wx-3.2.3/bin/wx-config /usr/local/bin/wx-config-3
         wx-config-3 --cflags
         echo ${GITHUB_WORKSPACE}/wx-3.2.3/bin >> $GITHUB_PATH
-        ls ${WXMSW3}/bin/
 
     - name: Make wxWidgets archive
       run: |
@@ -62,7 +61,6 @@ jobs:
 
     - name: Build LK
       run: |
-        ls ${WXMSW3}
         cmake -Bbuild_linux -DCMAKE_BUILD_TYPE=Debug
         cmake --build build_linux -- -j4
 
@@ -100,7 +98,6 @@ jobs:
       run: |
         cd wxWidgets-3.2.3
         msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release /p:Platform=x64
-        dir $env:WXMSW3
 
     - name: Make wxWidgets archive
       shell: bash
@@ -126,7 +123,6 @@ jobs:
 
     - name: Build LK
       run: |
-        dir $env:WXMSW3
         mkdir build
         cd build
         cmake -G "Visual Studio 17 2022" -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_SYSTEM_VERSION=10.0 ..
@@ -165,7 +161,6 @@ jobs:
           sudo ln -s $GITHUB_WORKSPACE/wx-3.2.3/bin/wx-config /usr/local/bin/wx-config-3
           wx-config-3 --cflags
           echo ${GITHUB_WORKSPACE}/wx-3.2.3/bin >> $GITHUB_PATH
-          ls ${WXMSW3}/bin/
 
       - name: Make wxWidgets archive
         run: |
@@ -185,19 +180,10 @@ jobs:
 
       - name: Build LK
         run: |
-          ls ${WXMSW3}
           cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
           cmake --build build -- -j3
 
       - name: Save static lib & lksandbox
-        uses: actions/upload-artifact@v2
-        with:
-          name: LK-${{ env.RUNS_ON }}-x86_64
-          path: |
-            build/lk_sandbox*
-            build/lk*.a
-
-      - name: Save wxWidgets build
         uses: actions/upload-artifact@v2
         with:
           name: LK-${{ env.RUNS_ON }}-x86_64
