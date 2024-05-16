@@ -91,7 +91,7 @@ if (UNIX)
 else ()
     # WXWIN is the environment variable used within the wxwidgets.props from the binary distribution of wxWidgets 
     if(NOT EXISTS "$ENV{WXWIN}/wxwidgets.props")
-        set(wxWidgets_ROOT_DIR $ENV{WXWIN})
+        set(wxWidgets_ROOT_DIR $ENV{WXMSW3})
         find_package(wxWidgets REQUIRED qa webview aui richtext html propgrid adv net stc core base scintilla)
         include(${wxWidgets_USE_FILE})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${wxWidgets_CXX_FLAGS}")
