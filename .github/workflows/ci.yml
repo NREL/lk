@@ -99,7 +99,7 @@ jobs:
     - name: Install wxWidgets
       run: |
         cd wxWidgets-3.2.3
-        msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release
+        msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release /p:Platform=x64
         dir $env:WXMSW3
 
     - name: Make wxWidgets archive
