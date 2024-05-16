@@ -33,6 +33,9 @@ jobs:
         WXMSW3=$GITHUB_WORKSPACE/wx-3.2.3
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
+    - name: Checkout
+      uses: actions/checkout@v2
+
     - name: Install wxWidgets
       run: |
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
@@ -56,9 +59,6 @@ jobs:
         name: wxWidgets-${{ env.RUNS_ON }}
         path: |
           wx3.2.3.7z
-
-    - name: Checkout
-      uses: actions/checkout@v2
 
     - name: Build LK
       run: |
@@ -151,6 +151,9 @@ jobs:
           WXMSW3=$GITHUB_WORKSPACE/wx-3.2.3
           echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
+      - name: Checkout
+        uses: actions/checkout@v2
+  
       - name: Install wxWidgets
         run: |
           curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
@@ -179,9 +182,6 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v2
         with:
           cmake-version: '3.24.x'
-
-      - name: Checkout
-        uses: actions/checkout@v2
 
       - name: Build LK
         run: |
