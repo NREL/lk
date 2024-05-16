@@ -108,20 +108,20 @@ jobs:
     - name: Install wxWidgets
       if: ${{ matrix.os == 'macos-14-large'}}
       run: |
-        brew install wxmac
-        /usr/local/Cellar/wxwidgets/3.2.5/bin/wx-config --cflags
-        WXMSW3=/usr/local/Cellar/wxwidgets/3.2.5
+        brew install wxmac@3.2.3
+        /usr/local/Cellar/wxwidgets/3.2.3/bin/wx-config --cflags
+        WXMSW3=/usr/local/Cellar/wxwidgets/3.2.3
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
-        echo /usr/local/Cellar/wxwidgets/3.2.5/bin >> $GITHUB_PATH
+        echo /usr/local/Cellar/wxwidgets/3.2.3/bin >> $GITHUB_PATH
 
     - name: Install wxWidgets
       if: ${{ matrix.os == 'macos-latest'}}
       run: |
-        brew install wxmac
-        /opt/homebrew/Cellar/wxwidgets/3.2.4/bin/wx-config --cflags
-        WXMSW3=/opt/homebrew/Cellar/wxwidgets/3.2.4
+        brew install wxmac@3.2.3
+        /opt/homebrew/Cellar/wxwidgets/3.2.3/bin/wx-config --cflags
+        WXMSW3=/opt/homebrew/Cellar/wxwidgets/3.2.3
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
-        echo /opt/homebrew/Cellar/wxwidgets/3.2.4/bin >> $GITHUB_PATH
+        echo /opt/homebrew/Cellar/wxwidgets/3.2.3/bin >> $GITHUB_PATH
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
