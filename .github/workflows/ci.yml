@@ -34,7 +34,7 @@ jobs:
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install wxWidgets
       run: |
@@ -53,7 +53,7 @@ jobs:
         7z a wx3.2.3.7z wx-3.2.3
 
     - name: Save wxWidgets build
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: wxWidgets-${{ env.RUNS_ON }}
         path: |
@@ -65,7 +65,7 @@ jobs:
         cmake --build build_linux -- -j4
 
     - name: Save static lib & lksandbox
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: LK-${{ env.RUNS_ON }}-x86_64
         path: |
@@ -85,7 +85,7 @@ jobs:
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       
     - name: Download wxWidgets
       shell: bash
@@ -110,7 +110,7 @@ jobs:
         7z a wx3.2.3.7z wx-3.2.3
 
     - name: Save wxWidgets build
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: wxWidgets-${{ env.RUNS_ON }}
         path: |
@@ -129,7 +129,7 @@ jobs:
         MSBuild.exe .\lk.sln /t:Build /p:Configuration=Release
 
     - name: Save static lib & lksandbox
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: LK-${{ env.RUNS_ON }}-x86_64
         path: |
@@ -148,7 +148,7 @@ jobs:
           echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
   
       - name: Install wxWidgets
         run: |
@@ -167,7 +167,7 @@ jobs:
           7z a wx3.2.3.7z wx-3.2.3
 
       - name: Save wxWidgets build
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: wxWidgets-${{ env.RUNS_ON }}
           path: |
@@ -184,7 +184,7 @@ jobs:
           cmake --build build -- -j3
 
       - name: Save static lib & lksandbox
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: LK-${{ env.RUNS_ON }}-x86_64
           path: |
