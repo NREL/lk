@@ -48,16 +48,12 @@ jobs:
         wx-config-3 --cflags
         echo ${GITHUB_WORKSPACE}/wx-3.2.3/bin >> $GITHUB_PATH
 
-    - name: Make wxWidgets archive
-      run: |
-        7z a wx3.2.3.7z wx-3.2.3
-
     - name: Save wxWidgets build
       uses: actions/upload-artifact@v4
       with:
         name: wxWidgets-linux
         path: |
-          wx3.2.3.7z
+          wx-3.2.3
 
     - name: Build LK
       run: |
@@ -107,14 +103,13 @@ jobs:
         cp -r wxWidgets-3.2.3/build/msw/vc_* wx-3.2.3/build/msw
         cp -r wxWidgets-3.2.3/include wx-3.2.3
         cp -r wxWidgets-3.2.3/lib wx-3.2.3
-        7z a wx3.2.3.7z wx-3.2.3
 
     - name: Save wxWidgets build
       uses: actions/upload-artifact@v4
       with:
         name: wxWidgets-windows
         path: |
-          wx3.2.3.7z
+          wx-3.2.3
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
@@ -162,16 +157,12 @@ jobs:
           wx-config-3 --cflags
           echo ${GITHUB_WORKSPACE}/wx-3.2.3/bin >> $GITHUB_PATH
 
-      - name: Make wxWidgets archive
-        run: |
-          7z a wx3.2.3.7z wx-3.2.3
-
       - name: Save wxWidgets build
         uses: actions/upload-artifact@v4
         with:
           name: wxWidgets-${{ matrix.os }}
           path: |
-            wx3.2.3.7z
+            wx-3.2.3
 
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
