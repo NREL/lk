@@ -135,7 +135,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-14-large, macos-latest]
+        os: [macos-14-large, macos-13]
     steps:
       - name: Set relative paths
         run: | 
