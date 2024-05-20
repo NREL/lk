@@ -77,7 +77,7 @@ jobs:
     - name: Set relative paths
       shell: bash
       run: | 
-        WXMSW3=$HOME/wxWidgets-3.2.3
+        WXMSW3=$GITHUB_WORKSPACE/wxWidgets-3.2.3
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Checkout
@@ -86,14 +86,13 @@ jobs:
     - name: Download wxWidgets
       shell: bash
       run: |
-        cd $HOME
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
         ls
         tar jxf wxWidgets-3.2.3.tar.bz2
 
     - name: Install wxWidgets
       run: |
-        cd $HOME/wxWidgets-3.2.3
+        cd wxWidgets-3.2.3
         msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release /p:Platform=x64
 
     - name: Make wxWidgets archive
@@ -101,9 +100,9 @@ jobs:
       run: |
         mkdir wx-3.2.3
         mkdir -p wx-3.2.3/build/msw
-        cp -r $HOME/wxWidgets-3.2.3/build/msw/vc_* wx-3.2.3/build/msw
-        cp -r $HOME/wxWidgets-3.2.3/include wx-3.2.3
-        cp -r $HOME/wxWidgets-3.2.3/lib wx-3.2.3
+        cp -r wxWidgets-3.2.3/build/msw/vc_* wx-3.2.3/build/msw
+        cp -r wxWidgets-3.2.3/include wx-3.2.3
+        cp -r wxWidgets-3.2.3/lib wx-3.2.3
 
     - name: Save wxWidgets build
       uses: actions/upload-artifact@v4
