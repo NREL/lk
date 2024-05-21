@@ -99,8 +99,6 @@ jobs:
       shell: bash
       run: |
         mkdir wx-3.2.3
-        mkdir -p wx-3.2.3/build/msw
-        cp -r wxWidgets-3.2.3/build/msw/vc_* wx-3.2.3/build/msw
         cp -r wxWidgets-3.2.3/include wx-3.2.3
         cp -r wxWidgets-3.2.3/lib wx-3.2.3
 
