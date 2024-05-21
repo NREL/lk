@@ -53,7 +53,7 @@ jobs:
       with:
         name: wxWidgets-linux
         path: |
-          $WXMSW3
+          ${{ env.WXMSW3 }}
 
     - name: Build LK
       run: |
@@ -162,7 +162,7 @@ jobs:
         with:
           name: wxWidgets-${{ matrix.os }}
           path: |
-            $WXMSW3
+            ${{ env.WXMSW3 }}
 
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
