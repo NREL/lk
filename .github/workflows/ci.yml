@@ -87,7 +87,6 @@ jobs:
       shell: bash
       run: |
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
-        ls
         tar jxf wxWidgets-3.2.3.tar.bz2
 
     - name: Install wxWidgets
@@ -118,7 +117,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G "Visual Studio 17 2022" -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_SYSTEM_VERSION=10.0 ..
+        cmake -G "Visual Studio 17 2022" -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_SYSTEM_VERSION=10 ..
         MSBuild.exe .\lk.sln /t:Build /p:Configuration=Release
 
     - name: Save static lib & lksandbox
