@@ -46,14 +46,14 @@ jobs:
         make install
         sudo ln -s $HOME/wx-3.2.3/bin/wx-config /usr/local/bin/wx-config-3
         wx-config-3 --cflags
-        echo ${HOME}/wx-3.2.3/bin >> $GITHUB_PATH
+        echo $HOME/wx-3.2.3/bin >> $GITHUB_PATH
 
     - name: Save wxWidgets build
       uses: actions/upload-artifact@v4
       with:
         name: wxWidgets-linux
         path: |
-          ${HOME}/wx-3.2.3
+          $WXMSW3
 
     - name: Build LK
       run: |
@@ -162,7 +162,7 @@ jobs:
         with:
           name: wxWidgets-${{ matrix.os }}
           path: |
-            ${HOME}/wx-3.2.3
+            $WXMSW3
 
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
