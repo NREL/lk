@@ -15,7 +15,7 @@ jobs:
       uses: jwlawson/actions-setup-cmake@v2
       with:
         cmake-version: '3.24.x'
-        
+
     - name: Test cmake version
       run: cmake --version
 
@@ -75,6 +75,7 @@ jobs:
         cmake --build build_linux -- -j4
 
     - name: Save static lib & lksandbox
+      if: steps.cachedwx.outputs.cache-hit != 'true'
       uses: actions/upload-artifact@v4
       with:
         name: LK-linux
@@ -145,6 +146,7 @@ jobs:
         MSBuild.exe .\lk.sln /t:Build /p:Configuration=Release
 
     - name: Save static lib & lksandbox
+      if: steps.cachedwx.outputs.cache-hit != 'true'
       uses: actions/upload-artifact@v4
       with:
         name: LK-windows
@@ -205,6 +207,7 @@ jobs:
           cmake --build build -- -j3
 
       - name: Save static lib & lksandbox
+        if: steps.cachedwx.outputs.cache-hit != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: LK-${{ matrix.os }}
