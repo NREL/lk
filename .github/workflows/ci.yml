@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+env:
+  WX_VERSION: '3.2.4'
+  
 jobs:
   build-on-ubuntu:
     runs-on: ubuntu-latest
@@ -30,23 +33,31 @@ jobs:
 
     - name: Set relative paths
       run: | 
-        WXMSW3=$HOME/wx-3.2.3
+        WXMSW3=$HOME/wx-$WX_VERSION
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Get cached build of wxWidgets
+      uses: actions/cache@v4
+      id: cachedwx
+      with:
+        path: ${{env.WXMSW3}}/
+        key: windows-wxWidgets-${{ env.WX_VERSION }}
+
     - name: Install wxWidgets
+      if: steps.cachedwx.outputs.cache-hit != 'true'
       run: |
-        curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
-        tar jxf wxWidgets-3.2.3.tar.bz2
-        cd wxWidgets-3.2.3
-        ./configure --prefix=$HOME/wx-3.2.3 --enable-shared=no --enable-debug=no --with-gtk=2 --with-libjpeg=builtin --with-libpng=builtin --with-regex=builtin --with-libtiff=builtin --with-zlib=builtin --with-expat=builtin --without-libjbig --without-liblzma --without-gtkprint --with-libnotify=no --with-libmspack=no --with-gnomevfs=no --with-opengl=yes --with-sdl=no --with-cxx=11 
+        curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v$WX_VERSION/wxWidgets-$WX_VERSION.tar.bz2 -o wxWidgets-$WX_VERSION.tar.bz2
+        tar jxf wxWidgets-$WX_VERSION.tar.bz2
+        cd wxWidgets-$WX_VERSION
+        ./configure --prefix=$HOME/wx-$WX_VERSION --enable-shared=no --enable-debug=no --with-gtk=2 --with-libjpeg=builtin --with-libpng=builtin --with-regex=builtin --with-libtiff=builtin --with-zlib=builtin --with-expat=builtin --without-libjbig --without-liblzma --without-gtkprint --with-libnotify=no --with-libmspack=no --with-gnomevfs=no --with-opengl=yes --with-sdl=no --with-cxx=11 
         make -j4
         make install
-        sudo ln -s $HOME/wx-3.2.3/bin/wx-config /usr/local/bin/wx-config-3
+        sudo ln -s $HOME/wx-$WX_VERSION/bin/wx-config /usr/local/bin/wx-config-3
         wx-config-3 --cflags
-        echo $HOME/wx-3.2.3/bin >> $GITHUB_PATH
+        echo $HOME/wx-$WX_VERSION/bin >> $GITHUB_PATH
 
     - name: Save wxWidgets build
       uses: actions/upload-artifact@v4
@@ -77,7 +88,7 @@ jobs:
     - name: Set relative paths
       shell: bash
       run: | 
-        WXMSW3=$GITHUB_WORKSPACE/wxWidgets-3.2.3
+        WXMSW3=$GITHUB_WORKSPACE/wxWidgets-$WX_VERSION
         echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
     - name: Checkout
@@ -86,27 +97,27 @@ jobs:
     - name: Download wxWidgets
       shell: bash
       run: |
-        curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
-        tar jxf wxWidgets-3.2.3.tar.bz2
+        curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v$WX_VERSION/wxWidgets-$WX_VERSION.tar.bz2 -o wxWidgets-$WX_VERSION.tar.bz2
+        tar jxf wxWidgets-$WX_VERSION.tar.bz2
 
     - name: Install wxWidgets
       run: |
-        cd wxWidgets-3.2.3
+        cd wxWidgets-$WX_VERSION
         msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release /p:Platform=x64
 
     - name: Make wxWidgets archive
       shell: bash
       run: |
-        mkdir wx-3.2.3
-        cp -r wxWidgets-3.2.3/include wx-3.2.3
-        cp -r wxWidgets-3.2.3/lib wx-3.2.3
+        mkdir wx-$WX_VERSION
+        cp -r wxWidgets-$WX_VERSION/include wx-$WX_VERSION
+        cp -r wxWidgets-$WX_VERSION/lib wx-$WX_VERSION
 
     - name: Save wxWidgets build
       uses: actions/upload-artifact@v4
       with:
         name: wxWidgets-windows
         path: |
-          wx-3.2.3
+          wx-$WX_VERSION
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
@@ -136,7 +147,7 @@ jobs:
     steps:
       - name: Set relative paths
         run: | 
-          WXMSW3=$HOME/wx-3.2.3
+          WXMSW3=$HOME/wx-$WX_VERSION
           echo "WXMSW3=$WXMSW3" >> $GITHUB_ENV
 
       - name: Checkout
@@ -144,15 +155,15 @@ jobs:
   
       - name: Install wxWidgets
         run: |
-          curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.3/wxWidgets-3.2.3.tar.bz2 -o wxWidgets-3.2.3.tar.bz2
-          tar jxf wxWidgets-3.2.3.tar.bz2
-          cd wxWidgets-3.2.3
-          ./configure --prefix=$HOME/wx-3.2.3 --enable-stl=yes --enable-shared=no --disable-debug_flag --with-cocoa --enable-universal_binary=x86_64,arm64 --enable-unicode --enable-webview --disable-mediactrl --with-cxx=11 --with-macosx-version-min=10.15  --with-libjpeg=builtin --with-libpng=builtin --with-regex=builtin --with-libtiff=builtin --with-zlib=builtin --with-expat=builtin
+          curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v$WX_VERSION/wxWidgets-$WX_VERSION.tar.bz2 -o wxWidgets-$WX_VERSION.tar.bz2
+          tar jxf wxWidgets-$WX_VERSION.tar.bz2
+          cd wxWidgets-$WX_VERSION
+          ./configure --prefix=$HOME/wx-$WX_VERSION --enable-stl=yes --enable-shared=no --disable-debug_flag --with-cocoa --enable-universal_binary=x86_64,arm64 --enable-unicode --enable-webview --disable-mediactrl --with-cxx=11 --with-macosx-version-min=10.15  --with-libjpeg=builtin --with-libpng=builtin --with-regex=builtin --with-libtiff=builtin --with-zlib=builtin --with-expat=builtin
           make -j3
           make install
-          sudo ln -s $HOME/wx-3.2.3/bin/wx-config /usr/local/bin/wx-config-3
+          sudo ln -s $HOME/wx-$WX_VERSION/bin/wx-config /usr/local/bin/wx-config-3
           wx-config-3 --cflags
-          echo ${HOME}/wx-3.2.3/bin >> $GITHUB_PATH
+          echo ${HOME}/wx-$WX_VERSION/bin >> $GITHUB_PATH
 
       - name: Save wxWidgets build
         uses: actions/upload-artifact@v4
