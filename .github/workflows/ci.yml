@@ -15,8 +15,10 @@ jobs:
       uses: jwlawson/actions-setup-cmake@v2
       with:
         cmake-version: '3.24.x'
+        
     - name: Test cmake version
       run: cmake --version
+
     - name: Install OS dependencies
       run: |
         sudo apt-get update
