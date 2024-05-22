@@ -44,7 +44,7 @@ jobs:
       id: cachedwx
       with:
         path: ${{env.WXMSW3}}/
-        key: windows-wxWidgets-${{ env.WX_VERSION }}
+        key: wxWidgets-${{ env.WX_VERSION }}-linux
 
     - name: Install wxWidgets
       if: steps.cachedwx.outputs.cache-hit != 'true'
@@ -60,9 +60,10 @@ jobs:
         echo $HOME/wx-$WX_VERSION/bin >> $GITHUB_PATH
 
     - name: Save wxWidgets build
+      if: steps.cachedwx.outputs.cache-hit != 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: wxWidgets-linux
+        name: wxWidgets-${{ env.WX_VERSION }}-linux
         path: |
           ${{ env.WXMSW3 }}
 
@@ -93,19 +94,29 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v4
-      
+
+    - name: Get cached build of wxWidgets
+      uses: actions/cache@v4
+      id: cachedwx
+      with:
+        path: ${{env.WXMSW3}}/
+        key: wxWidgets-${{ env.WX_VERSION }}-windows
+
     - name: Download wxWidgets
+      if: steps.cachedwx.outputs.cache-hit != 'true'
       shell: bash
       run: |
         curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v$WX_VERSION/wxWidgets-$WX_VERSION.tar.bz2 -o wxWidgets-$WX_VERSION.tar.bz2
         tar jxf wxWidgets-$WX_VERSION.tar.bz2
 
     - name: Install wxWidgets
+      if: steps.cachedwx.outputs.cache-hit != 'true'
       run: |
-        cd wxWidgets-$WX_VERSION
+        cd wxWidgets-$env:WX_VERSION
         msbuild build/msw/wx_vc17.sln /t:Build /p:Configuration=Release /p:Platform=x64
 
     - name: Make wxWidgets archive
+      if: steps.cachedwx.outputs.cache-hit != 'true'
       shell: bash
       run: |
         mkdir wx-$WX_VERSION
@@ -115,9 +126,9 @@ jobs:
     - name: Save wxWidgets build
       uses: actions/upload-artifact@v4
       with:
-        name: wxWidgets-windows
+        name: wxWidgets-${{ env.WX_VERSION }}-windows
         path: |
-          wx-$WX_VERSION
+          ${{ env.WXMSW3 }}
 
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v2
@@ -153,7 +164,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
   
+      - name: Get cached build of wxWidgets
+        uses: actions/cache@v4
+        id: cachedwx
+        with:
+          path: ${{env.WXMSW3}}/
+          key: wxWidgets-${{ env.WX_VERSION }}-${{ matrix.os }}
+
       - name: Install wxWidgets
+        if: steps.cachedwx.outputs.cache-hit != 'true'
         run: |
           curl -L https://github.com/wxWidgets/wxWidgets/releases/download/v$WX_VERSION/wxWidgets-$WX_VERSION.tar.bz2 -o wxWidgets-$WX_VERSION.tar.bz2
           tar jxf wxWidgets-$WX_VERSION.tar.bz2
@@ -166,9 +185,10 @@ jobs:
           echo ${HOME}/wx-$WX_VERSION/bin >> $GITHUB_PATH
 
       - name: Save wxWidgets build
+        if: steps.cachedwx.outputs.cache-hit != 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: wxWidgets-${{ matrix.os }}
+          name: wxWidgets-${{ env.WX_VERSION }}-${{ matrix.os }}
           path: |
             ${{ env.WXMSW3 }}
 
