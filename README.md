@@ -2,7 +2,7 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![TravisCI](https://travis-ci.org/NREL/lk.svg?branch=develop)](https://travis-ci.org/NREL/lk)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FNREL%2Flk.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FNREL%2Flk?ref=badge_shield)
 
-LK is a scripting language originally developed for the National Renewable Energy Laboratory's [System Advisor Model (SAM)](https://sam.nrel.gov). LK is designed to be small, fast, and easily embedded in other applications, and provides a way for users to to extend an application's built-in functionality.
+LK is a scripting language originally developed for the National Renewable Energy Laboratory's [System Advisor Model™ (SAM™)](https://sam.nrel.gov). LK is designed to be small, fast, and easily embedded in other applications, and provides a way for users to to extend an application's built-in functionality.
 
 This repository contains a cross-platform standard library of function calls and core LK engine, which includes a lexical analyzer, parser, compiler, and virtual machine. It comprises roughly 7000 lines of ISO-standard C++ code, and is only dependent on the Standard C++ Library (STL), making LK extremely tight and portable to various platforms. LK also provides a C language API for writing extensions that can be dynamically loaded at runtime.
 
