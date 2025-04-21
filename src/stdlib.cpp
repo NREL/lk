@@ -1862,19 +1862,55 @@ static void _ascii(lk::invoke_t &cxt) {
 static void _isalpha(lk::invoke_t &cxt) {
     LK_DOC("isalpha", "Returns true if the argument is an alphabetic character A-Z,a-z.", "(character):boolean");
     lk_string s = cxt.arg(0).as_string();
-    cxt.result().assign(::isalpha(s.length() > 0 ? (int) s[0] : 0) ? 1.0 : 0.0);
+    double x = 0;
+    if (!s.IsNull()) {
+        try {
+            lk_char y = s[0];
+            if (y < 256 && !s.IsNull())
+                x = ::isalpha(s.length() > 0 ? (int)y : 0) ? 1.0 : 0.0;
+        }
+        catch (const std::exception&) {
+            x = 0;
+        }
+    }
+    cxt.result().assign(x);
+    //cxt.result().assign(::isalpha(s.length() > 0 ? (int) s[0] : 0) ? 1.0 : 0.0);
 }
 
 static void _isdigit(lk::invoke_t &cxt) {
     LK_DOC("isdigit", "Returns true if the argument is a numeric digit 0-9.", "(character):boolean");
     lk_string s = cxt.arg(0).as_string();
-    cxt.result().assign(::isdigit(s.length() > 0 ? (int) s[0] : 0) ? 1.0 : 0.0);
+    double x = 0;
+    if (!s.IsNull()) {
+        try {
+            lk_char y = s[0];
+            if (y < 256)
+                x = ::isdigit(s.length() > 0 ? (int)y : 0) ? 1.0 : 0.0;
+        }
+        catch (const std::exception&) {
+            x = 0;
+        }
+    }
+    cxt.result().assign(x);
+//    cxt.result().assign(::isdigit(s.length() > 0 ? (int) s[0] : 0) ? 1.0 : 0.0);
 }
 
-static void _isalnum(lk::invoke_t &cxt) {
+static void _isalnum(lk::invoke_t& cxt) {
     LK_DOC("isalnum", "Returns true if the argument is an alphanumeric A-Z,a-z,0-9.", "(character):boolean");
     lk_string s = cxt.arg(0).as_string();
-    cxt.result().assign(::isalnum(s.length() > 0 ? (int) s[0] : 0) ? 1.0 : 0.0);
+    double x = 0;
+    if (!s.IsNull()) {
+        try {
+            lk_char y = s[0];
+            if (y < 256)
+                x = ::isalnum(s.length() > 0 ? (int)y : 0) ? 1.0 : 0.0;
+        }
+        catch (const std::exception&) {
+            x = 0;
+        }
+    }
+    cxt.result().assign(x);
+ //   cxt.result().assign(::isalnum(s.length() > 0 ? (int) s[0] : 0) ? 1.0 : 0.0);
 }
 
 static void _char(lk::invoke_t &cxt) {
